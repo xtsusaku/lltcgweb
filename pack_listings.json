@@ -1,0 +1,171 @@
+{
+  "_comment": "Amazon JP listing sources for pack-open wrapper art. image in booster.php stays official 3D box for picker grid only.",
+  "photo_size": [520, 980],
+  "promo_size": [520, 900],
+  "boxes": {
+    "bp_vol1": {
+      "asin": "B0DK8FYVFB",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0DK8FYVFB",
+      "pack_style": "photo",
+      "packs": [
+        {
+          "output": "bp_vol1-a.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81UEU0q6uyL._AC_SL1500_.jpg",
+          "crop": "auto"
+        },
+        {
+          "output": "bp_vol1-b.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81wSWlGDb+L._AC_SL1500_.jpg",
+          "crop": "auto"
+        },
+        {
+          "output": "bp_vol1-c.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81eyTcLEGyL._AC_SL1500_.jpg",
+          "crop": "auto"
+        }
+      ]
+    },
+    "bp_sapphire": {
+      "asin": "B0DNB1P587",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0DNB1P587",
+      "pack_style": "photo",
+      "packs": [
+        {
+          "output": "bp_sapphire-a.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81ic-W77WiL._AC_SL1500_.jpg",
+          "crop": "auto"
+        },
+        {
+          "output": "bp_sapphire-b.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81Jvinpi-6L._AC_SL1500_.jpg",
+          "crop": "auto"
+        },
+        {
+          "output": "bp_sapphire-c.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81ki7ixeXyL._AC_SL1500_.jpg",
+          "crop": "auto"
+        }
+      ]
+    },
+    "bp_royal": {
+      "asin": "B0DNB35HZ3",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0DNB35HZ3",
+      "pack_style": "photo",
+      "note": "Hand-cut transparent pack art (sources/royal-holiday-*.png).",
+      "packs": [
+        {
+          "output": "bp_royal-a.png",
+          "local": "assets/packs/sources/royal-holiday-a.png"
+        },
+        {
+          "output": "bp_royal-b.png",
+          "local": "assets/packs/sources/royal-holiday-b.png"
+        },
+        {
+          "output": "bp_royal-c.png",
+          "local": "assets/packs/sources/royal-holiday-c.png"
+        }
+      ]
+    },
+    "bp_anniv": {
+      "asin": "B0DNB1BCYP",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0DNB1BCYP",
+      "pack_style": "photo",
+      "packs": [
+        {
+          "output": "bp_anniv-a.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81rvCsnI3UL._AC_SL1500_.jpg",
+          "crop": "auto"
+        }
+      ]
+    },
+    "pb_muse": {
+      "asin": "B0F9WRZ38K",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0F9WRZ38K",
+      "pack_style": "photo",
+      "note": "Pack slot hiRes null on Amazon; large URL used.",
+      "packs": [
+        {
+          "output": "pb_muse-a.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/612acTwDW1L._AC_.jpg",
+          "crop": "auto"
+        }
+      ]
+    },
+    "pb_sunshine": {
+      "asin": "B0DNB4R6LW",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0DNB4R6LW",
+      "pack_style": "photo",
+      "packs": [
+        {
+          "output": "pb_sunshine-a.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81PsAr-hi3L._AC_SL1500_.jpg",
+          "crop": "auto"
+        }
+      ]
+    },
+    "pb_superstar": {
+      "asin": "B0DSBH2C5Z",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0DSBH2C5Z",
+      "pack_style": "photo",
+      "packs": [
+        {
+          "output": "pb_superstar-a.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81tIMFho91L._AC_SL1500_.jpg",
+          "crop": "auto"
+        }
+      ]
+    },
+    "pb_hasunosora": {
+      "asin": "B0DNB2QRQK",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0DNB2QRQK",
+      "pack_style": "photo",
+      "packs": [
+        {
+          "output": "pb_hasunosora-a.jpg",
+          "source_url": "https://m.media-amazon.com/images/I/81Nkftx2MUL._AC_SL1500_.jpg",
+          "crop": "auto"
+        }
+      ]
+    },
+    "bp_next": {
+      "asin": "B0DNB373SD",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0DNB373SD",
+      "pack_style": "promo",
+      "note": "Amazon lists box photo only (gallery 0); no flat pack wrapper on listing.",
+      "packs": [
+        {
+          "output": "bp_next-promo.png",
+          "source_url": "https://m.media-amazon.com/images/I/51BJRdWAAJL._AC_.jpg",
+          "crop": "auto"
+        }
+      ]
+    },
+    "bp_summer": {
+      "asin": "B0FGHHSSKC",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0FGHHSSKC",
+      "pack_style": "promo",
+      "note": "Amazon lists box photo only (gallery 0); no flat pack wrapper on listing.",
+      "packs": [
+        {
+          "output": "bp_summer-promo.png",
+          "source_url": "https://m.media-amazon.com/images/I/519tuSM-TnL._AC_.jpg",
+          "crop": "auto"
+        }
+      ]
+    },
+    "pb_niji": {
+      "asin": "B0FPC1GB9Z",
+      "amazon_url": "https://www.amazon.co.jp/dp/B0FPC1GB9Z",
+      "pack_style": "promo",
+      "note": "Amazon lists box photo only (gallery 0); no flat pack wrapper on listing.",
+      "packs": [
+        {
+          "output": "pb_niji-promo.png",
+          "source_url": "https://m.media-amazon.com/images/I/51qW8Ks3PML._AC_.jpg",
+          "crop": "auto"
+        }
+      ]
+    }
+  }
+}

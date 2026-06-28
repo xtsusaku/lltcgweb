@@ -1,0 +1,1459 @@
+{
+  "initial_labels": {
+    "p1": "Liella!",
+    "p2": "μ's"
+  },
+  "config": {
+    "first_player": "p1",
+    "p1_main_slots": {
+      "0": "PL!SP-sd1-019-SD",
+      "1": "PL!SP-sd1-007-SD",
+      "2": "PL!SP-sd1-023-SD",
+      "4": "PL!SP-sd1-006-SD",
+      "5": "PL!SP-sd1-008-SD",
+      "8": "PL!SP-sd1-020-SD",
+      "9": "PL!SP-sd1-020-SD",
+      "11": "PL!SP-sd1-026-SD",
+      "15": "PL!SP-sd1-023-SD",
+      "16": "PL!SP-sd1-016-SD",
+      "17": "PL!SP-sd1-002-SD",
+      "18": "PL!SP-sd1-025-SD",
+      "20": "PL!SP-sd1-018-SD",
+      "21": "PL!SP-sd1-003-SD",
+      "22": "PL!SP-sd1-006-SD"
+    },
+    "p1_main_fill_seed": "liella-tutorial-397",
+    "p2_main_slots": {
+      "0": "PL!-sd1-013-SD",
+      "1": "PL!-sd1-020-SD",
+      "3": "PL!-sd1-010-SD",
+      "4": "PL!-sd1-019-SD"
+    },
+    "p2_main_fill_seed": "muse-tutorial"
+  },
+  "beats": [
+    {
+      "id": "intro_welcome",
+      "dialogue": "Hi! I'm **Shibuya Kanon**. Welcome to the **Love Live! Official Card Game** tutorial!",
+      "highlights": [],
+      "actions": []
+    },
+    {
+      "id": "intro_what",
+      "dialogue": "This is a **two-player** card game about **school idols**! You'll recruit **Members** onto your Stage, manage **Energy**, and perform **Lives** to outshine your opponent.",
+      "highlights": [],
+      "actions": []
+    },
+    {
+      "id": "intro_goal",
+      "dialogue": "**Win condition:** Successfully perform **3 Lives** before your opponent. When your **Live** is a success, that Live moves to the **Success Live card storage** — first to three wins the match!",
+      "highlights": [
+        {
+          "target": "my-pips",
+          "shape": "rounded",
+          "padding": 14
+        },
+        {
+          "target": "opp-pips",
+          "shape": "rounded",
+          "padding": 14
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "intro_decks",
+      "dialogue": "This game uses three types of cards. **Member** cards, **Live** cards and **Energy** cards. Each player has a **Main Deck** of **60** cards (**48 Member** cards and **12 Live** cards) and an **Energy Deck** of **12 Energy** cards.",
+      "highlights": [],
+      "actions": []
+    },
+    {
+      "id": "intro_card_member",
+      "dialogue": "**Member cards** are the idols that will perform on Stage. Pay **Energy** equal to their cost to play them from your hand. Each Member has a certain amount of colored **Hearts** (upright) that are used when performing lives. There are also **Blades** (the round penlight icons) and **Blade hearts** (The sideways hearts), but we'll focus on the upright heart for now. Shiki here has **1 purple heart**.",
+      "highlights": [
+        {
+          "target": "hand-row",
+          "shape": "rounded",
+          "padding": 8
+        },
+        {
+          "target": "card-hover-panel",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [],
+      "select_hand": "PL!SP-sd1-019-SD"
+    },
+    {
+      "id": "intro_card_live",
+      "dialogue": "**Live cards** are the songs you perform. You can play up to 3 at a time. Lives are cleared using the **Member** cards you've placed on your stage - we'll touch on this more later.",
+      "highlights": [
+        {
+          "target": "my-live-1",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "intro_card_energy",
+      "dialogue": "**Energy cards** from your **Energy deck** are placed here. You begin with **3 Energy** and gain **+1** each turn (until all **12** of your energy is in play). Energy is spent to place **Member cards** onto your **stage**.",
+      "highlights": [
+        {
+          "target": "my-energy",
+          "shape": "rounded",
+          "padding": 12
+        },
+        {
+          "target": "my-nrg-deck-pile",
+          "shape": "circle",
+          "padding": 8
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "intro_demo",
+      "dialogue": "I'll walk you through a demo — **Liella!** vs **μ's** on the playmat. You're at the bottom; your opponent is on top.",
+      "highlights": [
+        {
+          "target": "playmat-column",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "intro_deck_piles",
+      "dialogue": "The top pile is your **Main Deck**, where you draw cards from. Below is the **Energy deck**.",
+      "highlights": [
+        {
+          "target": "my-deck-pile",
+          "shape": "rounded",
+          "padding": 10
+        },
+        {
+          "target": "my-nrg-deck-pile",
+          "shape": "circle",
+          "padding": 8
+        },
+        {
+          "target": "my-energy",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "intro_stage",
+      "dialogue": "The **Stage** (Left / Center / Right) is where Members sit. Their **Heart** colors and **Blade** values fuel Lives during Performance.",
+      "highlights": [
+        {
+          "target": "my-stage-left",
+          "shape": "rounded",
+          "padding": 12
+        },
+        {
+          "target": "my-stage-center",
+          "shape": "rounded",
+          "padding": 14
+        },
+        {
+          "target": "my-stage-right",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "intro_live",
+      "dialogue": "**Live Storage** holds up to 3 face-down cards during the Live Phase. You'll be able to see your own cards in this web version, but your opponent's cards will be hidden.",
+      "highlights": [
+        {
+          "target": "my-live-0",
+          "shape": "rounded",
+          "padding": 10
+        },
+        {
+          "target": "my-live-1",
+          "shape": "rounded",
+          "padding": 12
+        },
+        {
+          "target": "my-live-2",
+          "shape": "rounded",
+          "padding": 10
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "intro_success",
+      "dialogue": "Completing a **live** moves that live card to the **success storage** pile! Keep track of how close you are to winning here!",
+      "highlights": [
+        {
+          "target": "my-pips",
+          "shape": "circle",
+          "padding": 16
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "intro_wr",
+      "dialogue": "The **Waiting Room** is the discard pile.",
+      "highlights": [
+        {
+          "target": "my-wait-pile",
+          "shape": "rounded",
+          "padding": 10
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "intro_hands",
+      "dialogue": "Normally your opponent's hand will be hidden, but it's visible for this tutorial. Your hand consists of **Member** and **Live** cards from your deck.",
+      "highlights": [
+        {
+          "target": "hand-row",
+          "shape": "rounded",
+          "padding": 8
+        },
+        {
+          "target": "opp-hand-zone",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "setup_coin",
+      "dialogue": "Before play begins, a **coin flip** picks a winner — they **choose** who goes first. Watch for this at the start of every match!",
+      "highlights": [
+        {
+          "target": "sb-info",
+          "shape": "rounded",
+          "padding": 6
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "setup_coin_p1",
+      "dialogue": "...**Liella** goes first!",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "ack_coin_flip"
+        }
+      ]
+    },
+    {
+      "id": "setup_coin_p2",
+      "dialogue": "Now we can see our **starting hand!**",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "ack_coin_flip"
+        }
+      ]
+    },
+    {
+      "id": "setup_mulligan",
+      "dialogue": "You start with **6** cards. If you aren't happy with the cards you pulled, this screen gives you an opportunity to swap out as many cards as you want and draw replacements (We refer to this as a **mulligan**).",
+      "highlights": [
+        {
+          "target": "mulligan-overlay",
+          "shape": "rounded",
+          "padding": 10
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "setup_mull_p1",
+      "dialogue": "Game flow: **Main Phase** -> **Live Phase** -> **Performance Phase** -> Repeat.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "mulligan",
+          "card_ids": []
+        }
+      ]
+    },
+    {
+      "id": "setup_mull_p2",
+      "dialogue": "**Main Phase!**. A new card was drawn from your deck.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "mulligan",
+          "card_ids": []
+        }
+      ],
+      "bubblePlacement": "playmat-left"
+    },
+    {
+      "id": "t1_structure",
+      "dialogue": "Each **Main Phase**, the first player acts, then the second — that's where you play Members... and use skills. You'll press **End Main Phase** here when you're done performing actions.",
+      "highlights": [
+        {
+          "target": "phase-action-bar",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "t1_energy_refresh",
+      "dialogue": "At the start of a new turn, you'll gain **+1 energy**. You'll continue to gain **1** energy with each new turn until all **12** energy cards are in play.",
+      "highlights": [
+        {
+          "target": "my-energy",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "t1_main_p1",
+      "dialogue": "Liella's **Main Phase** — let's play a Member card first!",
+      "highlights": [],
+      "actions": [],
+      "select_hand": "PL!SP-sd1-019-SD",
+      "bubblePlacement": "playmat-left"
+    },
+    {
+      "id": "t1_play_shiki_plain",
+      "dialogue": "We spend **2 Energy** to play this card and send it to a free spot on our Stage! (Spent Energy is flipped sideways)",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "play_member",
+          "card_no": "PL!SP-sd1-019-SD",
+          "slot": "center"
+        }
+      ],
+      "bubblePlacement": "playmat-left"
+    },
+    {
+      "id": "t1_no_skill",
+      "dialogue": "We now have a single member in the center of our stage. If you don't have the required energy to place more cards, you can end your main phase.",
+      "highlights": [
+        {
+          "target": "my-stage-center",
+          "shape": "rounded",
+          "padding": 14
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "t1_end_main_p1",
+      "dialogue": "Liella ends their Main Phase — it's now the opponent's turn to set their cards!",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "end_main"
+        }
+      ]
+    },
+    {
+      "id": "t1_main_p2",
+      "dialogue": "μ's plays **Rin Hoshizora** to their Stage - with **1 pink heart**.",
+      "highlights": [
+        {
+          "target": "opp-stage-center",
+          "shape": "rounded",
+          "padding": 14
+        },
+        {
+          "target": "stage-board-panel",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "play_member",
+          "card_no": "PL!-sd1-005-SD",
+          "slot": "center"
+        }
+      ]
+    },
+    {
+      "id": "t1_hearts",
+      "dialogue": "You can see the total amount of **Hearts** and **Blades** for the cards active on your and your opponent's **Stage** up here!",
+      "highlights": [
+        {
+          "target": "stage-board-panel",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "t1_end_main_p2",
+      "dialogue": "After both players complete their Main Phase, it's time for the **Live Phase**!",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "end_main"
+        }
+      ]
+    },
+    {
+      "id": "t1_live_intro",
+      "dialogue": "Place 0–3 cards (Live or Member) in **Live card storage**. Draw 1 new card from your deck for each card you placed. Member cards placed in Live storage will be discarded in the next phase — you can replace unwanted cards this way!",
+      "highlights": [
+        {
+          "target": "my-live-0",
+          "shape": "rounded",
+          "padding": 10
+        },
+        {
+          "target": "my-live-1",
+          "shape": "rounded",
+          "padding": 10
+        },
+        {
+          "target": "my-live-2",
+          "shape": "rounded",
+          "padding": 10
+        },
+        {
+          "target": "opp-live-0",
+          "shape": "rounded",
+          "padding": 10
+        },
+        {
+          "target": "opp-live-1",
+          "shape": "rounded",
+          "padding": 10
+        },
+        {
+          "target": "opp-live-2",
+          "shape": "rounded",
+          "padding": 10
+        }
+      ],
+      "actions": [],
+      "bubblePlacement": "playmat-left"
+    },
+    {
+      "id": "t1_live_p1",
+      "dialogue": "When you set a **Live** card in the Live phase, it must be attempted later in the same turn, so choose wisely! Liella sets **WE WILL!!** — it needs 1 **red** heart, 1 **purple** heart, and 1 additional heart of **any color** (indicated by a grey heart) to be cleared successfully.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "set_live_cards",
+          "card_nos": [
+            "PL!SP-sd1-023-SD"
+          ]
+        }
+      ],
+      "bubblePlacement": "playmat-left"
+    },
+    {
+      "id": "t1_live_p1_lock",
+      "dialogue": "Liella Ends their **Live Phase**, locking in their selection. Unlike the Main Phase, you and your opponent's Live Phase occurs at the same time. If your opponent's Live Phase is not over yet, you'll wait for them to finish before moving on.",
+      "highlights": [
+        {
+          "target": "my-live-0",
+          "shape": "rounded",
+          "padding": 12
+        },
+        {
+          "target": "phase-action-bar",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "end_live_set"
+        }
+      ]
+    },
+    {
+      "id": "t1_live_p2",
+      "dialogue": "μ's sets a **Live** face-down in storage - You'll see what it is in the **Performance Phase**.",
+      "highlights": [
+        {
+          "target": "opp-live-0",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "set_live_cards",
+          "card_nos": [
+            "PL!-sd1-020-SD"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_live_p2_lock",
+      "dialogue": "μ's locks in.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "end_live_set",
+          "yell_prime": {
+            "p1": [
+              "PL!SP-sd1-020-SD",
+              "PL!SP-sd1-020-SD"
+            ],
+            "p2": [
+              "PL!-sd1-018-SD"
+            ]
+          },
+          "perf_snapshots": [
+            {
+              "id": "t1_perf_intro",
+              "dialogue": "When both players have ended their Live Phase — the **Performance Phase** begins! If either player has set a live card, the **LIVE START** screen will appear! This is where the success of your live performances will be determined.",
+              "highlights": [
+                {
+                  "target": "perf-spectacle",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "intro",
+              "bubblePlacement": "playmat-left"
+            },
+            {
+              "id": "t1_hearts_check",
+              "dialogue": "Here we can see if the cards on your stage meet the heart requirements for this live. **Shiki** only provides **1 purple heart**, meaning we are still missing **1 red heart** and **1 any heart**.",
+              "highlights": [
+                {
+                  "target": "perf-mine-hearts",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-mine-lives",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "hearts_check",
+              "bubblePlacement": "right"
+            },
+            {
+              "id": "t1_hearts_grey",
+              "dialogue": "**Grey / any** hearts count as **any color** — once red and purple are covered, any leftover heart can fill the `any` slot on WE WILL!!.",
+              "highlights": [
+                {
+                  "target": "perf-mine-lives",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-mine-hearts",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "hearts_grey"
+            },
+            {
+              "id": "t1_yell",
+              "dialogue": "It may look like we've failed the live, but it isn't over yet... This is where the **Yell** mechanic comes in. Using your cards **Blade** value, Liella will \"yell\", drawing additional cards from your deck depending on how many total **blades** are active. Shiki provides 2 blades, so 2 cards will be drawn from your deck!",
+              "highlights": [
+                {
+                  "target": "perf-mine-blade",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "my-deck-pile",
+                  "shape": "rounded",
+                  "padding": 10
+                }
+              ],
+              "spectacle": "hearts_grey",
+              "bubblePlacement": "perf-yell-names"
+            },
+            {
+              "id": "t1_yell_hearts",
+              "dialogue": "Two Natsumi cards have been drawn! Cards drawn with yell contribute the sideways heart in the top-left (**blade hearts**) to your total. The two **red hearts** count for **1 red** and **1 any**. **We can now clear the live!**",
+              "highlights": [
+                {
+                  "target": "perf-mine-yell",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-mine-hearts",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "yell_mine",
+              "bubblePlacement": "perf-yell-names"
+            },
+            {
+              "id": "t1_success",
+              "dialogue": "Think of **Yell** as cries of support from the crowd. Yells are very important for meeting difficult heart requirements that won't be easily met with your stage cards alone, so keep your stages **blade** value in mind — The **WE WILL!!** live was a **success**!",
+              "highlights": [
+                {
+                  "target": "perf-mine-outcomes",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "outcomes_mine",
+              "bubblePlacement": "playmat-left"
+            },
+            {
+              "id": "t1_yell_opp",
+              "dialogue": "μ's **Yell** runs next — they flip **1** card for **1 Blade** on stage. **Nico** had no blade heart and added nothing — still not enough to clear **Kitto Seishun ga Kikoeru**.",
+              "highlights": [
+                {
+                  "target": "perf-opp-yell",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-opp-hearts",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "yell_opp",
+              "bubblePlacement": "perf-yell-names"
+            },
+            {
+              "id": "t1_fail",
+              "dialogue": "μ's couldn't meet **Kitto Seishun ga Kikoeru**'s Heart cost — that Live went to the **Waiting Room**.",
+              "highlights": [
+                {
+                  "target": "perf-opp-outcomes",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "outcomes"
+            },
+            {
+              "id": "t1_judge",
+              "dialogue": "Liella wins the score and earns a **Success Live**!",
+              "highlights": [
+                {
+                  "target": "perf-judge-panel",
+                  "shape": "rounded",
+                  "padding": 10
+                }
+              ],
+              "spectacle": "judge",
+              "bubblePlacement": "playmat-left"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t1_end",
+      "dialogue": "Turn 1 done — you played a Member, set a Live, and learned **Heart matching** during Performance.",
+      "highlights": [
+        {
+          "target": "my-pips",
+          "shape": "circle",
+          "padding": 14
+        },
+        {
+          "target": "sb-info",
+          "shape": "rounded",
+          "padding": 6
+        }
+      ],
+      "actions": [],
+      "bubblePlacement": "right",
+      "spotlightDim": "none"
+    },
+    {
+      "id": "t2_start",
+      "dialogue": "**Turn 2** — A card is drawn to your hand, and you gain +1 energy.",
+      "highlights": [],
+      "actions": [],
+      "bubblePlacement": "right"
+    },
+    {
+      "id": "t2_skill_intro",
+      "dialogue": "The cards we've played so far only give **hearts** and **blades**, but some cards also have **skills** that affect the game in various ways. Take a look at this card, it features skill text.",
+      "highlights": [
+        {
+          "target": "card-hover-panel",
+          "shape": "rounded",
+          "padding": 8
+        },
+        {
+          "target": "hand-row",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [],
+      "select_hand": "PL!SP-sd1-008-SD"
+    },
+    {
+      "id": "t2_skill_preview",
+      "dialogue": "This is an **[On Enter]** skill, meaning when this card enters the stage from your hand, something happens.",
+      "highlights": [],
+      "actions": [],
+      "select_hand": "PL!SP-sd1-008-SD"
+    },
+    {
+      "id": "t2_play_shiki_skill",
+      "dialogue": "Liella plays Shiki to the right slot. Watch — the game will ask if you want her **On Enter** effect.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "play_member",
+          "card_no": "PL!SP-sd1-008-SD",
+          "slot": "right",
+          "drain_prompts": "none"
+        }
+      ],
+      "bubblePlacement": "right",
+      "spotlightDim": "none"
+    },
+    {
+      "id": "t2_on_enter_offer",
+      "dialogue": "If a skill says \"you may\" that means activating it is optional, and you can choose to skip the effect. Liella agrees to **activate** the skill. After paying **1 Energy**, Liella can choose a new card from the top of their deck to add to their hand!",
+      "highlights": [],
+      "actions": [],
+      "bubblePlacement": "left",
+      "bubbleAnchor": "overlay-prompt"
+    },
+    {
+      "id": "t2_on_enter_confirm",
+      "dialogue": "Now they pick which card to keep. Liella will choose **1 card** to keep, and send the others back to the **Waiting Room**.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "resolve_prompts",
+          "mode": "one",
+          "on_enter": "yes"
+        }
+      ],
+      "bubbleAnchor": "overlay-pick"
+    },
+    {
+      "id": "t2_on_enter_result",
+      "dialogue": "Shiki's skill resolves — one card joins Liella's hand, two go to the **Waiting Room**. That's an **[On Enter]** skill in action.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "resolve_prompts",
+          "mode": "all"
+        }
+      ]
+    },
+    {
+      "id": "t2_end_p1",
+      "dialogue": "Liella ends Main.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "end_main"
+        }
+      ]
+    },
+    {
+      "id": "t2_main_p2",
+      "dialogue": "μ's plays an affordable Member to add Hearts.",
+      "highlights": [
+        {
+          "target": "opp-stage-left",
+          "shape": "rounded",
+          "padding": 14
+        }
+      ],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "play_member",
+          "card_no": "PL!-sd1-013-SD",
+          "slot": "left"
+        }
+      ]
+    },
+    {
+      "id": "t2_end_p2",
+      "dialogue": "μ's ends Main.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "end_main"
+        }
+      ]
+    },
+    {
+      "id": "t2_live_skill_intro",
+      "dialogue": "Live cards can have skills too! Some have **[Live Start]** — that triggers when that Live's performance begins.",
+      "highlights": [
+        {
+          "target": "opp-hand-zone",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": []
+    },
+    {
+      "id": "t2_live_p1",
+      "dialogue": "Liella sets a Live card.",
+      "highlights": [
+        {
+          "target": "my-live-0",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "deck_to_hand",
+          "card_no": "PL!SP-sd1-026-SD"
+        },
+        {
+          "player": "p1",
+          "type": "set_live_cards",
+          "card_nos": [
+            "PL!SP-sd1-026-SD"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_live_p1_lock",
+      "dialogue": "Locked.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "end_live_set"
+        }
+      ]
+    },
+    {
+      "id": "t2_live_p2",
+      "dialogue": "μ's sets **START:DASH!!** face-down.",
+      "highlights": [
+        {
+          "target": "opp-live-0",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "set_live_cards",
+          "card_nos": [
+            "PL!-sd1-019-SD"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t2_live_p2_lock",
+      "dialogue": "μ's locks in.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "end_live_set",
+          "live_start": "yes",
+          "surveil_keep": 1,
+          "yell_prime": {
+            "p1": [
+              "PL!SP-sd1-016-SD",
+              "PL!SP-sd1-002-SD",
+              "PL!SP-sd1-007-SD"
+            ],
+            "p2": [
+              "PL!-sd1-021-SD",
+              "PL!-sd1-014-SD"
+            ]
+          },
+          "perf_snapshots": [
+            {
+              "id": "t2_perf_intro",
+              "dialogue": "Both lock in — another **Performance**! Lives revealed again.",
+              "highlights": [
+                {
+                  "target": "perf-spectacle",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "intro",
+              "bubblePlacement": "playmat-left"
+            },
+            {
+              "id": "t2_live_start_offer",
+              "dialogue": "**[Live Start]** — START:DASH!! lets μ's **look at the top 3** deck cards and reorder them before Performance continues. This prompt is the Live Start effect in action.",
+              "highlights": [
+                {
+                  "target": "overlay-prompt",
+                  "shape": "rounded",
+                  "padding": 10
+                }
+              ],
+              "spectacle": "live_start"
+            },
+            {
+              "id": "t2_yell_mine",
+              "dialogue": "**Your Yell** runs first — you flip **3** cards for **3 Blade** on stage. **Ren**, **Keke**, and **Mei** turn up; none of them add **blade hearts** — **Watashi no Symphony ~Kanon Shibuya Ver.~** needs **4 red**, **4 purple**, and **3 any**, so that Live **fails**.",
+              "highlights": [
+                {
+                  "target": "perf-mine-yell",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-mine-hearts",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "yell_mine",
+              "bubblePlacement": "perf-yell-names"
+            },
+            {
+              "id": "t2_yell_opp",
+              "dialogue": "μ's **Yell** runs next — their first card is **Korekara no Someday** with an **ALL blade heart** (counts as any color, filling what they're missing to clear **START:DASH!!** — here **yellow**). The second card, **Rin**, had no blade heart and added nothing.",
+              "highlights": [
+                {
+                  "target": "perf-opp-yell",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-opp-hearts",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "yell_opp",
+              "bubblePlacement": "perf-yell-names"
+            },
+            {
+              "id": "t2_outcomes",
+              "dialogue": "Both Lives resolve — successes stay in storage, failures go to the **Waiting Room**.",
+              "highlights": [
+                {
+                  "target": "perf-mine-outcomes",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-opp-outcomes",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "outcomes"
+            },
+            {
+              "id": "t2_judge",
+              "dialogue": "Only **μ's** cleared **START:DASH!!** — your Live failed, so **Watashi no Symphony ~Kanon Shibuya Ver.~** will be sent to the **Waiting Room**. μ's earns the **Success Live**!",
+              "highlights": [
+                {
+                  "target": "perf-judge-panel",
+                  "shape": "rounded",
+                  "padding": 10
+                }
+              ],
+              "spectacle": "judge",
+              "bubblePlacement": "playmat-left"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t3_start",
+      "dialogue": "**Turn 3** — μ's goes first this turn because they cleared the only Success Live last Performance.",
+      "highlights": [
+        {
+          "target": "opp-energy",
+          "shape": "rounded",
+          "padding": 12
+        },
+        {
+          "target": "opp-hand-zone",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [],
+      "bubblePlacement": "right",
+      "spotlightDim": "light"
+    },
+    {
+      "id": "t3_main_p2",
+      "dialogue": "μ's plays an affordable Member to add Hearts.",
+      "highlights": [
+        {
+          "target": "opp-stage-right",
+          "shape": "rounded",
+          "padding": 14
+        }
+      ],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "play_member",
+          "card_no": "PL!-sd1-010-SD",
+          "slot": "right"
+        }
+      ],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "t3_p2_end",
+      "dialogue": "μ's ends Main.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "end_main"
+        }
+      ],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "t3_turn",
+      "dialogue": "**Turn 3** — your Main Phase. You drew a card and gained **+1 Energy** (**6** in storage).",
+      "highlights": [
+        {
+          "target": "my-energy",
+          "shape": "rounded",
+          "padding": 12
+        },
+        {
+          "target": "hand-row",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "t3_baton_intro",
+      "dialogue": "I'll now explain another mechanic called **Baton Pass**. By playing a card over another card already on your Stage, you can **swap** the old card with the new one. When Baton Passing, you're treated as having paid the replaced Member's cost by moving them to the **Waiting Room** — you'll only pay the **difference** in Energy.",
+      "highlights": [
+        {
+          "target": "my-stage-center",
+          "shape": "rounded",
+          "padding": 14
+        },
+        {
+          "target": "my-wait-pile",
+          "shape": "rounded",
+          "padding": 10
+        }
+      ],
+      "actions": [],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "t3_baton_example",
+      "dialogue": "**Mei Yoneme** costs **7** — normally **7 Energy** from hand, but Baton Pass over **Shiki** (cost **4**) on **Right** costs only **3** (7−4). **Shiki** stays on **Center** (**2 Blade**), **Mei** on **Right** adds **1 red** and **2 purple** — you'll set **Mirai wa Kaze no You ni** from **hand** in the **Live Phase**, and Stage is one Heart short of clearing it until **Yell**.",
+      "highlights": [
+        {
+          "target": "card-hover-panel",
+          "shape": "rounded",
+          "padding": 8
+        },
+        {
+          "target": "hand-row",
+          "shape": "rounded",
+          "padding": 8
+        },
+        {
+          "target": "my-stage-right",
+          "shape": "circle",
+          "padding": 16
+        },
+        {
+          "target": "my-stage-center",
+          "shape": "rounded",
+          "padding": 14
+        },
+        {
+          "target": "my-energy",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": [],
+      "select_hand": "PL!SP-sd1-007-SD",
+      "spotlightDim": "light"
+    },
+    {
+      "id": "t3_baton_play",
+      "dialogue": "Liella **Baton Passes** Mei onto **Right**!",
+      "highlights": [
+        {
+          "target": "my-stage-right",
+          "shape": "circle",
+          "padding": 16
+        }
+      ],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "play_member",
+          "card_no": "PL!SP-sd1-007-SD",
+          "slot": "right",
+          "baton_id": "slot:right",
+          "on_enter": "no"
+        }
+      ],
+      "preview_card": "PL!SP-sd1-007-SD"
+    },
+    {
+      "id": "skill_glossary_intro",
+      "dialogue": "You've now seen several skill timings live. Here are common **keywords** you'll see on cards:",
+      "highlights": [
+        {
+          "target": "card-hover-panel",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [],
+      "preview_card": "PL!SP-sd1-008-SD",
+      "spotlightDim": "light"
+    },
+    {
+      "id": "skill_on_enter",
+      "dialogue": "**[On Enter]** — fires once when the Member is played from hand onto your Stage (like Shiki just did). Many say *you may* — they're optional.",
+      "highlights": [],
+      "actions": [],
+      "preview_card": "PL!SP-sd1-008-SD",
+      "spotlightDim": "light"
+    },
+    {
+      "id": "skill_live_start",
+      "dialogue": "**[Live Start]** — fires when a Live performance with that card begins (like START:DASH). Also often optional.",
+      "highlights": [],
+      "actions": [],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "skill_activated",
+      "dialogue": "**[Activated]** — during your Main Phase, use the buttons under **Activatable skills**. Some Members like **Kinako** can leave Stage to add a **Live** from your **Waiting Room** to your hand.",
+      "highlights": [
+        {
+          "target": "card-hover-panel",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [],
+      "preview_card": "PL!SP-sd1-006-SD",
+      "spotlightDim": "light"
+    },
+    {
+      "id": "skill_wr_note",
+      "dialogue": "Some **[Activated]** skills only work while the Member is **in the Waiting Room** — the list shows **WR ·** before their name. Stage skills show the slot instead.",
+      "highlights": [
+        {
+          "target": "sb-activatable-wrap",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "skill_always",
+      "dialogue": "**[Always]** / **[Automatic]** — stays active while conditions are met; no button to press. **Automatic** triggers by itself when something happens.",
+      "highlights": [],
+      "actions": [],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "skill_once",
+      "dialogue": "**[Once per turn]** — even if you could pay the cost again, you only get one use each turn.",
+      "highlights": [],
+      "actions": [],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "skill_center",
+      "dialogue": "**[Center]** — only works if that Member is in the **center** Stage slot.",
+      "highlights": [],
+      "actions": [],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "skill_on_leave",
+      "dialogue": "**[On Leave]** — fires when the Member leaves Stage (Baton Pass, removal effects, etc.).",
+      "highlights": [],
+      "actions": [],
+      "spotlightDim": "light"
+    },
+    {
+      "id": "t3_stage_hearts",
+      "dialogue": "With **Left** open, set **Mirai wa Kaze no You ni** from **hand** in the **Live Phase**. **Shiki** on **Center** and **Mei** on **Right** supply some Hearts — **Mirai wa Kaze no You ni** still needs some more Hearts, which will hopefully be provided by **Yell**. **Mirai wa Kaze no You ni**'s skill allows **Yell** hearts to count as **any** color, so that improves our chances.",
+      "highlights": [
+        {
+          "target": "card-hover-panel",
+          "shape": "rounded",
+          "padding": 8
+        },
+        {
+          "target": "my-stage-center",
+          "shape": "rounded",
+          "padding": 14
+        },
+        {
+          "target": "my-stage-right",
+          "shape": "rounded",
+          "padding": 14
+        },
+        {
+          "target": "hand-row",
+          "shape": "rounded",
+          "padding": 8
+        }
+      ],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "deck_to_hand",
+          "card_no": "PL!SP-sd1-025-SD"
+        }
+      ],
+      "select_hand": "PL!SP-sd1-025-SD",
+      "spotlightDim": "light"
+    },
+    {
+      "id": "t3_end_p1",
+      "dialogue": "Liella ends Main.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "end_main"
+        }
+      ]
+    },
+    {
+      "id": "t3_live1",
+      "dialogue": "Liella sets **Mirai wa Kaze no You ni** from **hand**.",
+      "highlights": [
+        {
+          "target": "hand-row",
+          "shape": "rounded",
+          "padding": 8
+        },
+        {
+          "target": "my-live-0",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "set_live_cards",
+          "card_nos": [
+            "PL!SP-sd1-025-SD"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t3_live1_lock",
+      "dialogue": "Liella locks in.",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p1",
+          "type": "end_live_set"
+        }
+      ]
+    },
+    {
+      "id": "t3_live2",
+      "dialogue": "μ's sets **START:DASH!!** face-down.",
+      "highlights": [
+        {
+          "target": "opp-live-0",
+          "shape": "rounded",
+          "padding": 12
+        }
+      ],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "set_live_cards",
+          "card_nos": [
+            "PL!-sd1-019-SD"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "t3_live2_lock",
+      "dialogue": "μ's locks in — final Performance!",
+      "highlights": [],
+      "actions": [
+        {
+          "player": "p2",
+          "type": "end_live_set",
+          "live_start": "skip",
+          "yell_prime": {
+            "p2": [
+              "PL!-sd1-010-SD",
+              "PL!-sd1-001-SD",
+              "PL!-sd1-012-SD"
+            ],
+            "p1": [
+              "PL!SP-sd1-018-SD",
+              "PL!SP-sd1-003-SD",
+              "PL!SP-sd1-006-SD"
+            ]
+          },
+          "perf_snapshots": [
+            {
+              "id": "t3_perf_intro",
+              "dialogue": "Both lock in — final **Performance**!",
+              "highlights": [
+                {
+                  "target": "perf-spectacle",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "intro",
+              "bubblePlacement": "playmat-left"
+            },
+            {
+              "id": "t3_yell_mine",
+              "dialogue": "μ's **Yell** runs first — they flip deck cards for **Blade** hearts. **START:DASH!!** already matches their Stage (**pink**, **yellow**, **purple** from **Rin**, **Honoka**, and **Umi**).",
+              "highlights": [
+                {
+                  "target": "perf-opp-yell",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-opp-hearts",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "yell_mine",
+              "bubblePlacement": "perf-yell-names"
+            },
+            {
+              "id": "t3_yell_opp",
+              "dialogue": "Your **Yell** next — **Shiki** on **Center** (**2 Blade**) and **Mei** on **Right** (**1 Blade**) flip **3** cards. **Mirai wa Kaze no You ni** treats those Yell hearts as **any** color — together with Stage they **clear** the Live!",
+              "highlights": [
+                {
+                  "target": "perf-mine-yell",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-mine-hearts",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "yell_opp",
+              "bubblePlacement": "perf-yell-names"
+            },
+            {
+              "id": "t3_outcomes",
+              "dialogue": "Both Lives **succeed**! When this happens, you'll need to decide the winner through a tie-breaker. It's time for the **Live Judge!**",
+              "highlights": [
+                {
+                  "target": "perf-mine-outcomes",
+                  "shape": "rounded",
+                  "padding": 8
+                },
+                {
+                  "target": "perf-opp-outcomes",
+                  "shape": "rounded",
+                  "padding": 8
+                }
+              ],
+              "spectacle": "outcomes"
+            },
+            {
+              "id": "t3_judge",
+              "dialogue": "**Live Judge** — your boosted score beats μ's! That's another **Success Live** toward **three** to win the match.",
+              "highlights": [
+                {
+                  "target": "perf-judge-panel",
+                  "shape": "rounded",
+                  "padding": 10
+                },
+                {
+                  "target": "my-pips",
+                  "shape": "circle",
+                  "padding": 14
+                }
+              ],
+              "spectacle": "judge",
+              "bubblePlacement": "playmat-left"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "outro",
+      "dialogue": "Core loop: **Main → Live Set → Performance → Judge**. Skills add spice on top. Try **Practice vs CPU** next!",
+      "highlights": [],
+      "actions": []
+    },
+    {
+      "id": "outro_link",
+      "dialogue": "Full rules: llofficial-cardgame.com/rule/ — good luck!",
+      "highlights": [],
+      "actions": []
+    }
+  ]
+}
