@@ -26,8 +26,6 @@ Launching the website with the `?debug` parameter ([loveliveradio.ca/tcg/?debug]
 
 # Repository guide
 
-Browser implementation of the **Love Live! Official Card Game** (Loveca), deployed at [loveliveradio.ca/tcg](https://loveliveradio.ca/tcg).
-
 This section documents **what is in git** — the PHP/JS game and card data. Runtime state, art, and local dev tooling are excluded (see [Not in git](#not-in-git-by-design)).
 
 ---
@@ -167,12 +165,10 @@ Guest lobby, CPU, tutorial (`?tutorial`), and `?debug` work without accounts. Co
 
 ## Deploy note (loveliveradio.ca)
 
-Production deploy is handled from the **Chiichan** repo (`scripts/deploy-loveliveradio-ca.sh`). List **remote** paths with the `tcg/` prefix (e.g. `LLR_SITE_FILES="tcg/index.html tcg/api.php"`); files are read from this **lltcgweb** checkout (`LLR_TCG_ROOT`, default `../lltcgweb` next to Chiichan). Ensure `data/`, `games/`, `cardimg/`, and `experiment_decks/` are writable on the host; art dirs must already be populated on the server.
+Production deploy is handled from the **Chiichan** repo (`scripts/deploy-loveliveradio-ca.sh`). List **remote** paths with the `tcg/` prefix (e.g. `LLR_SITE_FILES="tcg/index.html tcg/api.php"`); files are read from this **lltcgweb** checkout (`LLR_TCG_ROOT`, default `../lltcgweb` next to Chiichan). Set **`LLR_LLTCGWEB_COMMIT_SUMMARY`** to a brief description of the change — the deploy script commits committable files here and **pushes to GitHub** after a successful Hostinger upload (`LLR_SKIP_LLTCGWEB_PUSH=1` to skip). Ensure `data/`, `games/`, `cardimg/`, and `experiment_decks/` are writable on the host; art dirs must already be populated on the server.
 
 ---
 
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
-**Game art and audio** are not included in git — they are Love Live / official TCG material you must supply on your own host. Only source code and card *data* (`cards.json`) are published here.
