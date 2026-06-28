@@ -165,7 +165,7 @@ Guest lobby, CPU, tutorial (`?tutorial`), and `?debug` work without accounts. Co
 
 ## Deploy note (loveliveradio.ca)
 
-Production deploy is handled from the **Chiichan** repo (`scripts/deploy-loveliveradio-ca.sh`). List **remote** paths with the `tcg/` prefix (e.g. `LLR_SITE_FILES="tcg/index.html tcg/api.php"`); files are read from this **lltcgweb** checkout (`LLR_TCG_ROOT`, default `../lltcgweb` next to Chiichan). Set **`LLR_LLTCGWEB_COMMIT_SUMMARY`** to a brief description of the change — the deploy script commits committable files here and **pushes to GitHub** after a successful Hostinger upload (`LLR_SKIP_LLTCGWEB_PUSH=1` to skip). Ensure `data/`, `games/`, `cardimg/`, and `experiment_decks/` are writable on the host; art dirs must already be populated on the server.
+Production deploy is handled from the **Chiichan** repo (`scripts/deploy-loveliveradio-ca.sh`). List **remote** paths with the `tcg/` prefix (e.g. `LLR_SITE_FILES="tcg/index.html tcg/api.php"`); files are read from this **lltcgweb** checkout (`LLR_TCG_ROOT`, default `../lltcgweb` next to Chiichan). Set **`LLR_LLTCGWEB_COMMIT_SUMMARY`** to a brief description of the change — the deploy script commits committable files here and **pushes to GitHub** after a successful Hostinger upload (`LLR_SKIP_LLTCGWEB_PUSH=1` to skip). **Docs-only** changes (e.g. `README.md`, `LICENSE`) are not deployed to the site but should still be pushed via `LLR_LLTCGWEB_REPO_FILES='README.md'` and the same push script. Ensure `data/`, `games/`, `cardimg/`, and `experiment_decks/` are writable on the host; art dirs must already be populated on the server.
 
 ---
 
