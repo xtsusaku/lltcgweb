@@ -17748,7 +17748,8 @@ async function applyStateUpdate(s) {
         if (shouldAnimateEmptyLiveStorageWr(animPrev, s)) {
           G.animating = true;
           try {
-            const wrAnimated = await playLiveStorageWrDiscards(animPrev, s, G.playerId);
+            const wrFrom = buildEmptyLiveWrPlayback(animPrev, s) || animPrev;
+            const wrAnimated = await playLiveStorageWrDiscards(wrFrom, s, G.playerId);
             if (wrAnimated) animPrev = G.gameState;
             moves = diffCardMoves(animPrev, s);
             if (G._deferredHandDrawIids?.size) {
@@ -22434,6 +22435,7 @@ function liveStorageHadFaceDownLive(prev, myId = G.playerId) {
 
 function shouldRunLiveRevealSequence(prev, next) {
   if (!prev || !next || G.isTutorial) return false;
+  if (isEmptyLiveSkipTransition(prev, next)) return false;
   const flipKeys = collectLiveRevealFlips(prev, next);
   const oppFaceDown = liveStorageHadFaceDownOppBluff(prev);
   const prevHasLiveCards = liveRoundHasLiveCardsForRound(prev);
@@ -23145,6 +23147,11 @@ function isEmptyLiveSkipTransition(prev, next) {
   if (slice.some(e => e.msg === 'No Lives played this turn.')) return true;
   if (logTransitionHasLivePerformance(prev, next) || newLogHasLivePerformance(prev, next)) return false;
   if (logSliceHasLivePipelineSignals(slice)) return false;
+  if (slice.some(e => (e.msg || '').includes('Remaining Live storage sent to Waiting Room.')
+      && (e.anim || []).some(a => a.from === 'live' && a.to === 'waiting_room'))
+      && !liveRoundHasLiveCards(prev) && !liveRoundHasLiveCards(next)) {
+    return true;
+  }
   if (!isMemberOnlyLiveStorageRound(prev, next)) return false;
   if (isLeavingLiveSetPhase(prev, next) || leavingEmptyLivePipeline(prev, next)) return true;
   // Batched poll: client missed live_set exit but zone diff shows bluff discards.
@@ -23152,11 +23159,44 @@ function isEmptyLiveSkipTransition(prev, next) {
   return false;
 }
 
+/** Playback board for member-only empty LIVE — prev may already have cleared live_zone. */
+function buildEmptyLiveWrPlayback(prev, next) {
+  if (prev && liveStorageHasCards(prev)) return deepCloneState(prev);
+  const deferred = G._deferPerfSpectaclePrev;
+  if (deferred && liveStorageHasCards(deferred)) return deepCloneState(deferred);
+  if (!next?.players) return prev ? deepCloneState(prev) : null;
+  const from = prev?.log?.length || 0;
+  const anims = (next.log || []).slice(from).flatMap(e => e.anim || [])
+    .filter(a => a.from === 'live' && a.to === 'waiting_room' && a.iid && a.pid);
+  if (!anims.length) return prev ? deepCloneState(prev) : null;
+  const synth = deepCloneState(next);
+  if (prev) {
+    synth.phase = prev.phase;
+    synth.turn = prev.turn;
+    synth.active_player = prev.active_player;
+    synth.log = (prev.log || []).slice();
+  } else {
+    synth.phase = 'live_set';
+  }
+  for (const spec of anims) {
+    const pid = spec.pid;
+    const card = findCardInState(next, spec.iid, pid);
+    if (!card || isLiveTypeCard(card)) continue;
+    const p = synth.players[pid];
+    if (!p) continue;
+    p.waiting_room = (p.waiting_room || []).filter(c => c.instance_id !== spec.iid);
+    const live = (p.live_zone || []).filter(c => c.instance_id !== spec.iid);
+    live.push({ ...card, revealed: true });
+    p.live_zone = live;
+  }
+  return liveStorageHasCards(synth) ? synth : (prev ? deepCloneState(prev) : null);
+}
+
 function shouldAnimateEmptyLiveStorageWr(prev, next) {
   if (!isEmptyLiveSkipTransition(prev, next)) return false;
-  if (!liveStorageHasCards(prev)) return false;
   if (collectLiveBluffDiscards(prev, next).length > 0) return true;
-  return liveStorageHasCards(prev) && !liveRoundHasLiveCards(prev);
+  const wrFrom = buildEmptyLiveWrPlayback(prev, next);
+  return !!(wrFrom && collectLiveBluffDiscards(wrFrom, next).length);
 }
 
 function queueMainPhaseBannerAfterEmptyLiveSkip(next, myId) {
@@ -23899,25 +23939,26 @@ function liveRoundPresentationPlan(prev, next, opts = {}) {
   }
   rememberPerfSpectacleBaseline(prev, next);
   const leavingLiveSet = isLeavingLiveSetPhase(prev, next);
-  const needsLiveReveal = shouldRunLiveRevealSequence(prev, next);
+  const emptyRound = isEmptyLiveSkipTransition(prev, next);
+  const needsLiveReveal = emptyRound ? false : shouldRunLiveRevealSequence(prev, next);
   const hadLives = roundHasLivePerformanceSignals(prev, next);
   const showTurn = opts.forceSpectacleTurn ?? inferLiveShowTurn(prev, next);
-  let wantsSpectacle = shouldTriggerPerfSpectacle(prev, next);
-  if (!wantsSpectacle && shouldForceLiveSpectacle(prev, next)) {
+  let wantsSpectacle = emptyRound ? false : shouldTriggerPerfSpectacle(prev, next);
+  if (!emptyRound && !wantsSpectacle && shouldForceLiveSpectacle(prev, next)) {
     wantsSpectacle = true;
     TCG_DEBUG.log('live', 'force spectacle (log/atomic pipeline)', TCG_DEBUG.trans(prev, next));
   }
-  if (!wantsSpectacle && opts.forceSpectacleTurn != null && !liveSpectacleDoneForTurn(showTurn)
+  if (!emptyRound && !wantsSpectacle && opts.forceSpectacleTurn != null && !liveSpectacleDoneForTurn(showTurn)
       && roundHasLivePerformanceSignals(prev, next) && perfRoundHasShow(prev, next)
       && !pendingPromptBlocksPerfSpectacle(next)) {
     wantsSpectacle = true;
     TCG_DEBUG.log('live', 'force spectacle (pending turn gate)', { showTurn, ...TCG_DEBUG.trans(prev, next) });
   }
-  if (!wantsSpectacle && liveRoundRequiresSpectacle(prev, next, showTurn)) {
+  if (!emptyRound && !wantsSpectacle && liveRoundRequiresSpectacle(prev, next, showTurn)) {
     wantsSpectacle = true;
     TCG_DEBUG.log('live', 'force spectacle (live cards in round)', { showTurn, ...TCG_DEBUG.trans(prev, next) });
   }
-  const wantsEmptyRound = leavingLiveSet && isEmptyLiveSkipTransition(prev, next);
+  const wantsEmptyRound = leavingLiveSet && emptyRound;
   return { needsLiveReveal, wantsSpectacle, wantsEmptyRound, hadLives, showTurn };
 }
 
@@ -24110,12 +24151,18 @@ async function presentLiveRound(prev, next, myId, opts = {}) {
   }
   const plan = liveRoundPresentationPlan(prev, next, opts);
   const emptySkip = plan.wantsEmptyRound || !!opts.forceEmptyRound || isEmptyLiveSkipTransition(prev, next);
-  if (emptySkip) clearEmptyLiveRoundPerfState();
-  const allowFinishedSpectacle = next?.status === 'finished' && plan.wantsSpectacle;
+  let needsLiveReveal = plan.needsLiveReveal;
+  let wantsSpectacle = plan.wantsSpectacle;
+  if (emptySkip) {
+    clearEmptyLiveRoundPerfState();
+    needsLiveReveal = false;
+    wantsSpectacle = false;
+  }
+  const allowFinishedSpectacle = next?.status === 'finished' && wantsSpectacle;
   if (isPresentationSuperseded() || (next?.status === 'finished' && !allowFinishedSpectacle)) {
     return { reveal: false, spectacle: false };
   }
-  if (!plan.needsLiveReveal && !plan.wantsSpectacle && !emptySkip) {
+  if (!needsLiveReveal && !wantsSpectacle && !emptySkip) {
     const judgePick = next.phase === 'live_judge'
       && next.pending_prompt?.type === 'pick_judge_success_live';
     if (judgePick) {
@@ -24127,11 +24174,11 @@ async function presentLiveRound(prev, next, myId, opts = {}) {
     return { reveal: false, spectacle: false };
   }
 
-  const g = TCG_DEBUG.group('live', `presentLiveRound reveal=${plan.needsLiveReveal} spectacle=${plan.wantsSpectacle} empty=${emptySkip}`);
-  TCG_DEBUG.log('live', 'plan', { ...plan, emptySkip }, TCG_DEBUG.trans(prev, next));
+  const g = TCG_DEBUG.group('live', `presentLiveRound reveal=${needsLiveReveal} spectacle=${wantsSpectacle} empty=${emptySkip}`);
+  TCG_DEBUG.log('live', 'plan', { ...plan, needsLiveReveal, wantsSpectacle, emptySkip }, TCG_DEBUG.trans(prev, next));
   syncLiveSuccessPresentationDefer(prev, next);
   const spectacleLogBaseline = (prev?.log || []).length;
-  if (plan.wantsSpectacle) {
+  if (wantsSpectacle) {
     G._prevLogLen = Math.max(G._prevLogLen || 0, spectacleLogBaseline);
   } else {
     catchUpGameLog(next, prev);
@@ -24140,8 +24187,9 @@ async function presentLiveRound(prev, next, myId, opts = {}) {
   G._liveRoundPlaybackActive = true;
   G._liveRoundPostSpectacleReady = false;
   let spectacleRan = false;
-  const runStorageReveal = plan.needsLiveReveal;
-  const deferStorageOutcomes = plan.wantsSpectacle
+  let emptyWrPlayed = false;
+  const runStorageReveal = needsLiveReveal;
+  const deferStorageOutcomes = wantsSpectacle
     || (emptySkip && shouldAnimateEmptyLiveStorageWr(prev, next));
   try {
     await waitForCenterBannersClear();
@@ -24150,21 +24198,36 @@ async function presentLiveRound(prev, next, myId, opts = {}) {
     if (runStorageReveal) {
       await playLivePhaseTransition(prev, next, myId, {
         deferFinal: deferStorageOutcomes,
-        skipIntroBanner: plan.wantsSpectacle || emptySkip,
+        skipIntroBanner: wantsSpectacle || emptySkip,
       });
     }
 
     await awaitLiveStartPromptsIfNeeded(prev, next, myId);
 
-    let wantsSpectacle = plan.wantsSpectacle;
-    if (!wantsSpectacle && (opts.forceSpectacleTurn != null || plan.showTurn != null)) {
+    if (!wantsSpectacle && !emptySkip && (opts.forceSpectacleTurn != null || plan.showTurn != null)) {
       const replayPlan = liveRoundPresentationPlan(prev, G.gameState || next, {
         forceSpectacleTurn: opts.forceSpectacleTurn ?? plan.showTurn,
       });
-      wantsSpectacle = replayPlan.wantsSpectacle;
+      wantsSpectacle = replayPlan.wantsSpectacle && !isEmptyLiveSkipTransition(prev, next);
     }
 
-    if (wantsSpectacle) {
+    if (emptySkip) {
+      const wrFrom = buildEmptyLiveWrPlayback(prev, next) || prev;
+      if (wrFrom) {
+        G.gameState = wrFrom;
+        renderGame(wrFrom, { skipLog: true });
+      }
+      await queueEmptyLiveRoundBanner();
+      await waitForBannersIdle();
+      if (wrFrom && collectLiveBluffDiscards(wrFrom, next).length) {
+        emptyWrPlayed = await playLiveStorageWrDiscards(wrFrom, next, myId, {
+          initialDelayMs: LIVE_BLUFF_WR_DELAY_MS,
+        });
+      }
+      G.gameState = next;
+      renderGame(next, { skipLog: true });
+      G._liveRoundPostSpectacleReady = true;
+    } else if (wantsSpectacle) {
       G._deferredLiveState = next;
       const spectacleNext = (G.gameState?.seq ?? 0) >= (next?.seq ?? 0) ? G.gameState : next;
       const perfPrev = buildPerfSpectaclePrev(prev, spectacleNext);
@@ -24177,14 +24240,6 @@ async function presentLiveRound(prev, next, myId, opts = {}) {
         forceShowTurn: opts.forceSpectacleTurn ?? plan.showTurn,
       });
       commitDeferredLiveState(next);
-      G._liveRoundPostSpectacleReady = true;
-    } else if (emptySkip) {
-      await queueEmptyLiveRoundBanner();
-      await waitForBannersIdle();
-      if (!deferStorageOutcomes) {
-        G.gameState = next;
-        renderGame(next, { skipLog: true });
-      }
       G._liveRoundPostSpectacleReady = true;
     } else {
       let wrAnimated = false;
@@ -24202,8 +24257,12 @@ async function presentLiveRound(prev, next, myId, opts = {}) {
 
     await awaitResolvePostLivePrompts(prev, next, myId, opts);
 
-    const storageBoard = G._livePostRevealBoard || G.gameState;
-    if (await playDeferredLiveStorageOutcomes(storageBoard, next, myId)) {
+    if (!emptyWrPlayed) {
+      const storageBoard = G._livePostRevealBoard || G.gameState;
+      if (await playDeferredLiveStorageOutcomes(storageBoard, next, myId)) {
+        G._livePostRevealBoard = null;
+      }
+    } else {
       G._livePostRevealBoard = null;
     }
 
@@ -24227,8 +24286,8 @@ async function presentLiveRound(prev, next, myId, opts = {}) {
     queueMainPhaseBannerAfterEmptyLiveSkip(next, myId);
   }
   ensureLiveRoundStateCommitted(prev, next, myId);
-  TCG_DEBUG.log('live', 'presentLiveRound done', { reveal: plan.needsLiveReveal, spectacle: spectacleRan, empty: emptySkip });
-  return { reveal: plan.needsLiveReveal, spectacle: spectacleRan };
+  TCG_DEBUG.log('live', 'presentLiveRound done', { reveal: needsLiveReveal, spectacle: spectacleRan, empty: emptySkip });
+  return { reveal: needsLiveReveal, spectacle: spectacleRan };
 }
 
 async function pullLatestState() {
@@ -24465,6 +24524,7 @@ function flushPendingState() {
 }
 
 function perfSpectacleHasContent(prev, next) {
+  if (isEmptyLiveSkipTransition(prev, next)) return false;
   const perfPrev = buildPerfSpectaclePrev(prev, next);
   if (!perfPrev || !next) return false;
   if (liveRoundRequiresSpectacle(prev, next)) return true;
