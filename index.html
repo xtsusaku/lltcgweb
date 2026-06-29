@@ -17756,6 +17756,9 @@ async function applyStateUpdate(s) {
     if (prev && liveStorageOutcomePlaybackPending(prev, s)) {
       moves = filterLiveStorageDeferredMoves(prev, moves, s);
     }
+    if (emptyLiveRoundPresentationPending(prev, s)) {
+      moves = filterEmptyLivePendingWrMoves(prev, moves, s);
+    }
     const openingDeal = isOpeningHandDealTransition(prev, s);
     const setupMulliganOnly = prev?.phase === 'setup' && s.phase === 'setup';
     if (setupMulliganOnly) moves = [];
@@ -17785,14 +17788,42 @@ async function applyStateUpdate(s) {
         releaseLivePollsAndFlush();
       }
     } else {
-        TCG_DEBUG.log('apply', 'direct render', { moves: moves.length, newLog: newEntries.length, ...TCG_DEBUG.trans(prev, s) });
+        const emptyPending = emptyLiveRoundPresentationPending(prev, s);
+        TCG_DEBUG.log('apply', 'direct render', { moves: moves.length, newLog: newEntries.length, emptyPending, ...TCG_DEBUG.trans(prev, s) });
         let animPrev = prev;
-        if (shouldAnimateEmptyLiveStorageWr(animPrev, s) && shouldPresentEmptyLiveRound(prev, s)) {
+        let emptyRoundHandled = false;
+        if (emptyPending && isLeavingLiveSetPhase(prev, s)) {
+          G.animating = true;
+          try {
+            await presentLiveRound(prev, s, G.playerId, { newEntries, forceEmptyRound: true });
+            ensurePendingPromptSurfaced(s, G.playerId);
+            emptyRoundHandled = true;
+          } finally {
+            G._animHideIids = null;
+            clearHandArrivingFlags();
+            G.animating = false;
+            releaseLivePollsAndFlush();
+          }
+        } else if (shouldAnimateEmptyLiveStorageWr(animPrev, s) && shouldPresentEmptyLiveRound(prev, s)) {
           G.animating = true;
           try {
             const wrFrom = buildEmptyLiveWrPlayback(animPrev, s) || animPrev;
-            const wrAnimated = await playLiveStorageWrDiscards(wrFrom, s, G.playerId);
-            if (wrAnimated) animPrev = G.gameState;
+            if (wrFrom && liveStorageHasCards(wrFrom)) {
+              G.gameState = wrFrom;
+              renderGame(wrFrom, { skipLog: true });
+              await runLiveStorageRevealSequence(wrFrom, s, G.playerId, {
+                deferWrDiscards: true,
+                skipIntroBanner: true,
+              });
+            }
+            await queueEmptyLiveRoundBanner();
+            await waitForBannersIdle();
+            const revealBoard = G._livePostRevealBoard || wrFrom;
+            if (revealBoard && collectLiveBluffDiscards(revealBoard, s).length) {
+              await playLiveStorageWrDiscards(revealBoard, s, G.playerId, { initialDelayMs: LIVE_BLUFF_WR_DELAY_MS });
+              animPrev = G.gameState;
+            }
+            G._livePostRevealBoard = null;
             moves = diffCardMoves(animPrev, s);
             if (G._deferredHandDrawIids?.size) {
               moves = filterDeferredHandDrawMoves(moves, G._deferredHandDrawIids);
@@ -17800,10 +17831,10 @@ async function applyStateUpdate(s) {
             if (prev && liveStorageOutcomePlaybackPending(prev, s)) {
               moves = filterLiveStorageDeferredMoves(prev, moves, s);
             }
+            moves = filterEmptyLivePendingWrMoves(prev, moves, s);
             G._prevRects = collectCardRects();
             G._handSlotsBefore = collectHandSlotRects();
             G._animHideIids = animPrev && moves.length ? animHideIidsForMoves(animPrev, moves) : null;
-            await queueEmptyLiveRoundBanner();
             flushPostLiveLogBanners(animPrev, s, G.playerId, { emptySkip: true });
             markEmptyLiveRoundPresented(prev, s);
           } finally {
@@ -17829,6 +17860,7 @@ async function applyStateUpdate(s) {
             G.animating = false;
           }
         }
+        if (!emptyRoundHandled) {
         applyTurnPrepEntriesToState(s, s, newEntries);
         if (!detectPendingLiveSpectacleTurn(prev, s) && !liveRoundRequiresSpectacle(prev, s)) {
           queueStateAnnouncements(prev, s, G.playerId, { emptyLiveSkip: isEmptyLiveSkipTransition(prev, s) });
@@ -17893,6 +17925,7 @@ async function applyStateUpdate(s) {
             void refreshWaitingRoomPiles(s, G.playerId, { clearPending: true });
           }
           flushPendingState();
+        }
         }
     }
   }
@@ -22524,10 +22557,34 @@ function mergeLiveCardFromFinal(prevCard, final, pid) {
   return { ...prevCard, revealed: true };
 }
 
+/** Best board for empty-round WR playback when prev.live_zone may already be cleared. */
+function liveStorageBoardForPlayback(prev) {
+  if (prev && liveStorageHasCards(prev)) return prev;
+  const baseline = G._liveSetStorageBaseline;
+  if (baseline && liveStorageHasCards(baseline)) return baseline;
+  return null;
+}
+
+function fullLogHasEmptyLiveSkip(s) {
+  return (s?.log || []).some(e => e.msg === 'No Lives played this turn.');
+}
+
+function fullLogHasEmptyLiveSkipForTurn(s, showTurn) {
+  if (!s?.log || showTurn == null) return false;
+  let inTurn = 1;
+  for (const e of s.log) {
+    const t = parseTurnMarker(e.msg);
+    if (t != null) inTurn = t;
+    if (e.msg === 'No Lives played this turn.' && inTurn === showTurn) return true;
+  }
+  return false;
+}
+
 function collectLiveBluffDiscards(revealState, final) {
+  const board = liveStorageBoardForPlayback(revealState) || revealState;
   const moves = [];
   for (const pid of ['p1', 'p2']) {
-    const prevLive = revealState.players?.[pid]?.live_zone || [];
+    const prevLive = board.players?.[pid]?.live_zone || [];
     prevLive.forEach((c, index) => {
       const iid = c.instance_id;
       const stillInLive = (final.players?.[pid]?.live_zone || [])
@@ -23222,13 +23279,20 @@ function isMemberOnlyLiveStorageRound(prev, next) {
   if (liveStorageHasCards(prev)) return true;
   const baseline = G._liveSetStorageBaseline;
   if (baseline && liveStorageHasCards(baseline)) return true;
-  return collectLiveBluffDiscards(prev, next).length > 0;
+  const bluffBoard = liveStorageBoardForPlayback(prev) || prev;
+  return collectLiveBluffDiscards(bluffBoard, next).length > 0;
 }
 
 function logTransitionHasEmptyLiveSkip(prev, next) {
   if (!next?.log) return false;
   const from = prev?.log?.length || 0;
-  if ((next.log || []).slice(from).some(e => e.msg === 'No Lives played this turn.')) return true;
+  const slice = (next.log || []).slice(from);
+  if (slice.some(e => e.msg === 'No Lives played this turn.')) return true;
+  // Batched poll (log+0): client already caught up on log; scan full log for this show turn.
+  if (!slice.length) {
+    const showTurn = inferLiveShowTurn(prev, next);
+    if (showTurn != null && fullLogHasEmptyLiveSkipForTurn(next, showTurn)) return true;
+  }
   return false;
 }
 
@@ -23241,9 +23305,9 @@ function emptyLiveRoundShowTurn(prev, next) {
       return turnAtLogIndex(next, from + i);
     }
   }
-  if (logTransitionHasEmptyLiveSkip(prev, next)) {
-    return inferLiveShowTurn(prev, next);
-  }
+  const showTurn = inferLiveShowTurn(prev, next);
+  if (showTurn != null && fullLogHasEmptyLiveSkipForTurn(next, showTurn)) return showTurn;
+  if (logTransitionHasEmptyLiveSkip(prev, next)) return showTurn;
   return null;
 }
 
@@ -23274,15 +23338,27 @@ function isEmptyLiveSkipTransition(prev, next) {
       && !liveRoundHasLiveCards(prev) && !liveRoundHasLiveCards(next)) {
     return true;
   }
-  if (!isMemberOnlyLiveStorageRound(prev, next)) return false;
-  if (isLeavingLiveSetPhase(prev, next) || leavingEmptyLivePipeline(prev, next)) return true;
+  const memberOnly = isMemberOnlyLiveStorageRound(prev, next);
+  const leavingLive = isLeavingLiveSetPhase(prev, next) || leavingEmptyLivePipeline(prev, next);
+  // log+0 batched poll: full log has empty skip; zone diff / baseline still owe presentation.
+  if (leavingLive && memberOnly && showTurn != null && fullLogHasEmptyLiveSkipForTurn(next, showTurn)) {
+    TCG_DEBUG.log('live', 'emptyRound detect', { via: 'log+0+member', showTurn, ...TCG_DEBUG.trans(prev, next) });
+    return true;
+  }
+  if (!memberOnly) return false;
+  if (leavingLive) return true;
   // Batched poll: client missed live_set exit but zone diff shows bluff discards.
-  if (collectLiveBluffDiscards(prev, next).length > 0) return true;
+  const bluffBoard = liveStorageBoardForPlayback(prev) || prev;
+  if (collectLiveBluffDiscards(bluffBoard, next).length > 0) {
+    if (!slice.length && fullLogHasEmptyLiveSkip(next)) {
+      TCG_DEBUG.log('live', 'emptyRound detect', { via: 'zone+fullLog', ...TCG_DEBUG.trans(prev, next) });
+    }
+    return true;
+  }
   // Recovery: state already committed (live_zone empty) but log still records empty round.
   if (showTurn != null && !liveRoundHasLiveCards(prev) && !liveRoundHasLiveCards(next)
-      && logHasLivePerformanceForTurn(next, showTurn) === false) {
-    const logHasEmpty = (next.log || []).some(e => e.msg === 'No Lives played this turn.');
-    if (logHasEmpty) return true;
+      && logHasLivePerformanceForTurn(next, showTurn) === false && fullLogHasEmptyLiveSkip(next)) {
+    return true;
   }
   return false;
 }
@@ -23299,17 +23375,34 @@ function batchHasEmptyLiveSkipEntries(entries) {
   return (entries || []).some(e => e.msg === 'No Lives played this turn.');
 }
 
+function emptyLiveRoundPresentationPending(prev, next) {
+  if (!shouldPresentEmptyLiveRound(prev, next)) return false;
+  const turn = emptyLiveRoundShowTurn(prev, next) ?? inferLiveShowTurn(prev, next);
+  return !emptyLiveRoundAlreadyPresented(turn);
+}
+
+function filterEmptyLivePendingWrMoves(prev, moves, next) {
+  if (!emptyLiveRoundPresentationPending(prev, next)) return moves;
+  return (moves || []).filter(m => {
+    if (m.from?.zone === 'live' && m.to?.zone === 'waiting_room') return false;
+    return true;
+  });
+}
+
 /** Playback board for member-only empty LIVE — prev may already have cleared live_zone. */
 function buildEmptyLiveWrPlayback(prev, next) {
-  if (prev && liveStorageHasCards(prev)) return deepCloneState(prev);
-  const baseline = G._liveSetStorageBaseline;
-  if (baseline && liveStorageHasCards(baseline)) return deepCloneState(baseline);
+  const stored = liveStorageBoardForPlayback(prev);
+  if (stored) return deepCloneState(stored);
   const deferred = G._deferPerfSpectaclePrev;
   if (deferred && liveStorageHasCards(deferred)) return deepCloneState(deferred);
   if (!next?.players) return prev ? deepCloneState(prev) : null;
   const from = prev?.log?.length || 0;
-  const anims = (next.log || []).slice(from).flatMap(e => e.anim || [])
+  let anims = (next.log || []).slice(from).flatMap(e => e.anim || [])
     .filter(a => a.from === 'live' && a.to === 'waiting_room' && a.iid && a.pid);
+  if (!anims.length) {
+    anims = (next.log || []).flatMap(e => e.anim || [])
+      .filter(a => a.from === 'live' && a.to === 'waiting_room' && a.iid && a.pid);
+  }
   if (!anims.length) return prev ? deepCloneState(prev) : null;
   const synth = deepCloneState(next);
   if (prev) {
@@ -27115,7 +27208,10 @@ function leavingEmptyLivePipeline(prev, next) {
   if (isLivePipelinePhase(next.phase) || next.phase === 'live_set') return false;
   if (liveRoundHasLiveCards(prev) || liveRoundHasLiveCards(next)) return false;
   const from = prev.log?.length || 0;
-  if ((next.log || []).slice(from).some(e => e.msg === 'No Lives played this turn.')) return true;
+  const slice = (next.log || []).slice(from);
+  if (slice.some(e => e.msg === 'No Lives played this turn.')) return true;
+  const showTurn = inferLiveShowTurn(prev, next);
+  if (!slice.length && showTurn != null && fullLogHasEmptyLiveSkipForTurn(next, showTurn)) return true;
   return !perfRoundHasShow(prev, next);
 }
 
