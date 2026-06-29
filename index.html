@@ -7601,22 +7601,28 @@ function syncDebugCardTestButton(forceShow) {
 }
 
 function openUnrankedLobby() {
-  (async () => {
-    if (isSignedInAccount()) {
-      try {
-        const dl = await accountGet('deck_list');
-        if (dl.success) A.decks = dl.decks || [];
-      } catch (e) {}
-    }
-    syncLobbyExperimentField();
-    renderLobbyDeckOptions();
+  if (el('screen-lobby')?.classList.contains('active')) return;
+  syncLobbyExperimentField();
+  renderLobbyDeckOptions();
+  showScr('lobby');
+  void refreshUnrankedLobbyInBackground();
+}
+
+/** Deck list + casual queue resume after lobby is visible (do not block navigation). */
+async function refreshUnrankedLobbyInBackground() {
+  if (isSignedInAccount()) {
     try {
-      const res = await apiPost('casual_status', { queue_id: getCasualQueueId() });
-      if (res.queue_stats) updateCasualQueueStats(res.queue_stats);
+      const dl = await accountGet('deck_list');
+      if (dl.success) {
+        A.decks = dl.decks || [];
+        if (el('screen-lobby')?.classList.contains('active')) renderLobbyDeckOptions();
+      }
     } catch (e) {}
-    setTimeout(resumeCasualSearchIfQueued, 0);
-    showScr('lobby');
-  })();
+  }
+  if (!el('screen-lobby')?.classList.contains('active')) return;
+  try {
+    await resumeCasualSearchIfQueued();
+  } catch (e) {}
 }
 
 function syncLobbyExperimentField() {
