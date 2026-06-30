@@ -20546,7 +20546,10 @@ function cpuLiveSet() {
   const members = hand.filter(c => isCpuMemberCard(c));
   const viableLives = liveInHand.filter(c => cpuCheckHearts(pool, cpuLiveRequiredHearts(c)));
 
-  const desiredTotal = cpuDesiredLiveStorageTotal(ctx, hand, viableLives, alreadyStored);
+  let desiredTotal = cpuDesiredLiveStorageTotal(ctx, hand, viableLives, alreadyStored);
+  if (tier !== 'easy' && viableLives.length && hand.length >= 3 && desiredTotal <= alreadyStored) {
+    desiredTotal = Math.min(3, alreadyStored + 1);
+  }
   if (alreadyStored >= desiredTotal) {
     cpuAct('end_live_set', {});
     return;
