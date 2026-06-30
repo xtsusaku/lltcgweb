@@ -5704,7 +5704,6 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
                     <label for="sel-deck-pool-sort">Sort by</label>
                     <div class="llc-select-wrap deck-collection-sort__select">
                       <select id="sel-deck-pool-sort" aria-label="Collection sort order">
-                        <option value="default">Default</option>
                         <option value="id">Card ID</option>
                         <option value="rarity">Rarity</option>
                         <option value="name">Name (idol)</option>
@@ -8713,8 +8712,8 @@ let _experimentPoolGen = 0;
 const DECK_FILTER_GROUPS = ["μ's", 'Nijigasaki', 'Sunshine', 'Superstar', 'Hasunosora'];
 const DECK_FILTER_RARITIES = ['N', 'R', 'R+', 'L', 'L+', 'P', 'P+', 'PR', 'PR+', 'PE', 'PE+', 'SEC', 'LLE', 'RM', 'AR'];
 const DECK_POOL_SORT_KEY = 'tcg_deck_pool_sort';
+const DECK_POOL_SORT_DEFAULT = 'id';
 const DECK_POOL_SORT_OPTIONS = [
-  { id: 'default', label: 'Default' },
   { id: 'id', label: 'Card ID' },
   { id: 'rarity', label: 'Rarity' },
   { id: 'name', label: 'Name (idol)' },
@@ -8723,17 +8722,22 @@ const DECK_POOL_SORT_OPTIONS = [
   { id: 'recent', label: 'Recently acquired', collectionOnly: true },
 ];
 
+function normalizeDeckPoolSortMode(mode) {
+  if (mode === 'default') return DECK_POOL_SORT_DEFAULT;
+  return DECK_POOL_SORT_OPTIONS.some(o => o.id === mode) ? mode : DECK_POOL_SORT_DEFAULT;
+}
+
 function deckPoolSortMode() {
-  if (A.deckPoolSort) return A.deckPoolSort;
+  if (A.deckPoolSort) return normalizeDeckPoolSortMode(A.deckPoolSort);
   try {
     const saved = sessionStorage.getItem(DECK_POOL_SORT_KEY);
-    if (saved && DECK_POOL_SORT_OPTIONS.some(o => o.id === saved)) return saved;
+    if (saved) return normalizeDeckPoolSortMode(saved);
   } catch (e) {}
-  return 'default';
+  return DECK_POOL_SORT_DEFAULT;
 }
 
 function setDeckPoolSort(mode) {
-  const next = DECK_POOL_SORT_OPTIONS.some(o => o.id === mode) ? mode : 'default';
+  const next = normalizeDeckPoolSortMode(mode);
   A.deckPoolSort = next;
   try { sessionStorage.setItem(DECK_POOL_SORT_KEY, next); } catch (e) {}
   syncDeckPoolSortUi();
@@ -8742,7 +8746,7 @@ function setDeckPoolSort(mode) {
 
 function effectiveDeckPoolSort() {
   const mode = deckPoolSortMode();
-  if (mode === 'recent' && A.deckBuilderMode === 'experiment') return 'default';
+  if (mode === 'recent' && A.deckBuilderMode === 'experiment') return DECK_POOL_SORT_DEFAULT;
   return mode;
 }
 
@@ -8777,7 +8781,7 @@ function deckPoolSortKey(entry, mode) {
     case 'recent':
       return [-(entry.acquired_at || entry.row?.acquired_at || 0), no];
     default:
-      return entry._idx ?? 0;
+      return no;
   }
 }
 
@@ -8795,13 +8799,12 @@ function compareDeckPoolSortKeys(ka, kb) {
 }
 
 function compareDeckPoolEntries(a, b, mode) {
-  if (mode === 'default') return (a._idx ?? 0) - (b._idx ?? 0);
   return compareDeckPoolSortKeys(deckPoolSortKey(a, mode), deckPoolSortKey(b, mode));
 }
 
 function sortDeckPoolEntries(entries, mode) {
   const sortMode = mode || effectiveDeckPoolSort();
-  if (!entries.length || sortMode === 'default') return entries;
+  if (!entries.length) return entries;
   return entries.slice().sort((a, b) => compareDeckPoolEntries(a, b, sortMode));
 }
 
@@ -8815,8 +8818,8 @@ function syncDeckPoolSortUi() {
   const effective = effectiveDeckPoolSort();
   if (sel.value !== effective) sel.value = effective;
   if (mode === 'recent' && experiment) {
-    A.deckPoolSort = 'default';
-    try { sessionStorage.setItem(DECK_POOL_SORT_KEY, 'default'); } catch (e) {}
+    A.deckPoolSort = DECK_POOL_SORT_DEFAULT;
+    try { sessionStorage.setItem(DECK_POOL_SORT_KEY, DECK_POOL_SORT_DEFAULT); } catch (e) {}
   }
 }
 const DECK_FILTER_TYPES = [
@@ -13547,7 +13550,7 @@ let G = {
     renderDeckBuilder();
   });
   on('sel-deck-pool-sort', 'change', () => {
-    setDeckPoolSort(el('sel-deck-pool-sort')?.value || 'default');
+    setDeckPoolSort(el('sel-deck-pool-sort')?.value || DECK_POOL_SORT_DEFAULT);
   });
   on('btn-experiment-load-pwd', 'click', () => {
     loadExperimentDeckByPassword(el('inp-experiment-load-pwd')?.value);
