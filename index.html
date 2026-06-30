@@ -1617,6 +1617,79 @@ html.tcg-mobile-viewport body.perf-spectacle-active #center-banner{
   left:50%;top:50%;transform:translate(-50%,-50%);
 }
 
+/* ── Sub-1080p desktop: hide log + card preview; dock radio / phase / resign on left (like mobile) ── */
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame{
+  position:relative;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .game-wide-wrap{
+  --side-panel-w:min(300px, 28vw);
+  --playmat-gutter:var(--side-panel-w);
+  position:relative;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-left{
+  padding-bottom:calc(var(--mobile-action-dock-h, 168px) + 10px);
+  overflow-y:auto;
+  min-height:0;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-left .card-hover-panel{
+  display:none!important;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right{
+  position:absolute;left:0;bottom:0;
+  width:var(--side-panel-w);min-width:var(--side-panel-w);max-width:var(--side-panel-w);
+  height:auto;flex:none;z-index:60;
+  background:transparent;border:none;box-shadow:none;
+  padding:6px 8px;pointer-events:none;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .logscroll,
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .sbs{
+  display:none!important;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .side-log{
+  flex:none;background:transparent;border:none;overflow:visible;
+  display:flex;flex-direction:column;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .phase-action-bar,
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .tcg-radio-stack,
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .tcg-radio-resize,
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .tcg-radio-bar,
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .tcg-radio-dock,
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .sbfoot{
+  pointer-events:auto;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .tcg-radio-bar{
+  padding:4px 6px 0;flex-shrink:0;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .tcg-radio-bar .tcg-radio-toggle{
+  font-size:11px;padding:6px 8px;
+  background:rgba(6,14,28,.88);border:1px solid var(--ui-panel-border);border-radius:8px;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .tcg-radio-stack:not([hidden]){
+  flex-shrink:0;min-height:160px;max-height:min(36vh, 280px);
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .phase-action-bar{
+  padding:6px;margin-bottom:4px;
+  background:rgba(6,14,28,.92);border:1px solid var(--ui-panel-border);border-radius:8px;
+  box-shadow:0 6px 22px rgba(0,0,0,.45);flex-shrink:0;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .phase-action-bar .btn-phase-primary{
+  font-size:14px;padding:10px 8px;min-height:44px;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .sbfoot{
+  padding:4px 6px;gap:4px;
+  background:rgba(6,14,28,.88);border:1px solid var(--ui-panel-border);border-radius:8px;
+  flex-shrink:0;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .phase-action-bar.show ~ .sbfoot .tcg-debug-row{
+  display:none;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right .sbfoot button{
+  font-size:11px;padding:7px;
+}
+html.tcg-compact-desktop:not(.tcg-mobile-viewport) .side-log.radio-open{
+  display:flex;flex-direction:column;
+}
+
 .playmat-img{
   display:block;width:100%;height:100%;
   object-fit:fill;
@@ -13788,7 +13861,9 @@ let G = {
     if (!toggle || !radioStack || !dock || !iframe || !sideLog || !resizeHandle || !logEl) return;
 
     function isDesktopRadioGrid() {
-      return !document.documentElement.classList.contains('tcg-mobile-viewport');
+      const root = document.documentElement;
+      return !root.classList.contains('tcg-mobile-viewport')
+        && !root.classList.contains('tcg-compact-desktop');
     }
 
     function getOrCreateRadioListenerId() {
@@ -14259,7 +14334,9 @@ function bindMobileViewport() {
     const tablet = mobile && !phone && shortSide <= 920;
     const useFixedFrame = mobile && landscape && (phone || tablet);
     const portraitBlock = mobile && (phone || tablet) && !landscape;
+    const compactDesktop = !useFixedFrame && !portraitBlock && h < 1080;
     root.classList.toggle('tcg-mobile-viewport', useFixedFrame);
+    root.classList.toggle('tcg-compact-desktop', compactDesktop);
     root.classList.toggle('tcg-phone-device', phone);
     root.classList.toggle('tcg-phone-landscape', phone && landscape);
     root.classList.toggle('tcg-tablet-landscape', tablet && landscape);
@@ -14331,11 +14408,19 @@ function tcgMobileViewportActive() {
   return document.documentElement.classList.contains('tcg-mobile-viewport');
 }
 
+function tcgCompactDesktopActive() {
+  return document.documentElement.classList.contains('tcg-compact-desktop');
+}
+
+function tcgActionDockActive() {
+  return tcgMobileViewportActive() || tcgCompactDesktopActive();
+}
+
 function syncMobilePhaseDock() {
   const frame = el('game-viewport-frame');
   const dock = document.querySelector('#screen-game .side-panel.side-right .side-log');
   if (!frame) return;
-  if (!tcgMobileViewportActive() || !dock) {
+  if (!tcgActionDockActive() || !dock) {
     frame.style.removeProperty('--mobile-action-dock-h');
     return;
   }
