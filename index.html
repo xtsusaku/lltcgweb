@@ -21438,7 +21438,8 @@ function scheduleCpuContinueAfterAct(type, tries = 0) {
       return;
     }
   }
-  if (G._liveSpectacleGateRunning || (G.animating && tries < 12)) {
+  const setupAct = CPU_SETUP_ACTION_TYPES.has(type);
+  if (!setupAct && (G._liveSpectacleGateRunning || (G.animating && tries < 12))) {
     cpuSchedule(() => scheduleCpuContinueAfterAct(type, tries + 1), 280);
     return;
   }
@@ -21469,9 +21470,25 @@ function cpuActInflightKey(type, data = {}) {
   return null;
 }
 
+const CPU_SETUP_ACTION_TYPES = new Set(['ack_coin_flip', 'choose_first_player', 'mulligan']);
+
+function isCpuPrepPhase(s) {
+  const ph = s?.phase;
+  return ph === 'coin_flip' || ph === 'setup';
+}
+
+/** Serialize concurrent CPU acts during main/live only — not coin flip / mulligan setup. */
+function cpuActUsesBusyGuard(s, type) {
+  if (CPU_SETUP_ACTION_TYPES.has(type) || isCpuPrepPhase(s)) return false;
+  return true;
+}
+
 async function cpuAct(type,data) {
   if (G.replayMode && !G.replayHandoff) return;
-  if (G._cpuActBusy) return;
+  if (G._cpuActBusy && cpuActUsesBusyGuard(G.gameState, type)) {
+    cpuSchedule(() => cpuAct(type, data), 150);
+    return;
+  }
   const inflightKey = cpuActInflightKey(type, data);
   if (inflightKey && G._cpuActInflight === inflightKey) return;
   if (type === 'end_live_set') {
@@ -23146,6 +23163,8 @@ function scanUndoneLiveSpectacleTurn(s, prev = null) {
 
 function detectPendingLiveSpectacleTurn(prev, next) {
   if (!next || G.isTutorial || G._perfSpectacleActive) return null;
+  const ph = next.phase;
+  if (ph === 'coin_flip' || ph === 'setup' || ph === 'waiting') return null;
   if (isLiveSetPlacementOnly(prev, next) || liveSetPlacementInProgress(next)) return null;
   if (isEmptyLiveSkipTransition(prev, next)) return null;
 
@@ -23446,6 +23465,8 @@ function isEmptyLiveSkipTransition(prev, next) {
 
 function shouldPresentEmptyLiveRound(prev, next) {
   if (!prev || !next || G.isTutorial) return false;
+  const ph = next?.phase;
+  if (ph === 'coin_flip' || ph === 'setup' || ph === 'waiting') return false;
   const turn = emptyLiveRoundShowTurn(prev, next) ?? inferLiveShowTurn(prev, next);
   if (emptyLiveRoundAlreadyPresented(turn)) return false;
   if (logTransitionHasEmptyLiveSkip(prev, next)) return true;
@@ -32120,6 +32141,7 @@ function finishCoinFlipAnimation(s, myId) {
   if (G._coinFlipAnimComplete) {
     ensureCoinFlipAcked(G.gameState || s, myId);
     syncCoinFlipChoiceUi(G.gameState || s, myId);
+    if (!G.animating) flushPendingState();
     return;
   }
   G._coinFlipAnimComplete = true;
@@ -32127,6 +32149,7 @@ function finishCoinFlipAnimation(s, myId) {
   if (coin) coin.classList.remove('flipping');
   ensureCoinFlipAcked(G.gameState || s, myId);
   syncCoinFlipChoiceUi(G.gameState || s, myId);
+  if (!G.animating) flushPendingState();
 }
 
 function startCoinFlipAnimation(s, myId, flipKey) {
@@ -34004,6 +34027,7 @@ function freshGameGlobals() {
     watchdogTimer:null, watchdogStuckCount:0, lastWatchdogSig:null,
     _cpuPromptTimer:null, _cpuPromptScheduled:null, _cpuResolveBusy:null,
     _cpuPromptRetryTimer:null, _cpuPromptHangTimer:null, _cpuPromptHangKey:null, _cpuPromptHangSince:0,
+    _cpuActBusy:false, _cpuActInflight:null,
     animating:false,
   _logFollowTail:true,
     handPointer:null,
