@@ -13486,36 +13486,42 @@ function ensureCardImageLoaded(card) {
   return preloadCardFaceImage(card).then(() => {});
 }
 
-/** Preload card face with cached→remote fallback; returns the URL that loaded. */
+/** Preload card face with official remote→cache fallback; returns the URL that loaded. */
 function preloadCardFaceImage(card) {
   card = enrichCard(card);
   const remote = card?.image || '';
   const cached = card?.card_no ? cachedCardImgUrl(card.card_no) : '';
-  if (!remote && !cached) return Promise.resolve('');
+  const official = isOfficialCardImageUrl(remote) ? remote : '';
+  if (!official && !remote && !cached) return Promise.resolve('');
 
   return new Promise(resolve => {
     const finish = (url) => {
-      if (url && url === remote) queuePersistCardImage(card);
+      if (url && url === official) queuePersistCardImage(card);
       resolve(url || '');
     };
-    const tryRemote = () => {
-      if (!remote) return finish('');
-      const probe = new Image();
-      probe.onload = () => finish(remote);
-      probe.onerror = () => finish('');
-      probe.src = remote;
-      if (probe.complete && probe.naturalWidth > 0) finish(remote);
-    };
-    if (cached) {
+    const tryCached = () => {
+      if (!cached) return finish(remote || '');
       const probe = new Image();
       probe.onload = () => finish(cached);
-      probe.onerror = tryRemote;
+      probe.onerror = () => finish(remote || '');
       probe.src = cached;
       if (probe.complete && probe.naturalWidth > 0) finish(cached);
-      return;
-    }
+    };
+    const tryRemote = () => {
+      const src = official || remote;
+      if (!src) return tryCached();
+      const probe = new Image();
+      probe.onload = () => finish(src);
+      probe.onerror = tryCached;
+      probe.src = src;
+      if (probe.complete && probe.naturalWidth > 0) finish(src);
+    };
     tryRemote();
   });
+}
+
+function isOfficialCardImageUrl(url) {
+  return !!url && /^https?:\/\//i.test(url) && !/cardimg\.php/i.test(url);
 }
 
 function applyCardImageToImg(img, card, onFail, opts = {}) {
@@ -13523,14 +13529,20 @@ function applyCardImageToImg(img, card, onFail, opts = {}) {
   const preferSrc = opts.preferSrc || '';
   const remote = card?.image || '';
   const cached = card?.card_no ? cachedCardImgUrl(card.card_no) : '';
-  if (!remote && !cached && !preferSrc) return false;
+  const official = isOfficialCardImageUrl(remote) ? remote : '';
+  if (!official && !remote && !cached && !preferSrc) return false;
 
   img.onload = () => {
-    if (img.dataset.imgSrc === 'remote') queuePersistCardImage(card);
+    if (img.dataset.imgSrc === 'remote' && official) queuePersistCardImage(card);
   };
   img.onerror = () => {
     if (preferSrc) {
       if (typeof onFail === 'function') onFail(img);
+      return;
+    }
+    if (img.dataset.imgSrc === 'remote' && cached) {
+      img.dataset.imgSrc = 'cached';
+      img.src = cached;
       return;
     }
     if (img.dataset.imgSrc === 'cached' && remote) {
@@ -13546,37 +13558,59 @@ function applyCardImageToImg(img, card, onFail, opts = {}) {
     img.src = preferSrc;
     return true;
   }
+  if (official) {
+    img.dataset.imgSrc = 'remote';
+    img.src = official;
+    return true;
+  }
   if (cached) {
     img.dataset.imgSrc = 'cached';
     img.src = cached;
-  } else {
+    return true;
+  }
+  if (remote) {
     img.dataset.imgSrc = 'remote';
     img.src = remote;
+    return true;
   }
-  return true;
+  return false;
 }
 
 function applyCardImageToBg(el, card) {
   card = enrichCard(card);
   const remote = card?.image || '';
   const cached = card?.card_no ? cachedCardImgUrl(card.card_no) : '';
-  if (!remote && !cached) return;
+  const official = isOfficialCardImageUrl(remote) ? remote : '';
+  if (!official && !remote && !cached) return;
 
   const probe = new Image();
   probe.onload = () => {
     el.style.backgroundImage = `url('${probe.src}')`;
     el.style.backgroundSize = 'cover';
     el.style.backgroundPosition = 'center';
-    if (probe.dataset.imgSrc === 'remote') queuePersistCardImage(card);
+    if (probe.dataset.imgSrc === 'remote' && official) queuePersistCardImage(card);
   };
   probe.onerror = () => {
+    if (probe.dataset.imgSrc === 'remote' && cached) {
+      probe.dataset.imgSrc = 'cached';
+      probe.src = cached;
+      return;
+    }
     if (probe.dataset.imgSrc === 'cached' && remote) {
       probe.dataset.imgSrc = 'remote';
       probe.src = remote;
     }
   };
-  probe.dataset.imgSrc = cached ? 'cached' : 'remote';
-  probe.src = cached || remote;
+  if (official) {
+    probe.dataset.imgSrc = 'remote';
+    probe.src = official;
+  } else if (cached) {
+    probe.dataset.imgSrc = 'cached';
+    probe.src = cached;
+  } else {
+    probe.dataset.imgSrc = 'remote';
+    probe.src = remote;
+  }
 }
 
 function setCardDetailImage(card) {
