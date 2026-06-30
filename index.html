@@ -19076,6 +19076,7 @@ function cpuScoreMember(c, cpu, hand, stageColors, tier, read = null) {
     const oppCenter = read.activeStage.find(x => x.slot === 'center');
     if (oppCenter && blade > oppCenter.blade + 1) score += tier === 'hard' ? 1.1 : 0.65;
   }
+  if (tier !== 'easy') score += cpuMemberLiveUnlockBonus(c, cpu, tier, hand);
   return score;
 }
 
@@ -19090,6 +19091,101 @@ function cpuHandHasViableLive(cpu) {
   const pool = stageHeartPool(cpu);
   return (cpu.hand || []).some(c =>
     isCpuLiveCard(c) && cpuCheckHearts(pool, cpuLiveRequiredHearts(c)));
+}
+
+function cpuHandLiveContext(cpu) {
+  const hand = cpu?.hand || [];
+  const pool = stageHeartPool(cpu);
+  const liveInHand = hand.filter(c => isCpuLiveCard(c));
+  const viableLives = liveInHand.filter(c => cpuCheckHearts(pool, cpuLiveRequiredHearts(c)));
+  const unviableLives = liveInHand.filter(c => !cpuCheckHearts(pool, cpuLiveRequiredHearts(c)));
+  return {
+    pool,
+    liveInHand,
+    viableLives,
+    unviableLives,
+    hasViableLive: viableLives.length > 0,
+    needsLives: liveInHand.length === 0,
+    needsHeartsForLives: unviableLives.length > 0 && !viableLives.length,
+  };
+}
+
+function cpuSimHeartPoolAfterMember(cpu, member, slot) {
+  const stage = {};
+  Object.entries(cpu.stage || {}).forEach(([k, v]) => {
+    if (v && k !== slot) stage[k] = v;
+  });
+  if (slot) stage[slot] = member;
+  return stageHeartPool({ stage });
+}
+
+function cpuLiveUnlockBonusValue(unlockedCount, bestLiveScore, tier) {
+  if (!unlockedCount) return 0;
+  const mul = tier === 'hard' ? 1 : 0.72;
+  let bonus = (tier === 'hard' ? 2.2 : 1.6) + (bestLiveScore || 0) * (tier === 'hard' ? 1.4 : 1.0);
+  if (unlockedCount > 1) bonus += (unlockedCount - 1) * (tier === 'hard' ? 1.1 : 0.75);
+  return bonus * mul;
+}
+
+function cpuMemberLiveUnlockBonus(c, cpu, tier, hand) {
+  if (tier === 'easy') return 0;
+  const { unviableLives } = cpuHandLiveContext(cpu);
+  if (!unviableLives.length) return 0;
+  const ae = (cpu.energy_zone || []).filter(energyChipActive).length;
+  const ec = effectiveCost(c, hand ?? cpu.hand);
+  const scorePool = (pool) => {
+    let unlocked = 0;
+    let bestScore = 0;
+    unviableLives.forEach(live => {
+      if (cpuCheckHearts(pool, cpuLiveRequiredHearts(live))) {
+        unlocked++;
+        bestScore = Math.max(bestScore, live.score || 0);
+      }
+    });
+    return cpuLiveUnlockBonusValue(unlocked, bestScore, tier);
+  };
+  let best = 0;
+  for (const slot of ['center', 'left', 'right']) {
+    const existing = cpu.stage?.[slot];
+    if (!existing) {
+      if (ec > ae) continue;
+      best = Math.max(best, scorePool(cpuSimHeartPoolAfterMember(cpu, c, slot)));
+      continue;
+    }
+    if (ec >= 1 && !memberBlocksBaton(existing) && !memberBatonRestricted(existing, c)) {
+      const batonCost = Math.max(0, ec - stageMemberEffectiveCost(existing, cpu));
+      if (batonCost <= affordableEnergyForBatonPlay(cpu, existing, c)) {
+        best = Math.max(best, scorePool(cpuSimHeartPoolAfterMember(cpu, c, slot)));
+      }
+    }
+    if (ae >= ec) {
+      best = Math.max(best, scorePool(cpuSimHeartPoolAfterMember(cpu, c, slot)));
+    }
+  }
+  return best;
+}
+
+function cpuAnyMemberUnlocksHandLives(cpu, tier) {
+  if (tier === 'easy') return false;
+  const { unviableLives } = cpuHandLiveContext(cpu);
+  if (!unviableLives.length) return false;
+  const hand = cpu.hand || [];
+  return hand.some(c => isCpuMemberCard(c) && cpuMemberLiveUnlockBonus(c, cpu, tier, hand) > 0);
+}
+
+function cpuWantsLiveSearch(cpu, tier) {
+  if (tier === 'easy') return false;
+  const liveCtx = cpuHandLiveContext(cpu);
+  if (liveCtx.hasViableLive) return false;
+  if (liveCtx.needsHeartsForLives && cpuAnyMemberUnlocksHandLives(cpu, tier)) return false;
+  return liveCtx.needsLives || liveCtx.needsHeartsForLives;
+}
+
+function cpuAbilityFindsLives(type) {
+  if (!type) return false;
+  return type.includes('draw') || type.includes('surveil') || type.includes('look_reveal')
+    || type.includes('look_deck') || type === 'reveal_top_live_score' || type === 'draw_until_hand'
+    || type === 'pay_energy_draw' || type === 'pay_energy_surveil';
 }
 
 function cpuScoreLiveForSet(c, tier, winPressure, read = null, cpu = null) {
@@ -19485,6 +19581,9 @@ function cpuScoreOptionalAbility(ab, cpu, tier, ae, hand, winPressure = 0, read 
   }
   if (type === 'optional_return_member_energy') {
     if (tier === 'easy') return -1;
+  }
+  if (tier !== 'easy' && cpuWantsLiveSearch(cpu, tier) && cpuAbilityFindsLives(type)) {
+    score += tier === 'hard' ? 1.2 : 0.75;
   }
   return score;
 }
@@ -19946,6 +20045,14 @@ function cpuScoreAbility(entry, cpu, tier, read = null, winPressure = 0) {
     score -= tier === 'hard' ? 1.2 : 2;
   }
   if (t.includes('opp') && read && !read.activeStage.length) score -= 1.5;
+  if (tier !== 'easy' && cpuWantsLiveSearch(cpu, tier)) {
+    if (cpuAbilityFindsLives(t)) {
+      score += tier === 'hard' ? 1.85 : 1.15;
+      if (cpuHandLiveContext(cpu).needsLives) score += tier === 'hard' ? 0.65 : 0.4;
+    } else if (t.includes('wr') && (cpu.waiting_room || []).some(c => isCpuLiveCard(c))) {
+      score += tier === 'hard' ? 1.2 : 0.75;
+    }
+  }
   return score;
 }
 
@@ -20020,10 +20127,16 @@ function cpuListActivateCandidates(s, cpu, ctx) {
       return true;
     });
   }
+  const liveCtx = cpuHandLiveContext(cpu);
   cpuTraceScore('main', 'activate', abilities.slice(0, 5).map(a => ({
     score: a.score,
     label: a.ability?.type || 'ability',
-  })), { minScore });
+  })), {
+    minScore,
+    liveInHand: liveCtx.liveInHand.length,
+    viableLives: liveCtx.viableLives.length,
+    wantsLiveSearch: cpuWantsLiveSearch(cpu, tier),
+  });
   return abilities.map(a => ({
     kind: 'activate',
     score: a.score,
@@ -20171,9 +20284,17 @@ function cpuPlayMemberFromHand(s, cpu, hand, tier, read = null) {
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
   const plan = cpuPlanMemberPlay(s, cpu, hand, tier, read, { suboptimalPick: tier === 'normal' });
+  const liveCtx = cpuHandLiveContext(cpu);
   cpuTraceScore('main', 'play_member_pick', memberRows, {
     picked: plan?.label || null,
     slot: plan?.payload?.slot || null,
+    liveInHand: liveCtx.liveInHand.length,
+    viableLives: liveCtx.viableLives.length,
+    unlockBonus: plan?.payload?.card_id
+      ? +cpuMemberLiveUnlockBonus(
+        hand.find(c => c.instance_id === plan.payload.card_id), cpu, tier, hand
+      ).toFixed(2)
+      : 0,
   });
   if (!plan) return false;
   cpuAct('play_member', plan.payload);
@@ -20426,6 +20547,7 @@ function cpuMain() {
   const actions = cpuListMainActions(s, cpu, ctx);
   const best = cpuBestMainAction(actions, ctx);
   const posture = cpuPosture(ctx);
+  const liveCtx = cpuHandLiveContext(cpu);
   cpuTraceScore('main', 'decision', actions.slice(0, 5).map(a => ({
     kind: a.kind,
     score: a.score,
@@ -20434,6 +20556,9 @@ function cpuMain() {
     picked: best ? best.kind : null,
     minScore: cpuMainActionMinScore(ctx.tier, posture),
     ending: !best,
+    liveInHand: liveCtx.liveInHand.length,
+    viableLives: liveCtx.viableLives.length,
+    wantsLiveSearch: cpuWantsLiveSearch(cpu, ctx.tier),
   });
   if (best) {
     if (best.kind === 'activate') cpuAct('activate_ability', best.payload);
