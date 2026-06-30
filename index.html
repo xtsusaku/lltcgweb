@@ -15320,6 +15320,7 @@ async function doSolo() {
       ...cpuJoinPayload(deckSel),
     });
     G.cpuToken = r2.player_token;
+    captureSyncMeta(r2);
     showScr('game'); startPoll();
   } catch(e){ setErr(e.message); }
 }
@@ -15456,6 +15457,8 @@ async function beginGameSync() {
   }
   if (G.syncEnabled && G.syncTicket) {
     openSyncStream();
+    // Bootstrap: SSE only pushes seq bumps; missed pre-subscribe notifies need one fetch.
+    await pullLatestState();
     return;
   }
   G.syncEnabled = false;
