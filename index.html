@@ -4507,12 +4507,20 @@ body.tcg-debug-on .llc-menu-item.tcg-debug-only{display:flex}
   align-items:center;
 }
 #screen-deck .deck-section-head__title-row{
-  display:flex;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
   align-items:center;
-  justify-content:space-between;
   gap:10px;
   width:100%;
   min-width:0;
+}
+#screen-deck .deck-section-head--pool h4{
+  grid-column:1 / -1;
+  justify-self:center;
+  width:auto;
+  max-width:calc(100% - 280px);
+  text-align:center;
+  pointer-events:none;
 }
 #screen-deck .deck-section-head h4{
   margin:0;
@@ -4529,6 +4537,10 @@ body.tcg-debug-on .llc-menu-item.tcg-debug-only{display:flex}
 #screen-deck .deck-section-head--deck h4{
   width:100%;
   text-align:center;
+  grid-column:auto;
+  justify-self:auto;
+  max-width:none;
+  pointer-events:auto;
 }
 #screen-deck .deck-section-stats{
   margin:0;
@@ -4548,6 +4560,13 @@ body.tcg-debug-on .llc-menu-item.tcg-debug-only{display:flex}
   width:auto;
   margin:0;
   flex:0 0 auto;
+  grid-column:3;
+  justify-self:end;
+  z-index:1;
+}
+#screen-deck .deck-collection-sort__select--dir .llc-select-wrap{
+  min-width:min(100%,108px);
+  max-width:min(100%,128px);
 }
 #screen-deck .deck-collection-sort label{
   font-size:12px;
@@ -5699,17 +5718,23 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
             <div class="deck-builder-pool-main">
               <div class="deck-section-head deck-section-head--pool">
                 <div class="deck-section-head__title-row">
-                  <h4>Collection</h4>
+                  <h4 id="deck-pool-head-title">Collection</h4>
                   <div class="deck-collection-sort" id="deck-collection-sort-wrap">
                     <label for="sel-deck-pool-sort">Sort by</label>
                     <div class="llc-select-wrap deck-collection-sort__select">
-                      <select id="sel-deck-pool-sort" aria-label="Collection sort order">
+                      <select id="sel-deck-pool-sort" aria-label="Collection sort field">
                         <option value="id">Card ID</option>
                         <option value="rarity">Rarity</option>
                         <option value="name">Name (idol)</option>
                         <option value="type">Card type</option>
                         <option value="group">Group / school</option>
                         <option value="recent">Recently acquired</option>
+                      </select>
+                    </div>
+                    <div class="llc-select-wrap deck-collection-sort__select deck-collection-sort__select--dir">
+                      <select id="sel-deck-pool-sort-dir" aria-label="Collection sort direction">
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
                       </select>
                     </div>
                   </div>
@@ -6666,6 +6691,7 @@ const A = {
   experimentDeckCache: {},
   deckPoolFilters: null,
   deckPoolSort: null,
+  deckPoolSortDir: null,
   deckFilterAdvancedOpen: false,
   starterPick: null,
   boxPick: null,
@@ -8712,7 +8738,9 @@ let _experimentPoolGen = 0;
 const DECK_FILTER_GROUPS = ["μ's", 'Nijigasaki', 'Sunshine', 'Superstar', 'Hasunosora'];
 const DECK_FILTER_RARITIES = ['N', 'R', 'R+', 'L', 'L+', 'P', 'P+', 'PR', 'PR+', 'PE', 'PE+', 'SEC', 'LLE', 'RM', 'AR'];
 const DECK_POOL_SORT_KEY = 'tcg_deck_pool_sort';
+const DECK_POOL_SORT_DIR_KEY = 'tcg_deck_pool_sort_dir';
 const DECK_POOL_SORT_DEFAULT = 'id';
+const DECK_POOL_SORT_DIR_DEFAULT = 'asc';
 const DECK_POOL_SORT_OPTIONS = [
   { id: 'id', label: 'Card ID' },
   { id: 'rarity', label: 'Rarity' },
@@ -8740,6 +8768,27 @@ function setDeckPoolSort(mode) {
   const next = normalizeDeckPoolSortMode(mode);
   A.deckPoolSort = next;
   try { sessionStorage.setItem(DECK_POOL_SORT_KEY, next); } catch (e) {}
+  syncDeckPoolSortUi();
+  renderDeckBuilder();
+}
+
+function normalizeDeckPoolSortDir(dir) {
+  return dir === 'desc' ? 'desc' : 'asc';
+}
+
+function deckPoolSortDir() {
+  if (A.deckPoolSortDir) return normalizeDeckPoolSortDir(A.deckPoolSortDir);
+  try {
+    const saved = sessionStorage.getItem(DECK_POOL_SORT_DIR_KEY);
+    if (saved) return normalizeDeckPoolSortDir(saved);
+  } catch (e) {}
+  return DECK_POOL_SORT_DIR_DEFAULT;
+}
+
+function setDeckPoolSortDir(dir) {
+  const next = normalizeDeckPoolSortDir(dir);
+  A.deckPoolSortDir = next;
+  try { sessionStorage.setItem(DECK_POOL_SORT_DIR_KEY, next); } catch (e) {}
   syncDeckPoolSortUi();
   renderDeckBuilder();
 }
@@ -8798,18 +8847,21 @@ function compareDeckPoolSortKeys(ka, kb) {
   return String(ka).localeCompare(String(kb), undefined, { numeric: true, sensitivity: 'base' });
 }
 
-function compareDeckPoolEntries(a, b, mode) {
-  return compareDeckPoolSortKeys(deckPoolSortKey(a, mode), deckPoolSortKey(b, mode));
+function compareDeckPoolEntries(a, b, mode, dir) {
+  const cmp = compareDeckPoolSortKeys(deckPoolSortKey(a, mode), deckPoolSortKey(b, mode));
+  return normalizeDeckPoolSortDir(dir) === 'desc' ? -cmp : cmp;
 }
 
-function sortDeckPoolEntries(entries, mode) {
+function sortDeckPoolEntries(entries, mode, dir) {
   const sortMode = mode || effectiveDeckPoolSort();
+  const sortDir = dir || deckPoolSortDir();
   if (!entries.length) return entries;
-  return entries.slice().sort((a, b) => compareDeckPoolEntries(a, b, sortMode));
+  return entries.slice().sort((a, b) => compareDeckPoolEntries(a, b, sortMode, sortDir));
 }
 
 function syncDeckPoolSortUi() {
   const sel = el('sel-deck-pool-sort');
+  const dirSel = el('sel-deck-pool-sort-dir');
   const recentOpt = sel?.querySelector('option[value="recent"]');
   const experiment = A.deckBuilderMode === 'experiment';
   if (recentOpt) recentOpt.hidden = experiment;
@@ -8817,6 +8869,7 @@ function syncDeckPoolSortUi() {
   const mode = deckPoolSortMode();
   const effective = effectiveDeckPoolSort();
   if (sel.value !== effective) sel.value = effective;
+  if (dirSel && dirSel.value !== deckPoolSortDir()) dirSel.value = deckPoolSortDir();
   if (mode === 'recent' && experiment) {
     A.deckPoolSort = DECK_POOL_SORT_DEFAULT;
     try { sessionStorage.setItem(DECK_POOL_SORT_KEY, DECK_POOL_SORT_DEFAULT); } catch (e) {}
@@ -13551,6 +13604,9 @@ let G = {
   });
   on('sel-deck-pool-sort', 'change', () => {
     setDeckPoolSort(el('sel-deck-pool-sort')?.value || DECK_POOL_SORT_DEFAULT);
+  });
+  on('sel-deck-pool-sort-dir', 'change', () => {
+    setDeckPoolSortDir(el('sel-deck-pool-sort-dir')?.value || DECK_POOL_SORT_DIR_DEFAULT);
   });
   on('btn-experiment-load-pwd', 'click', () => {
     loadExperimentDeckByPassword(el('inp-experiment-load-pwd')?.value);
