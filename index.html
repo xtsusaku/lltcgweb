@@ -1618,12 +1618,6 @@ html.tcg-mobile-viewport body.perf-spectacle-active #center-banner{
 }
 
 /* ── Sub-1080p desktop: log hidden; radio / phase / resign in left pane; playmat fills viewport ── */
-html.tcg-compact-desktop:not(.tcg-mobile-viewport) #llc-sky-bg{
-  opacity:0;pointer-events:none;
-}
-html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game.active{
-  background:#060810;width:100vw;max-width:100vw;
-}
 html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame,
 html.tcg-compact-desktop:not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .game-wide-wrap{
   width:100vw;max-width:100vw;
@@ -14338,7 +14332,10 @@ function bindMobileViewport() {
     const tablet = mobile && !phone && shortSide <= 920;
     const useFixedFrame = mobile && landscape && (phone || tablet);
     const portraitBlock = mobile && (phone || tablet) && !landscape;
-    const compactDesktop = !useFixedFrame && !portraitBlock && h < 1080;
+    // Below nominal 1080p only — require sub-HD width OR clearly short height so
+    // 1920×1080 desktops (innerHeight ~950–1040 with browser chrome) stay on full layout.
+    const compactDesktop = !useFixedFrame && !portraitBlock
+      && h < 1080 && (w < 1910 || h < 940);
     root.classList.toggle('tcg-mobile-viewport', useFixedFrame);
     root.classList.toggle('tcg-compact-desktop', compactDesktop);
     root.classList.toggle('tcg-phone-device', phone);
