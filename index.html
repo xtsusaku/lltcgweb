@@ -1683,6 +1683,14 @@ html.tcg-compact-desktop:not(.tcg-mobile-viewport) #side-left-actions-host.side-
   display:flex!important;flex-direction:column;gap:8px;
 }
 
+/* Full desktop: never show compact action host; keep standard three-column game layout */
+html:not(.tcg-compact-desktop):not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-left-actions-host{
+  display:none!important;
+}
+html:not(.tcg-compact-desktop):not(.tcg-mobile-viewport) #screen-game .game-viewport-frame .side-panel.side-right{
+  display:flex!important;
+}
+
 .playmat-img{
   display:block;width:100%;height:100%;
   object-fit:fill;
@@ -6055,7 +6063,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
           <div id="sb-activatable"></div>
         </div>
       </div>
-      <div class="side-block side-left-actions-host side-log" id="side-left-actions-host" hidden aria-hidden="true"></div>
+      <div class="side-block side-left-actions-host" id="side-left-actions-host" hidden aria-hidden="true"></div>
       <div class="side-block card-hover-panel" id="card-hover-panel">
         <p class="hc-empty" id="hc-empty">Hover a card in your hand to preview it here.</p>
         <img class="hc-img" id="hc-img" src="" alt="" onerror="this.classList.remove('show')">
@@ -14332,10 +14340,11 @@ function bindMobileViewport() {
     const tablet = mobile && !phone && shortSide <= 920;
     const useFixedFrame = mobile && landscape && (phone || tablet);
     const portraitBlock = mobile && (phone || tablet) && !landscape;
-    // Below nominal 1080p only — require sub-HD width OR clearly short height so
-    // 1920×1080 desktops (innerHeight ~950–1040 with browser chrome) stay on full layout.
-    const compactDesktop = !useFixedFrame && !portraitBlock
-      && h < 1080 && (w < 1910 || h < 940);
+    // Compact only on clearly sub-1080p viewports — never on typical 1080p+ desktops
+    // (wide + tall enough keeps the full log / card preview / three-column layout).
+    const fullDesktopLayout = w >= 1600 && h >= 880;
+    const compactDesktop = !useFixedFrame && !portraitBlock && !fullDesktopLayout
+      && (w < 1600 || h < 880);
     root.classList.toggle('tcg-mobile-viewport', useFixedFrame);
     root.classList.toggle('tcg-compact-desktop', compactDesktop);
     root.classList.toggle('tcg-phone-device', phone);
@@ -14431,30 +14440,49 @@ function syncCompactDesktopLayout() {
   if (!host || !sideLog) return;
 
   const compact = tcgCompactDesktopActive() && !tcgMobileViewportActive();
-  const actionNodes = compactActionSelectors
-    .map(sel => sideLog.querySelector(sel) || host.querySelector(sel))
-    .filter(Boolean);
 
-  if (compact) {
-    host.hidden = false;
-    host.setAttribute('aria-hidden', 'false');
-    if (cardPanel) {
-      cardPanel.hidden = true;
-      cardPanel.setAttribute('aria-hidden', 'true');
+  const restoreActionsToSideLog = () => {
+    const anchor = sideLog.querySelector('.logscroll') || sideLog.querySelector('.sbs');
+    let insertBefore = anchor?.nextElementSibling || null;
+    compactActionSelectors.forEach(sel => {
+      const node = host.querySelector(sel);
+      if (!node) return;
+      sideLog.insertBefore(node, insertBefore);
+      insertBefore = node.nextElementSibling;
+    });
+    if (host.classList.contains('radio-open')) {
+      host.classList.remove('radio-open', 'side-log');
+      sideLog.classList.add('radio-open');
+    } else {
+      host.classList.remove('side-log');
     }
-    actionNodes.forEach(node => host.appendChild(node));
+    host.hidden = true;
+    host.setAttribute('aria-hidden', 'true');
+    if (cardPanel) {
+      cardPanel.hidden = false;
+      cardPanel.removeAttribute('aria-hidden');
+    }
+  };
+
+  if (!compact) {
+    restoreActionsToSideLog();
     return;
   }
 
-  host.hidden = true;
-  host.setAttribute('aria-hidden', 'true');
+  host.hidden = false;
+  host.setAttribute('aria-hidden', 'false');
+  host.classList.add('side-log');
+  if (sideLog.classList.contains('radio-open')) {
+    sideLog.classList.remove('radio-open');
+    host.classList.add('radio-open');
+  }
   if (cardPanel) {
-    cardPanel.hidden = false;
-    cardPanel.removeAttribute('aria-hidden');
+    cardPanel.hidden = true;
+    cardPanel.setAttribute('aria-hidden', 'true');
   }
   compactActionSelectors.forEach(sel => {
-    const node = host.querySelector(sel);
-    if (node) sideLog.appendChild(node);
+    const node = sideLog.querySelector(sel);
+    if (node) host.appendChild(node);
   });
 }
 
@@ -35086,6 +35114,7 @@ function showScr(n){
   if (n === 'game') {
     clearMatHands();
     el('screen-game')?.classList.add('prep-hands-hidden');
+    syncCompactDesktopLayout();
   }
   tcgUpdatePhoneFsUI();
 }
