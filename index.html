@@ -4481,6 +4481,46 @@ body.tcg-debug-on .llc-menu-item.tcg-debug-only{display:flex}
   text-align:center;
   white-space:normal;
 }
+#screen-deck .deck-collection-sort{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+  width:100%;
+  margin:0 0 2px;
+}
+#screen-deck .deck-collection-sort label{
+  font-size:12px;
+  font-weight:600;
+  color:rgba(255,255,255,.78);
+  margin:0;
+  white-space:nowrap;
+}
+#screen-deck .deck-collection-sort .llc-select-wrap{
+  width:auto;
+  min-width:min(100%,148px);
+  max-width:min(100%,220px);
+}
+#screen-deck .deck-collection-sort select{
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  width:100%;display:block;box-sizing:border-box;
+  padding:6px 32px 6px 10px;min-height:34px;
+  font-size:12px;font-weight:700;line-height:1.3;letter-spacing:.02em;
+  border:1px solid rgba(186,228,255,.55);border-radius:8px;
+  background:rgba(52,163,243,.28);color:#fff;cursor:pointer;
+  transition:border-color .2s ease,background .2s ease;
+  color-scheme:dark;
+}
+#screen-deck .deck-collection-sort select:hover{
+  border-color:rgba(255,255,255,.55);
+  background:rgba(52,163,243,.42);
+}
+#screen-deck .deck-collection-sort select:focus{
+  outline:none;border-color:#fff;background:rgba(255,255,255,.14);
+  box-shadow:0 0 0 1px rgba(186,228,255,.4);
+}
+#screen-deck .deck-collection-sort select:disabled{opacity:.45;cursor:not-allowed}
 #screen-deck .deck-builder-hint{
   font-size:10px;
   margin:0 0 3px;
@@ -5607,6 +5647,20 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
             <div class="deck-builder-pool-main">
               <div class="deck-section-head">
                 <h4>Collection</h4>
+                <div class="deck-collection-sort" id="deck-collection-sort-wrap">
+                  <label for="sel-deck-pool-sort">Sort by</label>
+                  <div class="llc-select-wrap deck-collection-sort__select">
+                    <select id="sel-deck-pool-sort" aria-label="Collection sort order">
+                      <option value="default">Default</option>
+                      <option value="id">Card ID</option>
+                      <option value="rarity">Rarity</option>
+                      <option value="name">Name (idol)</option>
+                      <option value="type">Card type</option>
+                      <option value="group">Group / school</option>
+                      <option value="recent">Recently acquired</option>
+                    </select>
+                  </div>
+                </div>
                 <p class="deck-section-stats" id="deck-collection-stats">Total cards owned · 0</p>
               </div>
               <div class="deck-card-grid deck-card-grid--pool" id="deck-pool"></div>
@@ -6558,6 +6612,7 @@ const A = {
   experimentPassword: '',
   experimentDeckCache: {},
   deckPoolFilters: null,
+  deckPoolSort: null,
   deckFilterAdvancedOpen: false,
   starterPick: null,
   boxPick: null,
@@ -8560,6 +8615,7 @@ function syncDeckBuilderChrome() {
   }
   ensureDeckFilterPanel();
   syncDeckFilterUi();
+  syncDeckPoolSortUi();
   if (poolHead) poolHead.textContent = experiment ? 'Card pool' : 'Collection';
   const equipBtn = el('btn-deck-equip');
   if (equipBtn) equipBtn.hidden = experiment;
@@ -8602,6 +8658,113 @@ let _experimentPoolGen = 0;
 
 const DECK_FILTER_GROUPS = ["μ's", 'Nijigasaki', 'Sunshine', 'Superstar', 'Hasunosora'];
 const DECK_FILTER_RARITIES = ['N', 'R', 'R+', 'L', 'L+', 'P', 'P+', 'PR', 'PR+', 'PE', 'PE+', 'SEC', 'LLE', 'RM', 'AR'];
+const DECK_POOL_SORT_KEY = 'tcg_deck_pool_sort';
+const DECK_POOL_SORT_OPTIONS = [
+  { id: 'default', label: 'Default' },
+  { id: 'id', label: 'Card ID' },
+  { id: 'rarity', label: 'Rarity' },
+  { id: 'name', label: 'Name (idol)' },
+  { id: 'type', label: 'Card type' },
+  { id: 'group', label: 'Group / school' },
+  { id: 'recent', label: 'Recently acquired', collectionOnly: true },
+];
+
+function deckPoolSortMode() {
+  if (A.deckPoolSort) return A.deckPoolSort;
+  try {
+    const saved = sessionStorage.getItem(DECK_POOL_SORT_KEY);
+    if (saved && DECK_POOL_SORT_OPTIONS.some(o => o.id === saved)) return saved;
+  } catch (e) {}
+  return 'default';
+}
+
+function setDeckPoolSort(mode) {
+  const next = DECK_POOL_SORT_OPTIONS.some(o => o.id === mode) ? mode : 'default';
+  A.deckPoolSort = next;
+  try { sessionStorage.setItem(DECK_POOL_SORT_KEY, next); } catch (e) {}
+  syncDeckPoolSortUi();
+  renderDeckBuilder();
+}
+
+function effectiveDeckPoolSort() {
+  const mode = deckPoolSortMode();
+  if (mode === 'recent' && A.deckBuilderMode === 'experiment') return 'default';
+  return mode;
+}
+
+function deckPoolRarityRank(rarity) {
+  const r = String(rarity || '').toUpperCase();
+  const idx = DECK_FILTER_RARITIES.indexOf(r);
+  return idx >= 0 ? idx : -1;
+}
+
+function deckPoolCardTypeRank(card) {
+  const type = card?.card_type;
+  if (type === 'メンバー') return 0;
+  if (type === 'ライブ') return 1;
+  if (type === 'エネルギー') return 2;
+  return 3;
+}
+
+function deckPoolSortKey(entry, mode) {
+  const c = enrichCard(entry.c0 || entry.card || G.allCards[entry.card_no]);
+  const no = String(c?.card_no || entry.card_no || '');
+  switch (mode) {
+    case 'id':
+      return no;
+    case 'rarity':
+      return [-deckPoolRarityRank(c?.rarity), no];
+    case 'name':
+      return (c?.name_en || c?.name || no).toLowerCase();
+    case 'type':
+      return [deckPoolCardTypeRank(c), no];
+    case 'group':
+      return [(c?.group || 'zzz').toLowerCase(), no];
+    case 'recent':
+      return [-(entry.acquired_at || entry.row?.acquired_at || 0), no];
+    default:
+      return entry._idx ?? 0;
+  }
+}
+
+function compareDeckPoolSortKeys(ka, kb) {
+  if (Array.isArray(ka) && Array.isArray(kb)) {
+    for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
+      const va = ka[i];
+      const vb = kb[i];
+      if (va < vb) return -1;
+      if (va > vb) return 1;
+    }
+    return 0;
+  }
+  return String(ka).localeCompare(String(kb), undefined, { numeric: true, sensitivity: 'base' });
+}
+
+function compareDeckPoolEntries(a, b, mode) {
+  if (mode === 'default') return (a._idx ?? 0) - (b._idx ?? 0);
+  return compareDeckPoolSortKeys(deckPoolSortKey(a, mode), deckPoolSortKey(b, mode));
+}
+
+function sortDeckPoolEntries(entries, mode) {
+  const sortMode = mode || effectiveDeckPoolSort();
+  if (!entries.length || sortMode === 'default') return entries;
+  return entries.slice().sort((a, b) => compareDeckPoolEntries(a, b, sortMode));
+}
+
+function syncDeckPoolSortUi() {
+  const sel = el('sel-deck-pool-sort');
+  const recentOpt = sel?.querySelector('option[value="recent"]');
+  const experiment = A.deckBuilderMode === 'experiment';
+  if (recentOpt) recentOpt.hidden = experiment;
+  if (!sel) return;
+  const mode = deckPoolSortMode();
+  const effective = effectiveDeckPoolSort();
+  if (sel.value !== effective) sel.value = effective;
+  if (mode === 'recent' && experiment) {
+    A.deckPoolSort = 'default';
+    try { sessionStorage.setItem(DECK_POOL_SORT_KEY, 'default'); } catch (e) {}
+  }
+}
 const DECK_FILTER_TYPES = [
   { id: '', label: 'All types' },
   { id: 'member', label: 'Member' },
@@ -9383,8 +9546,10 @@ function experimentPoolEntries(searchQ) {
   const out = [];
   const seen = new Set();
   const filters = deckPoolFilterState();
+  const sortMode = effectiveDeckPoolSort();
   const cards = Object.values(G.allCards).sort((a, b) =>
     String(a.card_no || '').localeCompare(String(b.card_no || '')));
+  let idx = 0;
   cards.forEach(c0 => {
     if (!c0?.card_no || seen.has(c0.card_no)) return;
     if (!cardMatchesDeckPoolFilters(c0, filters, searchQ)) return;
@@ -9395,9 +9560,9 @@ function experimentPoolEntries(searchQ) {
     const maxOwn = experimentMaxOwned(c0.card_no, type);
     const available = maxOwn - inDeck;
     if (available <= 0) return;
-    out.push({ c0, type, available });
+    out.push({ c0, type, available, _idx: idx++ });
   });
-  return out;
+  return sortDeckPoolEntries(out, sortMode);
 }
 
 function renderExperimentPoolChunked(searchQ) {
@@ -9512,6 +9677,9 @@ function renderDeckBuilder(opts = {}) {
     const poolSeen = new Set();
     let poolCount = 0;
     let matchCount = 0;
+    const poolEntries = [];
+    let poolIdx = 0;
+    const sortMode = effectiveDeckPoolSort();
     A.collection.forEach(row => {
       const c0 = enrichCard(row.card || G.allCards[row.card_no]);
       if (!c0 || poolSeen.has(row.card_no)) return;
@@ -9523,8 +9691,18 @@ function renderDeckBuilder(opts = {}) {
       const inDeck = countInDeck(row.card_no);
       const available = row.qty - inDeck;
       if (available <= 0) return;
+      poolEntries.push({
+        row,
+        c0,
+        type,
+        available,
+        acquired_at: row.acquired_at || 0,
+        _idx: poolIdx++,
+      });
+    });
+    sortDeckPoolEntries(poolEntries, sortMode).forEach(entry => {
       poolCount++;
-      appendDeckCardTile(pool, c0, available, () => addCardToDeck(row.card_no, type));
+      appendDeckCardTile(pool, entry.c0, entry.available, () => addCardToDeck(entry.row.card_no, entry.type));
     });
     if (searchQ || filtered) {
       el('deck-collection-stats').textContent = 'Collection · ' + matchCount + ' match'
@@ -13313,6 +13491,9 @@ let G = {
   on('inp-deck-card-search', 'input', () => {
     A.experimentSearch = el('inp-deck-card-search')?.value || '';
     renderDeckBuilder();
+  });
+  on('sel-deck-pool-sort', 'change', () => {
+    setDeckPoolSort(el('sel-deck-pool-sort')?.value || 'default');
   });
   on('btn-experiment-load-pwd', 'click', () => {
     loadExperimentDeckByPassword(el('inp-experiment-load-pwd')?.value);

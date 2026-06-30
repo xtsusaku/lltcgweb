@@ -133,22 +133,30 @@ function tcgApiPickStarter(array $body): array {
 function tcgApiCollection(array $body): array {
     $uid = tcgRequireAuthUser($body);
     tcgEnsureUser($uid, tcgAuthUserProfile($uid));
-    $owned = tcgGetCollectionMap($uid);
+    $db = tcgDb();
+    $stmt = $db->prepare('SELECT card_no, qty, acquired_at FROM tcg_collection WHERE discord_id = ? ORDER BY card_no');
+    $stmt->execute([$uid]);
     $cards = tcgLoadCardsData();
     $cardMap = tcgBuildCardMap($cards);
     $list = [];
-    foreach ($owned as $no => $qty) {
+    $totalCards = 0;
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $qty = intval($row['qty'] ?? 0);
+        if ($qty <= 0) {
+            continue;
+        }
+        $totalCards += $qty;
         $list[] = [
-            'card_no' => $no,
+            'card_no' => $row['card_no'],
             'qty' => $qty,
-            'card' => $cardMap[$no] ?? null,
+            'acquired_at' => intval($row['acquired_at'] ?? 0),
+            'card' => $cardMap[$row['card_no']] ?? null,
         ];
     }
-    usort($list, fn($a, $b) => strcmp($a['card_no'], $b['card_no']));
     return [
         'success' => true,
         'total_unique' => count($list),
-        'total_cards' => array_sum($owned),
+        'total_cards' => $totalCards,
         'collection' => $list,
     ];
 }

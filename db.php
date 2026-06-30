@@ -136,6 +136,7 @@ function tcgDbMigrate(PDO $db): void {
     tcgDbEnsureColumn($db, 'tcg_users', 'star_gems', 'INTEGER NOT NULL DEFAULT 0');
     tcgDbEnsureColumn($db, 'tcg_users', 'dupe_gem_migration_done', 'INTEGER NOT NULL DEFAULT 0');
     tcgDbEnsureColumn($db, 'tcg_box_progress', 'rm_pity', 'INTEGER NOT NULL DEFAULT 0');
+    tcgDbEnsureColumn($db, 'tcg_collection', 'acquired_at', 'INTEGER');
 
     $db->exec('CREATE TABLE IF NOT EXISTS tcg_schema_meta (
         key TEXT PRIMARY KEY,
@@ -217,6 +218,21 @@ function tcgEnsureUser(string $discordId, array $profile = []): array {
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+function tcgUpsertCollectionCounts(string $discordId, array $counts, ?int $acquiredAt = null): void {
+    if (empty($counts)) {
+        return;
+    }
+    $db = tcgDb();
+    $now = $acquiredAt ?? time();
+    $stmt = $db->prepare('INSERT INTO tcg_collection (discord_id, card_no, qty, acquired_at) VALUES (?, ?, ?, ?)
+        ON CONFLICT(discord_id, card_no) DO UPDATE SET
+            qty = qty + excluded.qty,
+            acquired_at = excluded.acquired_at');
+    foreach ($counts as $no => $qty) {
+        $stmt->execute([$discordId, $no, $qty, $now]);
+    }
+}
+
 function tcgAddCardsToCollection(string $discordId, array $cardNos): void {
     if (empty($cardNos)) {
         return;
@@ -232,11 +248,7 @@ function tcgAddCardsToCollection(string $discordId, array $cardNos): void {
             }
             $counts[$no] = ($counts[$no] ?? 0) + 1;
         }
-        $stmt = $db->prepare('INSERT INTO tcg_collection (discord_id, card_no, qty) VALUES (?, ?, ?)
-            ON CONFLICT(discord_id, card_no) DO UPDATE SET qty = qty + excluded.qty');
-        foreach ($counts as $no => $qty) {
-            $stmt->execute([$discordId, $no, $qty]);
-        }
+        tcgUpsertCollectionCounts($discordId, $counts);
         $db->commit();
     } catch (Throwable $e) {
         $db->rollBack();
@@ -380,11 +392,7 @@ function tcgApplyBoosterPullWithGems(string $discordId, array $cardNos, array $c
     $db->beginTransaction();
     try {
         if (!empty($addCounts)) {
-            $stmt = $db->prepare('INSERT INTO tcg_collection (discord_id, card_no, qty) VALUES (?, ?, ?)
-                ON CONFLICT(discord_id, card_no) DO UPDATE SET qty = qty + excluded.qty');
-            foreach ($addCounts as $no => $qty) {
-                $stmt->execute([$discordId, $no, $qty]);
-            }
+            tcgUpsertCollectionCounts($discordId, $addCounts);
         }
         if ($gemsEarned > 0) {
             $db->prepare('UPDATE tcg_users SET star_gems = COALESCE(star_gems, 0) + ?, updated_at = ? WHERE discord_id = ?')
