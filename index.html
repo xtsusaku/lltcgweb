@@ -517,7 +517,7 @@ html:not(.tcg-mobile-viewport) #screen-game .opp-hand-strip .opp-hand-card{
 .my-hand-strip .hcard:hover:not(.play-sel){transform:translateY(-10px);z-index:5}
 .my-hand-strip .hcard.hover-sel:not(.play-sel){transform:translateY(-12px);z-index:6}
 .my-hand-strip .hcard.play-sel{
-  transform:translateY(-26px) scale(1.05);
+  transform:translateY(-28px);
   z-index:24;
   border-color:rgba(56,161,105,.9);
   box-shadow:0 0 22px rgba(56,161,105,.6),0 10px 28px rgba(0,0,0,.5);
@@ -1407,17 +1407,17 @@ html.tcg-mobile-viewport #screen-game .game-viewport-frame .my-hand-strip .hcard
   z-index:18;
 }
 html.tcg-mobile-viewport #screen-game .game-viewport-frame .my-hand-strip .hcard.play-sel{
-  transform:translateY(calc(-1 * var(--mobile-hand-tap-lift))) scale(1.02);
+  transform:translateY(calc(-1 * var(--mobile-hand-tap-lift)));
   z-index:42;
   border-color:rgba(56,161,105,.9);
   box-shadow:0 0 28px rgba(56,161,105,.62),0 14px 36px rgba(0,0,0,.55);
 }
 html:not(.foil-fx-off).tcg-mobile-viewport #screen-game .game-viewport-frame .my-hand-strip .hcard.card-tilt-enabled.foil-tilt-hover:not(.play-sel){
-  transform:translateY(calc(-1 * var(--mobile-hand-tap-lift))) scale(var(--foil-scale,1.04));
+  transform:translateY(calc(-1 * var(--mobile-hand-tap-lift))) rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
   z-index:20;
 }
 html:not(.foil-fx-off).tcg-mobile-viewport #screen-game .game-viewport-frame .my-hand-strip .hcard.card-tilt-enabled.play-sel.foil-tilt-hover{
-  transform:translateY(calc(-1 * var(--mobile-hand-tap-lift))) scale(calc(1.02 * var(--foil-scale,1)));
+  transform:translateY(calc(-1 * var(--mobile-hand-tap-lift))) rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
   z-index:42;
 }
 html:not(.foil-fx-off).tcg-mobile-viewport #screen-game .game-viewport-frame .my-hand-strip .hcard.card-tilt-enabled:not(.play-sel):not(.hover-sel):not(.foil-tilt-hover){
@@ -2337,9 +2337,9 @@ html:not(.foil-fx-off) #screen-game .hcard.card-tilt-enabled.hover-sel:not(.play
   transform:translateY(-8px);border-color:rgba(255,107,168,.45);box-shadow:0 0 10px rgba(255,107,168,.35);
 }
 html:not(.foil-fx-off) #screen-game .hcard.card-tilt-enabled:not(.play-sel):hover{
-  transform:translateY(-4px) scale(var(--foil-scale,1));
+  transform:translateY(-4px);
 }
-.hcard.play-sel{border-color:rgba(56,161,105,.9);transform:translateY(-26px) scale(1.05);z-index:24;
+.hcard.play-sel{border-color:rgba(56,161,105,.9);transform:translateY(-28px);z-index:24;
   box-shadow:0 0 22px rgba(56,161,105,.6),0 10px 28px rgba(0,0,0,.5)}
 .hcard.playable{box-shadow:0 0 6px rgba(56,161,105,.55);border-color:rgba(56,161,105,.5)}
 .hcard.playable.play-sel{box-shadow:0 0 22px rgba(56,161,105,.65),0 10px 28px rgba(0,0,0,.5)}
@@ -2819,8 +2819,8 @@ body.deck-card-preview #modal-card{z-index:970}
   border-radius:8px;overflow:hidden;cursor:pointer;border:3px solid rgba(255,255,255,.18);
   box-shadow:0 8px 28px rgba(0,0,0,.55);transition:transform .15s,border-color .15s,box-shadow .15s;
 }
-.hand-pick-card:hover{transform:translateY(-6px) scale(1.03);border-color:rgba(255,255,255,.45)}
-.hand-pick-card.sel{border-color:var(--pink);box-shadow:0 0 0 2px var(--pink),0 12px 32px rgba(255,107,168,.35);transform:translateY(-8px) scale(1.05)}
+.hand-pick-card:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.45)}
+.hand-pick-card.sel{border-color:var(--pink);box-shadow:0 0 0 2px var(--pink),0 12px 32px rgba(255,107,168,.35);transform:translateY(-10px)}
 .hand-pick-card:not(.card-live-hand) img,.hand-pick-card:not(.card-live-hand) .noimg{width:100%;height:100%;object-fit:cover}
 .hand-pick-card.card-live-hand{overflow:hidden}
 .hand-pick-count{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:14px}
@@ -2899,7 +2899,7 @@ body.deck-card-preview #modal-card{z-index:970}
 .zthumb{border-radius:4px;overflow:hidden;cursor:pointer;
   border:1px solid rgba(255,107,168,.2);transition:all .15s;flex-shrink:0}
 
-.zthumb:hover{transform:scale(1.06);border-color:var(--pink)}
+.zthumb:hover{transform:translateY(-4px);border-color:var(--pink)}
 
 /* Toast — hidden off-screen until .show; :empty avoids a blank pill if something toggles show without text */
 .toast{position:fixed;top:18px;left:50%;
@@ -3205,7 +3205,7 @@ body.perf-spectacle-active #center-banner.show{z-index:8750}
   box-shadow:0 8px 22px rgba(0,0,0,.42);transform:translateY(0);
   transition:transform .4s ease;flex-shrink:0;
 }
-.perf-deck-pile.perf-deck-draw{transform:translateY(-7px) scale(1.03)}
+.perf-deck-pile.perf-deck-draw{transform:translateY(-7px)}
 .perf-yell-card.perf-yell-flying{
   position:fixed;z-index:10060;pointer-events:none;margin:0;
   transition:transform .48s cubic-bezier(.2,.9,.2,1),opacity .38s ease;
@@ -5118,26 +5118,26 @@ html:not(.foil-fx-off) #screen-game .hcard.card-tilt-enabled,
 html:not(.foil-fx-off) #screen-game .lcard.card-tilt-enabled,
 html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled{
   transform-style:preserve-3d;
-  --foil-x:50%;--foil-y:50%;--foil-rx:0deg;--foil-ry:0deg;--foil-scale:1;
+  --foil-x:50%;--foil-y:50%;--foil-rx:0deg;--foil-ry:0deg;
   transition:transform .48s cubic-bezier(0.34,1.56,0.64,1),box-shadow .18s ease,border-color .15s;
 }
 html:not(.foil-fx-off) #screen-game .hcard.card-tilt-enabled:not(.play-sel):not(.foil-tilt-hover):hover{
-  transform:translateY(-4px) scale(var(--foil-scale,1));
+  transform:translateY(-4px);
 }
 html:not(.foil-fx-off) #screen-game .my-hand-strip .hcard.card-tilt-enabled.foil-tilt-hover:not(.play-sel){
-  transform:translateY(-12px) scale(var(--foil-scale,1.06)) rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
+  transform:translateY(-12px) rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
   z-index:8;box-shadow:0 16px 36px rgba(0,0,0,.48),0 0 22px rgba(255,180,230,.18);
 }
 html:not(.foil-fx-off) #screen-game .hcard.card-tilt-enabled.foil-tilt-hover:not(.play-sel){
-  transform:translateY(-10px) scale(var(--foil-scale,1.06)) rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
+  transform:translateY(-10px) rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
   z-index:7;box-shadow:0 14px 32px rgba(0,0,0,.45),0 0 18px rgba(255,200,255,.15);
 }
 html:not(.foil-fx-off) #screen-game .hcard.card-tilt-enabled.play-sel.foil-tilt-hover{
-  transform:translateY(-26px) scale(calc(1.05 * var(--foil-scale,1))) rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
+  transform:translateY(-28px) rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
 }
 html:not(.foil-fx-off) #screen-game .lcard.card-tilt-enabled.foil-tilt-hover,
 html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
-  transform:scale(var(--foil-scale,1.04)) rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
+  transform:rotateX(var(--foil-rx,0deg)) rotateY(var(--foil-ry,0deg));
   z-index:12;box-shadow:0 10px 26px rgba(0,0,0,.42),0 0 14px rgba(255,210,255,.12);
 }
 .card-foil-fx{
@@ -5187,6 +5187,24 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 .foil-tex-signed .card-foil-stamp{display:block;opacity:.88}
 .card-tilt-enabled .card-face-fill,
 .card-tilt-enabled img.card-face-fill{transform:translateZ(1px)}
+/* Keep card art sharp when lifting — avoid scale() on card shells (causes bitmap upscale blur). */
+#screen-game img.card-face-fill,
+#screen-game .hcard img,
+#screen-game .lcard img,
+#screen-game .mslot img,
+#screen-game .echip img,
+.overlay .menu-card img,
+.overlay .mullcard img,
+.overlay .pickcard img,
+.overlay .surveilcard img,
+.overlay .hand-pick-card img,
+.deck-card-tile img,
+.zthumb img{
+  image-rendering:auto;
+  image-rendering:-webkit-optimize-contrast;
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
+}
 </style>
 </head>
 <body>
@@ -7104,7 +7122,6 @@ function clearCardFoilFx(el) {
   el.style.removeProperty('--foil-ry');
   el.style.removeProperty('--foil-x');
   el.style.removeProperty('--foil-y');
-  el.style.removeProperty('--foil-scale');
   foilFxHost(el).querySelector(':scope > .card-foil-fx')?.remove();
 }
 
@@ -7112,13 +7129,11 @@ function handleFoilTiltEnter(e) {
   if (!foilFxEnabled()) return;
   const el = e.currentTarget;
   el.classList.add('foil-tilt-hover');
-  el.style.setProperty('--foil-scale', '1.06');
 }
 
 function handleFoilTiltLeave(e) {
   const el = e.currentTarget;
   el.classList.remove('foil-tilt-hover');
-  el.style.setProperty('--foil-scale', '1');
   el.style.setProperty('--foil-rx', '0deg');
   el.style.setProperty('--foil-ry', '0deg');
   el.style.setProperty('--foil-x', '50%');
@@ -7134,8 +7149,8 @@ function handleFoilTiltMove(e) {
   const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
   el.style.setProperty('--foil-x', `${x * 100}%`);
   el.style.setProperty('--foil-y', `${y * 100}%`);
-  el.style.setProperty('--foil-ry', `${(x - 0.5) * 20}deg`);
-  el.style.setProperty('--foil-rx', `${(0.5 - y) * 16}deg`);
+  el.style.setProperty('--foil-ry', `${(x - 0.5) * 12}deg`);
+  el.style.setProperty('--foil-rx', `${(0.5 - y) * 10}deg`);
 }
 
 function bindCardFoilTilt(el) {
