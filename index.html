@@ -9369,24 +9369,25 @@ function rebuildDeckPoolSortSelect() {
   const experiment = A.deckBuilderMode === 'experiment';
   const showValue = deckPoolSortFieldSelectValue();
   sel.replaceChildren();
+  sel.setAttribute('aria-label', t('deck.filters.sort.aria'));
   const sortGroup = document.createElement('optgroup');
-  sortGroup.label = 'Sort by';
+  sortGroup.label = t('deck.filters.sort.sortBy');
   DECK_POOL_SORT_OPTIONS.forEach(opt => {
     if (opt.collectionOnly && experiment) return;
     const o = document.createElement('option');
     o.value = `field:${opt.id}`;
-    o.textContent = opt.label;
+    o.textContent = t('deck.filters.sort.' + opt.id);
     sortGroup.appendChild(o);
   });
   const orderGroup = document.createElement('optgroup');
-  orderGroup.label = 'Order';
+  orderGroup.label = t('deck.filters.sort.order');
   [
-    { id: 'asc', label: 'Ascending' },
-    { id: 'desc', label: 'Descending' },
+    { id: 'asc', labelKey: 'asc' },
+    { id: 'desc', labelKey: 'desc' },
   ].forEach(opt => {
     const o = document.createElement('option');
     o.value = `dir:${opt.id}`;
-    o.textContent = opt.label;
+    o.textContent = t('deck.filters.sort.' + opt.labelKey);
     orderGroup.appendChild(o);
   });
   sel.appendChild(sortGroup);
@@ -9486,24 +9487,24 @@ function syncDeckPoolSortUi() {
   rebuildDeckPoolSortSelect();
 }
 const DECK_FILTER_TYPES = [
-  { id: '', label: 'All types' },
-  { id: 'member', label: 'Member' },
-  { id: 'live', label: 'Live' },
-  { id: 'energy', label: 'Energy' },
+  { id: '', labelKey: 'allTypes' },
+  { id: 'member', labelKey: 'member' },
+  { id: 'live', labelKey: 'live' },
+  { id: 'energy', labelKey: 'energy' },
 ];
 const DECK_FILTER_SEARCH_MODES = [
-  { id: 'all', label: 'All fields' },
-  { id: 'name', label: 'Name' },
-  { id: 'text', label: 'Text' },
-  { id: 'id', label: 'Card ID' },
+  { id: 'all', labelKey: 'all' },
+  { id: 'name', labelKey: 'name' },
+  { id: 'text', labelKey: 'text' },
+  { id: 'id', labelKey: 'id' },
 ];
 const DECK_FILTER_PRODUCT_KINDS = [
-  { id: '', label: 'All products' },
-  { id: 'bp', label: 'Booster Pack' },
-  { id: 'pb', label: 'Premium Booster' },
-  { id: 'sd', label: 'Starter Deck' },
-  { id: 'collection', label: 'Collection' },
-  { id: 'pr', label: 'PR' },
+  { id: '', labelKey: 'allProducts' },
+  { id: 'bp', labelKey: 'bp' },
+  { id: 'pb', labelKey: 'pb' },
+  { id: 'sd', labelKey: 'sd' },
+  { id: 'collection', labelKey: 'collection' },
+  { id: 'pr', labelKey: 'pr' },
 ];
 const DECK_HEART_FILTER_COLORS = ['pink', 'red', 'yellow', 'green', 'blue', 'purple'];
 const DECK_HEART_COUNT_MODES = [
@@ -9511,7 +9512,7 @@ const DECK_HEART_COUNT_MODES = [
   { id: '2', label: '2' },
   { id: '3', label: '3' },
   { id: '4+', label: '4+' },
-  { id: 'none', label: '—', title: 'Not included (含まない)' },
+  { id: 'none', label: '—', titleKey: 'notIncluded' },
 ];
 const DECK_BLADE_VALUES = ['1', '2', '3', '4', '5', '6', '7'];
 const DECK_COST_VALUES = Array.from({ length: 23 }, (_, i) => String(i));
@@ -9519,10 +9520,17 @@ const DECK_SCORE_VALUES = Array.from({ length: 10 }, (_, i) => String(i));
 const CARD_SPECIAL_HEART_DRAW = 'icon_draw.png';
 const CARD_SPECIAL_HEART_SCORE = 'icon_score.png';
 const DECK_FILTER_PARALLEL = [
-  { id: '', label: 'All' },
-  { id: 'normal', label: 'Normal only' },
-  { id: 'parallel', label: 'Parallel only' },
+  { id: '', labelKey: 'all' },
+  { id: 'normal', labelKey: 'normal' },
+  { id: 'parallel', labelKey: 'parallel' },
 ];
+const DECK_FILTER_GROUP_SLUG = {
+  "μ's": 'mus',
+  Nijigasaki: 'nijigasaki',
+  Sunshine: 'sunshine',
+  Superstar: 'superstar',
+  Hasunosora: 'hasunosora',
+};
 const PARALLEL_RARITIES = new Set(['P', 'P+', 'PE', 'PE+', 'L+', 'R+', 'SEC+', 'PR+', 'RM', 'AR', 'SRE', 'RE', 'LLE', 'SECE', 'SECL']);
 
 function emptyHeartFilterGrid() {
@@ -9746,24 +9754,103 @@ function deckFilterPackOptionsForKind(kind) {
 }
 
 function deckFilterSubunitOptions() {
-  const subs = new Set();
+  const seen = new Set();
   Object.values(G.allCards).forEach(c => {
-    if (c?.subunit) subs.add(c.subunit);
-    (c?.subunits || []).forEach(s => { if (s) subs.add(s); });
+    if (c?.subunit) seen.add(canonicalSubunitKey(c.subunit));
+    (c?.subunits || []).forEach(s => { if (s) seen.add(canonicalSubunitKey(s)); });
   });
-  return [...subs].sort((a, b) => {
-    const ea = SUBUNIT_EN[a] || a;
-    const eb = SUBUNIT_EN[b] || b;
-    return ea.localeCompare(eb, undefined, { sensitivity: 'base' });
-  });
+  return [...seen].filter(Boolean).sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: 'base' })
+  );
+}
+
+function deckFilterGroupLabel(groupId) {
+  if (!groupId) return t('deck.filters.all');
+  const slug = DECK_FILTER_GROUP_SLUG[groupId];
+  if (slug) {
+    const key = 'deck.filters.groups.' + slug;
+    const val = t(key);
+    if (val !== key) return val;
+  }
+  return groupId;
+}
+
+function deckFilterSubunitLabel(subunit) {
+  if (!subunit) return t('deck.filters.all');
+  if (getLocale() === 'ja') {
+    if (SUBUNIT_JA[subunit]) return SUBUNIT_JA[subunit];
+    for (const [jp, en] of Object.entries(SUBUNIT_EN)) {
+      if (en === subunit && jp !== en && /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]/.test(jp)) return jp;
+    }
+    return subunit;
+  }
+  return SUBUNIT_EN[subunit] || SUBUNIT_EN[String(subunit).replace(/！/g, '!')] || subunit;
+}
+
+function deckFilterChipLabel(filterKey, value) {
+  const val = value ?? '';
+  if (filterKey === 'group') return deckFilterGroupLabel(val);
+  if (filterKey === 'subunit') return deckFilterSubunitLabel(val);
+  if (filterKey === 'rarity') return val || t('deck.filters.all');
+  if (!val) {
+    if (filterKey === 'type') return t('deck.filters.allTypes');
+    if (filterKey === 'searchMode') return t('deck.filters.searchMode.all');
+    if (filterKey === 'productKind') return t('deck.filters.allProducts');
+    if (filterKey === 'parallel') return t('deck.filters.all');
+    return t('deck.filters.all');
+  }
+  const nsKey = filterKey === 'productKind' ? 'productKind' : filterKey;
+  const key = `deck.filters.${nsKey}.${val}`;
+  const translated = t(key);
+  if (translated !== key) return translated;
+  return val;
 }
 
 function deckSearchPlaceholder(mode) {
   const m = mode || 'all';
-  if (m === 'name') return 'Card name…';
-  if (m === 'text') return 'Rules text…';
-  if (m === 'id') return 'Card ID e.g. PL!N-sd1-021-SD';
-  return 'Name, ID, or rules text…';
+  const key = 'deck.filters.searchPlaceholder.' + m;
+  const val = t(key);
+  return val !== key ? val : t('deck.filters.searchPlaceholder.all');
+}
+
+function syncDeckFilterLabels() {
+  const panel = el('deck-filter-panel');
+  if (!panel?.dataset.built) return;
+  const headLbl = panel.querySelector('.deck-filter-title label');
+  if (headLbl) headLbl.textContent = t('deck.filters.title');
+  const clearBtn = panel.querySelector('.deck-filter-clear');
+  if (clearBtn) clearBtn.textContent = t('deck.clear');
+  syncDeckFilterAdvancedUi();
+  panel.querySelectorAll('.deck-filter-row-label[data-filter-label]').forEach(lbl => {
+    lbl.textContent = t('deck.filters.label.' + lbl.dataset.filterLabel);
+  });
+  panel.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.textContent = deckFilterChipLabel(btn.dataset.filter, btn.dataset.value ?? '');
+  });
+  panel.querySelectorAll('.deck-heart-mode-lbl').forEach(span => {
+    const mode = span.dataset.heartMode;
+    if (!mode) return;
+    const modeDef = DECK_HEART_COUNT_MODES.find(m => m.id === mode);
+    span.textContent = modeDef?.label || mode;
+    if (modeDef?.titleKey) span.title = t('deck.filters.' + modeDef.titleKey);
+  });
+  panel.querySelectorAll('.deck-heart-mode-btn').forEach(btn => {
+    const mode = btn.dataset.heartMode;
+    const modeDef = DECK_HEART_COUNT_MODES.find(m => m.id === mode);
+    btn.textContent = modeDef?.label || mode;
+    if (modeDef?.titleKey) btn.title = t('deck.filters.' + modeDef.titleKey);
+    else if (btn.dataset.heartColor) btn.title = `${btn.dataset.heartColor} × ${modeDef?.label || mode}`;
+  });
+  panel.querySelectorAll('.deck-filter-range-chip-row > span[data-range-label]').forEach(span => {
+    span.textContent = t('deck.filters.' + span.dataset.rangeLabel);
+  });
+  panel.querySelectorAll('.deck-filter-range-chip[data-range-value=""]').forEach(btn => {
+    btn.title = t('deck.filters.any');
+  });
+  refreshDeckFilterPackSelect();
+  rebuildDeckPoolSortSelect();
+  const searchInp = el('inp-deck-card-search');
+  if (searchInp) searchInp.placeholder = deckSearchPlaceholder(deckPoolFilterState().searchMode);
 }
 
 function cardMatchesDeckSearch(c, searchQ, searchMode) {
@@ -9841,8 +9928,14 @@ function cardMatchesDeckPoolFilters(card, filters, searchQ) {
   if (filters.pack && (c.booster_pack || '') !== filters.pack) return false;
   if (isPrDeckPoolFilter(filters) && !isEligibleForPrBoosterPool(c)) return false;
   if (filters.subunit) {
-    const subs = c.subunits || (c.subunit ? [c.subunit] : []);
-    if (!subs.includes(filters.subunit) && c.subunit !== filters.subunit) return false;
+    const cardSubs = new Set();
+    if (c.subunit) cardSubs.add(c.subunit);
+    (c.subunits || []).forEach(s => { if (s) cardSubs.add(s); });
+    let matched = false;
+    for (const s of cardSubs) {
+      if (subunitNamesMatch(s, filters.subunit)) { matched = true; break; }
+    }
+    if (!matched) return false;
   }
   if (filters.parallel === 'parallel' && !PARALLEL_RARITIES.has(c.rarity || '')) return false;
   if (filters.parallel === 'normal' && PARALLEL_RARITIES.has(c.rarity || '')) return false;
@@ -9904,7 +9997,7 @@ function refreshDeckFilterPackSelect() {
   packSel.replaceChildren();
   const optAll = document.createElement('option');
   optAll.value = '';
-  optAll.textContent = 'All sets';
+  optAll.textContent = t('deck.filters.allSets');
   packSel.appendChild(optAll);
   deckFilterPackOptionsForKind(kind).forEach(pack => {
     const opt = document.createElement('option');
@@ -9929,7 +10022,7 @@ function syncDeckFilterAdvancedUi() {
   panel.classList.toggle('show-advanced', open);
   adv.hidden = !open;
   if (btn) {
-    btn.textContent = open ? 'Hide Advanced Filters' : 'Show Advanced Filters';
+    btn.textContent = open ? t('deck.filters.hideAdvanced') : t('deck.filters.showAdvanced');
     btn.classList.toggle('has-active', !open && deckAdvancedFiltersActive(deckPoolFilterState()));
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
@@ -9967,7 +10060,7 @@ function syncDeckFilterUi() {
     const val = btn.dataset.rangeValue ?? '';
     btn.classList.toggle('active', String(f[key] ?? '') === val);
   });
-  syncDeckFilterAdvancedUi();
+  syncDeckFilterLabels();
 }
 
 function ensureDeckFilterPanel() {
@@ -10218,7 +10311,7 @@ function ensureDeckFilterPanel() {
   addChipRow('Subunit', 'subunit', [{ id: '', label: 'All' }].concat(
     deckFilterSubunitOptions().map(s => ({
       id: s,
-      label: SUBUNIT_EN[s] || s,
+      label: subunitFilterLabel(s),
     }))
   ), { target: advanced });
 
@@ -13410,6 +13503,42 @@ const SUBUNIT_EN = {
   'CatChu!': 'CatChu!',
   'A-RISE': 'A-RISE',
 };
+
+function normalizeSubunitPunctuation(subunit) {
+  return String(subunit || '').replace(/！/g, '!').trim();
+}
+
+function canonicalSubunitKey(subunit) {
+  const raw = String(subunit || '').trim();
+  if (!raw) return '';
+  if (SUBUNIT_EN[raw]) return SUBUNIT_EN[raw];
+  const norm = normalizeSubunitPunctuation(raw);
+  if (SUBUNIT_EN[norm]) return SUBUNIT_EN[norm];
+  return norm;
+}
+
+const SUBUNIT_JA = (() => {
+  const pref = {};
+  const hasJa = s => /[\u3040-\u30ff\u4e00-\u9fff]/.test(s);
+  for (const [raw, canonical] of Object.entries(SUBUNIT_EN)) {
+    const cur = pref[canonical];
+    if (!cur) { pref[canonical] = raw; continue; }
+    if (hasJa(raw) && !hasJa(cur)) pref[canonical] = raw;
+    else if (hasJa(raw) === hasJa(cur) && raw === canonical && cur !== canonical) pref[canonical] = raw;
+  }
+  return pref;
+})();
+
+function subunitFilterLabel(canonicalKey) {
+  if (!canonicalKey) return canonicalKey;
+  if (getLocale() === 'ja') return SUBUNIT_JA[canonicalKey] || canonicalKey;
+  return canonicalKey;
+}
+
+function subunitNamesMatch(a, b) {
+  if (!a || !b) return false;
+  return canonicalSubunitKey(a) === canonicalSubunitKey(b);
+}
 
 function localizeSubunitText(text) {
   if (getLocale() === 'ja') return text;
@@ -30281,8 +30410,9 @@ function memberBlocksBaton(card){
 }
 function cardMatchesSubunit(card, subunit) {
   if (!card || !subunit) return false;
-  if ((card.subunit || '') === subunit) return true;
-  return (card.subunits || []).includes(subunit);
+  const want = canonicalSubunitKey(subunit);
+  if (canonicalSubunitKey(card.subunit || '') === want) return true;
+  return (card.subunits || []).some(s => canonicalSubunitKey(s) === want);
 }
 function memberBatonRestricted(member, batonFrom) {
   for (const ab of member?.abilities || []) {

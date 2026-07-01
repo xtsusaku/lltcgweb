@@ -122,7 +122,88 @@
       "deckEmptyExperiment": "Tap cards from the pool to build a legal 60+12 deck.",
       "experimentStarterTitle": "Choose starter deck",
       "experimentStarterLead": "Load an official starter list as your base — edit freely from the full card pool.",
-      "equippedRanked": "Equipped for ranked."
+      "equippedRanked": "Equipped for ranked.",
+      "filters": {
+        "title": "Filters",
+        "showAdvanced": "Show Advanced Filters",
+        "hideAdvanced": "Hide Advanced Filters",
+        "all": "All",
+        "allTypes": "All types",
+        "allFields": "All fields",
+        "allProducts": "All products",
+        "allSets": "All sets",
+        "any": "Any",
+        "min": "Min",
+        "max": "Max",
+        "notIncluded": "Not included",
+        "heartAll": "All",
+        "drawIcon": "Draw icon",
+        "scoreIcon": "Score icon",
+        "label": {
+          "type": "Type",
+          "group": "Group",
+          "rarity": "Rarity",
+          "keywordIn": "Keyword in",
+          "product": "Product",
+          "productSet": "Product set",
+          "subunit": "Subunit",
+          "parallel": "Parallel",
+          "printedHearts": "Printed hearts",
+          "requiredHearts": "Required hearts",
+          "bladeHearts": "Blade hearts",
+          "blade": "Blade",
+          "cost": "Cost",
+          "score": "Score"
+        },
+        "type": {
+          "member": "Member",
+          "live": "Live",
+          "energy": "Energy"
+        },
+        "searchMode": {
+          "all": "All fields",
+          "name": "Name",
+          "text": "Text",
+          "id": "Card ID"
+        },
+        "searchPlaceholder": {
+          "all": "Name, ID, or rules text…",
+          "name": "Card name…",
+          "text": "Rules text…",
+          "id": "Card ID e.g. PL!N-sd1-021-SD"
+        },
+        "productKind": {
+          "bp": "Booster Pack",
+          "pb": "Premium Booster",
+          "sd": "Starter Deck",
+          "collection": "Collection",
+          "pr": "PR"
+        },
+        "parallel": {
+          "normal": "Normal only",
+          "parallel": "Parallel only"
+        },
+        "groups": {
+          "mus": "μ's",
+          "nijigasaki": "Nijigasaki",
+          "sunshine": "Sunshine",
+          "superstar": "Superstar",
+          "hasunosora": "Hasunosora"
+        },
+        "sort": {
+          "aria": "Collection sort and order",
+          "sortBy": "Sort by",
+          "order": "Order",
+          "asc": "Ascending",
+          "desc": "Descending",
+          "id": "Card ID",
+          "rarity": "Rarity",
+          "name": "Name (idol)",
+          "type": "Card type",
+          "group": "Group / school",
+          "recent": "Recently acquired"
+        }
+      }
     },
     "booster": {
       "title": "Open Boosters",
@@ -767,7 +848,88 @@
       "deckEmptyExperiment": "プールからカードをタップして合法60+12デッキを構築。",
       "experimentStarterTitle": "スターターデッキを選ぶ",
       "experimentStarterLead": "公式スターターリストを基盤に読み込み——全カードプールから自由に編集。",
-      "equippedRanked": "ランク用に装備しました。"
+      "equippedRanked": "ランク用に装備しました。",
+      "filters": {
+        "title": "フィルター",
+        "showAdvanced": "詳細フィルターを表示",
+        "hideAdvanced": "詳細フィルターを隠す",
+        "all": "すべて",
+        "allTypes": "すべてのタイプ",
+        "allFields": "すべての項目",
+        "allProducts": "すべての商品",
+        "allSets": "すべてのセット",
+        "any": "指定なし",
+        "min": "最小",
+        "max": "最大",
+        "notIncluded": "含まない",
+        "heartAll": "すべて",
+        "drawIcon": "ドローアイコン",
+        "scoreIcon": "スコアアイコン",
+        "label": {
+          "type": "タイプ",
+          "group": "グループ",
+          "rarity": "レアリティ",
+          "keywordIn": "キーワード検索",
+          "product": "商品",
+          "productSet": "商品セット",
+          "subunit": "サブユニット",
+          "parallel": "パラレル",
+          "printedHearts": "印刷ハート",
+          "requiredHearts": "必要ハート",
+          "bladeHearts": "ブレードハート",
+          "blade": "ブレード",
+          "cost": "コスト",
+          "score": "スコア"
+        },
+        "type": {
+          "member": "メンバー",
+          "live": "ライブ",
+          "energy": "エネルギー"
+        },
+        "searchMode": {
+          "all": "すべての項目",
+          "name": "名前",
+          "text": "テキスト",
+          "id": "カードID"
+        },
+        "searchPlaceholder": {
+          "all": "名前、ID、ルールテキスト…",
+          "name": "カード名…",
+          "text": "ルールテキスト…",
+          "id": "カードID（例：PL!N-sd1-021-SD）"
+        },
+        "productKind": {
+          "bp": "ブースターパック",
+          "pb": "プレミアムブースター",
+          "sd": "スタートデッキ",
+          "collection": "コレクション",
+          "pr": "PR"
+        },
+        "parallel": {
+          "normal": "通常のみ",
+          "parallel": "パラレルのみ"
+        },
+        "groups": {
+          "mus": "μ's",
+          "nijigasaki": "虹ヶ咲学園スクールアイドル同好会",
+          "sunshine": "Aqours",
+          "superstar": "Liella!",
+          "hasunosora": "蓮ノ空女学院スクールアイドルクラブ"
+        },
+        "sort": {
+          "aria": "コレクションの並べ替え",
+          "sortBy": "並べ替え",
+          "order": "順序",
+          "asc": "昇順",
+          "desc": "降順",
+          "id": "カードID",
+          "rarity": "レアリティ",
+          "name": "名前（メンバー）",
+          "type": "カードタイプ",
+          "group": "グループ／スクール",
+          "recent": "最近入手"
+        }
+      }
     },
     "booster": {
       "title": "ブースターを開封",
