@@ -7347,6 +7347,8 @@ function syncGameplayChromeI18n() {
   if (el('opp-skill-wait')?.classList.contains('show') && G.gameState && G.playerId) {
     updateOpponentSkillWaitBanner(G.gameState, G.playerId);
   }
+  refreshBannerQueueI18n();
+  refreshCenterBannerI18n();
 }
 
 function initFoilFxSetting() {
@@ -17818,39 +17820,27 @@ function isLogDividerMessage(m) {
 
 function phaseLabelFromBannerTitle(title) {
   if (!title) return null;
-  if (getLocale() === 'ja') {
-    if (/Main Phase/i.test(title)) return t('phase.main');
-    const jaDirect = {
-      'Coin Flip': 'コイントス',
-      'Preparation': '準備',
-      'Active Phase': 'アクティブフェイズ',
-      'LIVE Phase': 'ライブフェイズ',
-      'Live Start': 'ライブ開始',
-      'Live Success': 'ライブ成功',
-      'Performance Phase': 'パフォーマンスフェイズ',
-      'Live Win/Loss Check': 'ライブ勝敗判定',
-      'Game Start': 'ゲーム開始',
-    };
-    if (jaDirect[title]) return jaDirect[title];
-    if (title.startsWith('Your ')) return phaseLabelFromBannerTitle(title.slice(5));
-    if (/^Turn \d+$/.test(title)) return `ターン ${title.match(/\d+/)[0]} 開始`;
-    return null;
+  const trimmed = (title || '').trim();
+  if (/Main Phase/i.test(trimmed) || /メインフェイズ/.test(trimmed)) return t('phase.main');
+  const phaseKeys = [
+    ['phaseBanner.coinFlipTitle', 'phase.coinFlip'],
+    ['phaseBanner.setupTitle', 'phase.preparation'],
+    ['phaseBanner.activeTitle', 'phase.active'],
+    ['phaseBanner.liveTitle', 'phase.live'],
+    ['phaseBanner.liveStartTitle', 'phase.live_start_effects'],
+    ['phaseBanner.liveSuccessTitle', 'phase.live_success_effects'],
+    ['phaseBanner.performanceTitle', 'phase.performance'],
+    ['phaseBanner.liveJudgeTitle', 'phase.live_judge'],
+  ];
+  for (const [bannerKey, phaseKey] of phaseKeys) {
+    if (trimmed === t(bannerKey)) return t(phaseKey);
   }
-  if (/Main Phase/i.test(title)) return 'Main Phase';
-  const direct = {
-    'Coin Flip': 'Coin Flip',
-    'Preparation': 'Preparation',
-    'Active Phase': 'Active Phase',
-    'LIVE Phase': 'LIVE Phase',
-    'Live Start': 'Live Start',
-    'Live Success': 'Live Success',
-    'Performance Phase': 'Performance Phase',
-    'Live Win/Loss Check': 'Live Win/Loss Check',
-    'Game Start': 'Game Start',
-  };
-  if (direct[title]) return direct[title];
-  if (title.startsWith('Your ')) return phaseLabelFromBannerTitle(title.slice(5));
-  if (/^Turn \d+$/.test(title)) return `Turn ${title.match(/\d+/)[0]} begins`;
+  if (trimmed === t('splash.gameStart')) return t('splash.gameStart');
+  if (trimmed.startsWith('Your ')) return phaseLabelFromBannerTitle(trimmed.slice(5));
+  let m;
+  if ((m = trimmed.match(/^Turn (\d+)$/)) || (m = trimmed.match(/^ターン\s*(\d+)/))) {
+    return t('splash.turnBegin', { turn: m[1] });
+  }
   return null;
 }
 
@@ -24634,15 +24624,7 @@ function renderGame(s, opts = {}) {
   renderDeckPileOpacity('opp-nrg-deck-pile', zoneCardCount(opp, 'energy_deck'));
 
   // Sidebar
-  const ap=s.players[s.active_player], fp=s.players[s.first_player];
-  el('sb-info').innerHTML =
-    `<span class="turn-k">Turn ${s.turn||1}</span>` +
-    `<span class="turn-sep">·</span>` +
-    `Phase: <b class="ap">${hPhase(s.phase)}</b>` +
-    `<span class="turn-sep">·</span>` +
-    `Active: <b>${ap?.name||'—'}</b>` +
-    `<span class="turn-sep">·</span>` +
-    `First: <b>${fp?.name||'—'}</b>`;
+  el('sb-info').innerHTML = formatSidebarInfoHtml(s);
   renderStageBoardPanel(s, myId);
 
   // Phase bar
@@ -25973,12 +25955,12 @@ function queueMainPhaseBannerAfterEmptyLiveSkip(next, myId) {
 }
 
 async function queueEmptyLiveRoundBanner() {
-  queueCenterBanner({
-    title: 'No Lives played this turn',
-    subtitle: '',
+  queueCenterBanner(splashBanner({
+    titleKey: 'splash.noLives',
+    subtitleKey: null,
     kind: 'phase',
     duration: 1400,
-  });
+  }));
   await waitForBannersIdle();
 }
 
@@ -26229,6 +26211,85 @@ function hPhase(p){
   return val !== key ? val : p;
 }
 
+function formatSidebarInfoHtml(s) {
+  const ap = s.players[s.active_player];
+  const fp = s.players[s.first_player];
+  const turn = s.turn || 1;
+  const phase = hPhase(s.phase);
+  const active = ap?.name || '—';
+  const first = fp?.name || '—';
+  return t('game.sidebarInfo', {
+    turn: `<span class="turn-k">${escapeHtmlText(t('splash.turn', { turn }))}</span>`,
+    phase: `<b class="ap">${escapeHtmlText(phase)}</b>`,
+    active: `<b>${escapeHtmlText(active)}</b>`,
+    first: `<b>${escapeHtmlText(first)}</b>`,
+  });
+}
+
+function localizeBannerSpec(spec) {
+  if (!spec) return spec;
+  const out = { ...spec };
+  if (spec.titleKey) out.title = t(spec.titleKey, spec.titleVars);
+  if (spec.subtitleKey) out.subtitle = t(spec.subtitleKey, spec.subtitleVars);
+  if (spec.detailKey) out.detail = t(spec.detailKey, spec.detailVars);
+  return out;
+}
+
+function splashBanner(opts) {
+  return localizeBannerSpec(opts);
+}
+
+function splashPerformanceTitle() {
+  return t('phaseBanner.performanceTitle');
+}
+
+function splashLivePhaseTitle() {
+  return t('phaseBanner.liveTitle');
+}
+
+function isSplashPerformanceTitle(title) {
+  return (title || '').trim() === splashPerformanceTitle();
+}
+
+function isSplashLivePhaseTitle(title) {
+  return (title || '').trim() === splashLivePhaseTitle();
+}
+
+function isSplashTurnTitle(title) {
+  const trimmed = (title || '').trim();
+  if (!trimmed) return false;
+  return /^Turn \d+$/.test(trimmed) || /^ターン\s*\d+$/.test(trimmed);
+}
+
+function isSplashTurnBanner(spec) {
+  return spec?.titleKey === 'splash.turn' || isSplashTurnTitle(spec?.title);
+}
+
+function isSplashPerformanceBanner(spec) {
+  return spec?.titleKey === 'phaseBanner.performanceTitle' || isSplashPerformanceTitle(spec?.title);
+}
+
+function refreshCenterBannerI18n() {
+  const root = el('center-banner');
+  if (!root?.classList.contains('show') || !G._lastBannerSpec) return;
+  const loc = localizeBannerSpec(G._lastBannerSpec);
+  setSplashTitle(el('cb-title'), loc.title || '');
+  el('cb-sub').textContent = loc.subtitle || '';
+  const det = el('cb-detail');
+  if (loc.detail) {
+    det.textContent = loc.detail;
+    det.style.display = '';
+  } else {
+    det.textContent = '';
+    det.style.display = 'none';
+  }
+}
+
+function refreshBannerQueueI18n() {
+  if (!G._bannerQueue?.length) return;
+  G._bannerQueue = G._bannerQueue.map(b => localizeBannerSpec(b));
+}
+
 function phaseBannerMainTitle(activePid, myId, activeName) {
   const isMe = activePid === (myId || G.playerId);
   if (isMe) return t('phaseBanner.yourMain');
@@ -26275,24 +26336,31 @@ function possessiveName(name) {
 function phaseBannerCopy(phase, s, myId) {
   const activePid = s?.active_player;
   const active = s?.players?.[activePid]?.name || '—';
-  const mainTitle = phaseBannerMainTitle(activePid, myId, active);
+  const isMe = activePid === (myId || G.playerId);
+  const last = active.slice(-1);
+  const theirMainKey = (last === 's' || last === 'S') ? 'phaseBanner.theirMainS' : 'phaseBanner.theirMain';
+  const mainEntry = isMe
+    ? { titleKey: 'phaseBanner.yourMain' }
+    : { titleKey: theirMainKey, titleVars: { name: active } };
   const map = {
-    coin_flip: { title: t('phaseBanner.coinFlipTitle'), subtitle: t('phaseBanner.coinFlipSub') },
-    setup: { title: t('phaseBanner.setupTitle'), subtitle: t('phaseBanner.setupSub') },
-    active_first: { title: t('phaseBanner.activeTitle'), subtitle: t('phaseBanner.activeSub') },
-    active_second: { title: t('phaseBanner.activeTitle'), subtitle: t('phaseBanner.activeSub') },
-    main_first: { title: mainTitle, subtitle: '' },
-    main_second: { title: mainTitle, subtitle: '' },
-    live_set: { title: t('phaseBanner.liveTitle'), subtitle: t('phaseBanner.liveSub') },
-    live_set_first: { title: t('phaseBanner.liveTitle'), subtitle: t('phaseBanner.liveSub') },
-    live_set_second: { title: t('phaseBanner.liveTitle'), subtitle: t('phaseBanner.liveSub') },
-    live_start_effects: { title: t('phaseBanner.liveStartTitle'), subtitle: t('phaseBanner.liveStartSub') },
-    live_success_effects: { title: t('phaseBanner.liveSuccessTitle'), subtitle: t('phaseBanner.liveSuccessSub') },
-    live_performance_first: { title: t('phaseBanner.performanceTitle'), subtitle: t('phaseBanner.performanceSub') },
-    live_performance_second: { title: t('phaseBanner.performanceTitle'), subtitle: t('phaseBanner.performanceSub') },
-    live_judge: { title: t('phaseBanner.liveJudgeTitle'), subtitle: t('phaseBanner.liveJudgeSub') },
+    coin_flip: { titleKey: 'phaseBanner.coinFlipTitle', subtitleKey: 'phaseBanner.coinFlipSub' },
+    setup: { titleKey: 'phaseBanner.setupTitle', subtitleKey: 'phaseBanner.setupSub' },
+    active_first: { titleKey: 'phaseBanner.activeTitle', subtitleKey: 'phaseBanner.activeSub' },
+    active_second: { titleKey: 'phaseBanner.activeTitle', subtitleKey: 'phaseBanner.activeSub' },
+    main_first: { ...mainEntry, subtitleKey: null },
+    main_second: { ...mainEntry, subtitleKey: null },
+    live_set: { titleKey: 'phaseBanner.liveTitle', subtitleKey: 'phaseBanner.liveSub' },
+    live_set_first: { titleKey: 'phaseBanner.liveTitle', subtitleKey: 'phaseBanner.liveSub' },
+    live_set_second: { titleKey: 'phaseBanner.liveTitle', subtitleKey: 'phaseBanner.liveSub' },
+    live_start_effects: { titleKey: 'phaseBanner.liveStartTitle', subtitleKey: 'phaseBanner.liveStartSub' },
+    live_success_effects: { titleKey: 'phaseBanner.liveSuccessTitle', subtitleKey: 'phaseBanner.liveSuccessSub' },
+    live_performance_first: { titleKey: 'phaseBanner.performanceTitle', subtitleKey: 'phaseBanner.performanceSub' },
+    live_performance_second: { titleKey: 'phaseBanner.performanceTitle', subtitleKey: 'phaseBanner.performanceSub' },
+    live_judge: { titleKey: 'phaseBanner.liveJudgeTitle', subtitleKey: 'phaseBanner.liveJudgeSub' },
   };
-  return map[phase] || { title: hPhase(phase), subtitle: '' };
+  const entry = map[phase];
+  if (!entry) return splashBanner({ title: hPhase(phase), subtitle: '' });
+  return splashBanner(entry);
 }
 
 function playerNameMatches(name, s, myId) {
@@ -26353,18 +26421,26 @@ function parseLogToBanner(msg, kind, s, myId, prev = null, logFrom = 0) {
 
   let m;
   if ((m = msg.match(/^=== Turn (\d+) begins ===$/))) {
-    return { title: `Turn ${m[1]}`, subtitle: '', kind: 'phase', duration: PHASE_BANNER_MS };
+    return splashBanner({
+      titleKey: 'splash.turn',
+      titleVars: { turn: m[1] },
+      subtitleKey: null,
+      kind: 'phase',
+      duration: PHASE_BANNER_MS,
+    });
   }
   if (/— Active Phase:|— Energy Phase:|— Draw Phase\./.test(msg)) return null;
   if ((m = msg.match(/^(.+?) — Deck refresh: shuffled (\d+) card\(s\) from Waiting Room into a new deck\./))) {
     const [, name, n] = m;
     const isMe = playerNameMatches(name, s, myId);
-    return {
-      title: isMe ? 'Deck Refresh' : `${name} — Deck Refresh`,
-      subtitle: `${n} card(s) shuffled from Waiting Room`,
+    return splashBanner({
+      titleKey: isMe ? 'splash.deckRefresh' : 'splash.deckRefreshOpp',
+      titleVars: isMe ? null : { name },
+      subtitleKey: 'splash.deckRefreshSub',
+      subtitleVars: { n },
       kind: 'phase',
       duration: 2600,
-    };
+    });
   }
   if (msg === '=== LIVE Phase ===') {
     return null;
@@ -26377,55 +26453,80 @@ function parseLogToBanner(msg, kind, s, myId, prev = null, logFrom = 0) {
   if (msg === '=== Live Win/Loss Check Phase ===') {
     if (!liveRoundHasLiveCards(s)) return null;
     if (!bothPlayersClearedLiveThisRound(s)) return null;
-    return { title: 'Live Win/Loss Check', subtitle: '', kind: 'live', duration: LIVE_BANNER_MS };
+    return splashBanner({
+      titleKey: 'phaseBanner.liveJudgeTitle',
+      subtitleKey: null,
+      kind: 'live',
+      duration: LIVE_BANNER_MS,
+    });
   }
   if (msg === '=== Live Round ===') return null;
   if (msg === '=== Live Start Effects ===') {
     if (!liveRoundHasLiveCards(s)) return null;
     if (G._liveStartBannerPresentedSeq === (s?.seq ?? 0)) return null;
-    return { title: 'Live Start', subtitle: '', kind: 'live', duration: LIVE_BANNER_MS };
+    return splashBanner({
+      titleKey: 'phaseBanner.liveStartTitle',
+      subtitleKey: null,
+      kind: 'live',
+      duration: LIVE_BANNER_MS,
+    });
   }
   if (msg === 'No Lives played this turn.') {
-    return { title: 'No Lives played this turn', subtitle: '', kind: 'phase', duration: 1400 };
+    return splashBanner({
+      titleKey: 'splash.noLives',
+      subtitleKey: null,
+      kind: 'phase',
+      duration: 1400,
+    });
   }
   if (/attempts the Live performance!/.test(msg)) {
     const name = msg.replace(' attempts the Live performance!', '');
     const isMe = playerNameMatches(name, s, myId);
-    return {
-      title: isMe ? 'You Attempt Live!' : `${name} Attempts Live`,
-      subtitle: 'Drawing Yell · checking hearts',
+    return splashBanner({
+      titleKey: isMe ? 'splash.youAttemptLive' : 'splash.theyAttemptLive',
+      titleVars: isMe ? null : { name },
+      subtitleKey: 'splash.attemptSub',
       kind: 'live-attempt',
       duration: 2300,
-    };
+    });
   }
   if (/waits for a later turn/.test(msg)) {
     const name = msg.split(' waits')[0];
     const isMe = playerNameMatches(name, s, myId);
-    return {
-      title: isMe ? 'You Wait' : `${name} Waits`,
-      subtitle: isMe ? 'Live cards stay in storage' : 'Live cards stay in their storage',
+    return splashBanner({
+      titleKey: isMe ? 'splash.youWait' : 'splash.theyWait',
+      titleVars: isMe ? null : { name },
+      subtitleKey: isMe ? 'splash.youWaitSub' : 'splash.theyWaitSub',
       kind: 'action',
       duration: 1900,
-    };
+    });
   }
   if ((m = msg.match(/^(.+?) performed Live! Blades: (\d+) \| Hearts: \[([^\]]*)\] \| Live success: (\d+) \| Failed: (\d+)(?: \| Round: failed \(not all Lives succeeded\))?/))) {
     const [, name, blades, , ok, fail] = m;
     const isMe = playerNameMatches(name, s, myId);
     const roundFailed = /Round: failed \(not all Lives succeeded\)/.test(msg);
-    let sub;
+    let subKey;
+    let subVars;
     if (roundFailed) {
-      sub = `${ok} passed hearts · round failed (all Lives must succeed)`;
+      subKey = 'splash.perfRoundFailed';
+      subVars = { ok };
     } else if (fail === '0') {
-      sub = `${ok} Live card(s) cleared the round`;
+      subKey = 'splash.perfCleared';
+      subVars = { ok };
     } else {
-      sub = `${ok} succeeded · ${fail} failed hearts → Waiting Room`;
+      subKey = 'splash.perfMixed';
+      subVars = { ok, fail };
     }
-    return {
-      title: isMe ? 'Your Live Performance' : `${possessiveName(name)} Live`,
-      subtitle: `Yell ${blades} · ${sub}`,
+    const sub = t(subKey, subVars);
+    const liveTitleVars = isMe ? null : { name: getLocale() === 'ja' ? name : possessiveName(name) };
+    return splashBanner({
+      titleKey: isMe ? 'splash.yourLivePerformance' : 'splash.theirLive',
+      titleVars: liveTitleVars,
+      subtitleKey: 'splash.perfSubYell',
+      subtitleVars: { blades, sub },
       kind: 'live-perform',
       duration: 2900,
-    };
+    });
   }
   if (/has no valid Live cards!/.test(msg)) return null;
   if ((m = msg.match(/^Live Scores: (.+?) = (\d+) \| (.+?) = (\d+)/))) {
@@ -26473,21 +26574,32 @@ function parseLogToBanner(msg, kind, s, myId, prev = null, logFrom = 0) {
   if (/ wins this Live!/.test(msg)) {
     const name = msg.split(' wins this Live!')[0];
     const isMe = playerNameMatches(name, s, myId);
-    return {
-      title: isMe ? 'Success Live!' : `${name} — Success Live!`,
-      subtitle: isMe ? 'A Live card joins your successes' : 'A Live card joins their successes',
+    return splashBanner({
+      titleKey: isMe ? 'splash.successLiveYou' : 'splash.successLiveThey',
+      titleVars: isMe ? null : { name },
+      subtitleKey: isMe ? 'splash.successLiveSubYou' : 'splash.successLiveSubThey',
       kind: 'success',
       duration: 2800,
-    };
+    });
   }
   if (msg === 'Both players wait — Live cards stay in storage.') {
-    return { title: 'Both Players Wait', subtitle: 'Live cards remain in storage', kind: 'action', duration: 2100 };
+    return splashBanner({
+      titleKey: 'splash.bothWait',
+      subtitleKey: 'splash.bothWaitSub',
+      kind: 'action',
+      duration: 2100,
+    });
   }
   if (/ turn [—–-] Main Phase \(Active/.test(msg)) {
     return null; // covered by phase transition banner (Your / opponent Main Phase)
   }
   if (msg.startsWith('Game started!')) {
-    return { title: 'Game Start', subtitle: '', kind: 'phase', duration: PHASE_BANNER_MS };
+    return splashBanner({
+      titleKey: 'splash.gameStart',
+      subtitleKey: null,
+      kind: 'phase',
+      duration: PHASE_BANNER_MS,
+    });
   }
   if (msg.startsWith('--- Turn ') && msg.endsWith(' ---')) {
     return null; // skip minor turn divider if Turn N begins follows
@@ -26708,12 +26820,13 @@ function shouldSuppressPostSpectacleSplash(msg, phase, prev, s) {
 function queueTurnBeginBannerForState(s) {
   const turn = s?.turn;
   if (!turn) return;
-  queueCenterBanner({
-    title: `Turn ${turn}`,
-    subtitle: '',
+  queueCenterBanner(splashBanner({
+    titleKey: 'splash.turn',
+    titleVars: { turn },
+    subtitleKey: null,
     kind: 'phase',
     duration: PHASE_BANNER_MS,
-  });
+  }));
 }
 
 function isLivePerformancePhase(phase) {
@@ -26761,11 +26874,12 @@ async function prepareLiveRoundBannerSlot() {
 function performancePhaseBannerShowing() {
   const root = el('center-banner');
   if (!root?.classList.contains('show')) return false;
-  return (el('cb-title')?.textContent || '').trim() === 'Performance Phase';
+  return isSplashPerformanceBanner(G._lastBannerSpec)
+    || isSplashPerformanceTitle(el('cb-title')?.textContent);
 }
 
 function performancePhaseBannerQueued() {
-  return (G._bannerQueue || []).some(b => b.title === 'Performance Phase');
+  return (G._bannerQueue || []).some(b => isSplashPerformanceBanner(b));
 }
 
 async function ensurePerformancePhaseSplash() {
@@ -26774,12 +26888,12 @@ async function ensurePerformancePhaseSplash() {
     await waitForBannersIdle();
     return;
   }
-  await showCenterBannerNow({
-    title: 'Performance Phase',
-    subtitle: '',
+  await showCenterBannerNow(splashBanner({
+    titleKey: 'phaseBanner.performanceTitle',
+    subtitleKey: null,
     kind: 'live',
     duration: LIVE_BANNER_MS,
-  });
+  }));
 }
 
 /** Decide reveal flip, empty-round skip, and whether to run Performance spectacle. */
@@ -29658,7 +29772,7 @@ async function perfSeekPhase(prev, next, myId, targetPhase, { forward = true, an
     if (targetPhase === 'intro' && cur === 'closed') {
       el('perf-col-mine')?.classList.add('in');
       el('perf-col-opp')?.classList.add('in');
-      void perfFlashSplash('LIVE START', 1300, 'live-start');
+      void perfFlashSplash(t('splash.liveStartFlash'), 1300, 'live-start');
       if (G.isTutorial) {
         const step = G.tutorialData?.steps?.[G.tutorialStep];
         if (tutorialPerfIntroPlaymatStep(step)) {
@@ -29679,7 +29793,7 @@ async function perfSeekPhase(prev, next, myId, targetPhase, { forward = true, an
     el('perf-col-mine')?.classList.remove('in');
     el('perf-col-opp')?.classList.remove('in');
     const splashP = animate
-      ? perfFlashSplash('LIVE START', 1300, 'live-start')
+      ? perfFlashSplash(t('splash.liveStartFlash'), 1300, 'live-start')
       : Promise.resolve();
     requestAnimationFrame(() => {
       el('perf-col-mine')?.classList.add('in');
@@ -29909,10 +30023,11 @@ function shouldShowMatchSplash() {
 }
 
 function queueCenterBanner(opts) {
-  if (!opts?.title) return;
+  if (!opts?.title && !opts?.titleKey) return;
   if (!shouldShowMatchSplash()) return;
-  TCG_DEBUG.log('banner', 'queue', opts.title, opts.subtitle || '', `(q=${(G._bannerQueue?.length || 0) + 1})`);
-  G._bannerQueue.push(opts);
+  const loc = localizeBannerSpec(opts);
+  TCG_DEBUG.log('banner', 'queue', loc.title, loc.subtitle || '', `(q=${(G._bannerQueue?.length || 0) + 1})`);
+  G._bannerQueue.push({ ...opts, title: loc.title, subtitle: loc.subtitle, detail: loc.detail });
   if (!G._bannerActive) drainCenterBannerQueue();
 }
 
@@ -29958,8 +30073,8 @@ function dismissCenterBannerIfShowing() {
   resolveCenterBannerShow();
 }
 
-function shouldLogPerformancePhaseDivider(title) {
-  if (title !== 'Performance Phase') return true;
+function shouldLogPerformancePhaseDivider(title, titleKey) {
+  if (titleKey !== 'phaseBanner.performanceTitle' && !isSplashPerformanceTitle(title)) return true;
   if (G._perfSpectacleActive) return true;
   const s = G.gameState;
   const ph = s?.phase;
@@ -29968,12 +30083,16 @@ function shouldLogPerformancePhaseDivider(title) {
   return isLiveSpectaclePipelinePhase(ph);
 }
 
-function showCenterBannerNow({ title, subtitle, detail, kind = 'phase', duration = PHASE_BANNER_MS, judgeClass = '' }) {
+function showCenterBannerNow(spec) {
+  const banner = localizeBannerSpec(spec);
+  const { title, subtitle, detail, kind = 'phase', duration = PHASE_BANNER_MS, judgeClass = '' } = banner;
+  const titleKey = spec?.titleKey;
   return new Promise(resolve => {
     const root = el('center-banner');
     if (!root) { resolve(); return; }
     if (!String(title || '').trim()) { resolve(); return; }
     if (!shouldShowMatchSplash()) { resolve(); return; }
+    G._lastBannerSpec = { ...spec };
     sfxPlaySplash(sfxSplashForBanner({ kind, title }));
     setSplashTitle(el('cb-title'), title || '');
     el('cb-sub').textContent = subtitle || '';
@@ -29989,14 +30108,14 @@ function showCenterBannerNow({ title, subtitle, detail, kind = 'phase', duration
       'kind-judge', 'kind-success', 'kind-action', 'win-me', 'lose-me');
     root.classList.add('show', `kind-${kind}`);
     if (judgeClass) root.classList.add(judgeClass);
-    if ((kind === 'phase' || (kind === 'live' && phaseLabelFromBannerTitle(title))) && shouldLogPerformancePhaseDivider(title)) {
+    if ((kind === 'phase' || (kind === 'live' && phaseLabelFromBannerTitle(title))) && shouldLogPerformancePhaseDivider(title, titleKey)) {
       appendPhaseLogDivider(title);
     }
     cancelCenterBannerAutoDismiss();
     G._cbResolve = resolve;
     G._cbTimer = setTimeout(() => {
       root.classList.remove('show');
-      if (/^Turn \d+$/.test(title || '')) {
+      if (isSplashTurnBanner({ titleKey, title })) {
         G._perfSpectacleDoneKey = null;
         G._postSpectacleSplashPause = false;
       }
@@ -30025,9 +30144,11 @@ function leavingEmptyLivePipeline(prev, next) {
 }
 
 function centerBannerForPhase(phase, copy) {
-  const liveKind = ['live_set', 'live_set_first', 'live_set_second',
-    'live_performance_first', 'live_performance_second'].includes(phase)
-    || copy?.title === 'LIVE Phase' || copy?.title === 'Performance Phase';
+  const livePhases = ['live_set', 'live_set_first', 'live_set_second',
+    'live_performance_first', 'live_performance_second'];
+  const liveKind = livePhases.includes(phase)
+    || copy?.titleKey === 'phaseBanner.liveTitle'
+    || copy?.titleKey === 'phaseBanner.performanceTitle';
   if (liveKind) {
     return { ...copy, kind: 'live', duration: LIVE_BANNER_MS, subtitle: copy?.subtitle || '' };
   }
@@ -30035,12 +30156,12 @@ function centerBannerForPhase(phase, copy) {
 }
 
 function queuePerformancePhaseBanner() {
-  queueCenterBanner({
-    title: 'Performance Phase',
-    subtitle: '',
+  queueCenterBanner(splashBanner({
+    titleKey: 'phaseBanner.performanceTitle',
+    subtitleKey: null,
     kind: 'live',
     duration: LIVE_BANNER_MS,
-  });
+  }));
 }
 
 function showPhaseTransitionBanner(s, myId, prev) {

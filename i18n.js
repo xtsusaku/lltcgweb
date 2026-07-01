@@ -234,7 +234,8 @@
       "baton": "Baton",
       "opponentSkillWait": "{name} is activating a skill…",
       "perfYou": "You",
-      "perfOpp": "Opponent"
+      "perfOpp": "Opponent",
+      "sidebarInfo": "{turn}<span class=\"turn-sep\">·</span>Phase: {phase}<span class=\"turn-sep\">·</span>Active: {active}<span class=\"turn-sep\">·</span>First: {first}"
     },
     "slot": {
       "left": "Left",
@@ -322,6 +323,35 @@
       "yourMain": "Your Main Phase",
       "theirMain": "{name}'s Main Phase",
       "theirMainS": "{name}' Main Phase"
+    },
+    "splash": {
+      "turn": "Turn {turn}",
+      "turnBegin": "Turn {turn} begins",
+      "noLives": "No Lives played this turn",
+      "gameStart": "Game Start",
+      "deckRefresh": "Deck Refresh",
+      "deckRefreshOpp": "{name} — Deck Refresh",
+      "deckRefreshSub": "{n} card(s) shuffled from Waiting Room",
+      "youAttemptLive": "You Attempt Live!",
+      "theyAttemptLive": "{name} Attempts Live",
+      "attemptSub": "Drawing Yell · checking hearts",
+      "youWait": "You Wait",
+      "theyWait": "{name} Waits",
+      "youWaitSub": "Live cards stay in storage",
+      "theyWaitSub": "Live cards stay in their storage",
+      "perfRoundFailed": "{ok} passed hearts · round failed (all Lives must succeed)",
+      "perfCleared": "{ok} Live card(s) cleared the round",
+      "perfMixed": "{ok} succeeded · {fail} failed hearts → Waiting Room",
+      "yourLivePerformance": "Your Live Performance",
+      "theirLive": "{name} Live",
+      "perfSubYell": "Yell {blades} · {sub}",
+      "successLiveYou": "Success Live!",
+      "successLiveThey": "{name} — Success Live!",
+      "successLiveSubYou": "A Live card joins your successes",
+      "successLiveSubThey": "A Live card joins their successes",
+      "bothWait": "Both Players Wait",
+      "bothWaitSub": "Live cards remain in storage",
+      "liveStartFlash": "LIVE START"
     },
     "mulligan": {
       "title": "Opening Hand 🌸",
@@ -847,7 +877,8 @@
       "baton": "バトン",
       "opponentSkillWait": "{name}がスキルを発動中…",
       "perfYou": "あなた",
-      "perfOpp": "相手"
+      "perfOpp": "相手",
+      "sidebarInfo": "{turn}<span class=\"turn-sep\">·</span>フェイズ：{phase}<span class=\"turn-sep\">·</span>アクティブ：{active}<span class=\"turn-sep\">·</span>先攻：{first}"
     },
     "slot": {
       "left": "左",
@@ -935,6 +966,35 @@
       "yourMain": "あなたのメインフェイズ",
       "theirMain": "{name}のメインフェイズ",
       "theirMainS": "{name}のメインフェイズ"
+    },
+    "splash": {
+      "turn": "ターン {turn}",
+      "turnBegin": "ターン {turn} 開始",
+      "noLives": "このターンはライブなし",
+      "gameStart": "ゲーム開始",
+      "deckRefresh": "デッキリフレッシュ",
+      "deckRefreshOpp": "{name} — デッキリフレッシュ",
+      "deckRefreshSub": "控え室から{n}枚をシャッフルして新デッキに",
+      "youAttemptLive": "ライブ試行！",
+      "theyAttemptLive": "{name}がライブ試行",
+      "attemptSub": "エール抽選 · ハート判定",
+      "youWait": "ウェイト",
+      "theyWait": "{name}がウェイト",
+      "youWaitSub": "ライブカードは置き場に残る",
+      "theyWaitSub": "ライブカードは相手の置き場に残る",
+      "perfRoundFailed": "成功{ok} · ラウンド失敗（全ライブ成功が必要）",
+      "perfCleared": "ライブ{ok}枚がラウンドクリア",
+      "perfMixed": "成功{ok} · 失敗{fail} → 控え室",
+      "yourLivePerformance": "あなたのライブ",
+      "theirLive": "{name}のライブ",
+      "perfSubYell": "エール {blades} · {sub}",
+      "successLiveYou": "ライブ成功！",
+      "successLiveThey": "{name} — ライブ成功！",
+      "successLiveSubYou": "ライブカードが成功置き場へ",
+      "successLiveSubThey": "ライブカードが相手の成功置き場へ",
+      "bothWait": "両者ウェイト",
+      "bothWaitSub": "ライブカードは置き場に残る",
+      "liveStartFlash": "LIVE START"
     },
     "mulligan": {
       "title": "初期手札 🌸",
