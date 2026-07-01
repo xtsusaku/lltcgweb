@@ -83,10 +83,14 @@ function deckgenMemberBuildScore(array $card): int {
     $score += intval($card['blade'] ?? 0) * 2;
     $score += count($card['abilities'] ?? []) * 5;
     $cost = intval($card['cost'] ?? 0);
-    if ($cost === 4) {
+    if ($cost >= 13) {
+        $score += 6;
+    } elseif ($cost >= 9) {
+        $score += 5;
+    } elseif ($cost >= 5) {
         $score += 2;
-    } elseif ($cost === 9 || $cost === 15) {
-        $score += 4;
+    } elseif ($cost === 4) {
+        $score += 2;
     }
     $rarity = (string)($card['rarity'] ?? '');
     if (preg_match('/^(SEC|SECE|SECL|LLE?)/', $rarity) || str_contains($rarity, 'SEC')) {
@@ -97,6 +101,153 @@ function deckgenMemberBuildScore(array $card): int {
         $score += 2;
     }
     return $score;
+}
+
+/** Cost curve bucket for auto-build (4→9→15 ramp plus mid/high lines). */
+function deckgenMemberCostTier(int $cost): string {
+    if ($cost === 4) {
+        return 'ramp4';
+    }
+    if ($cost <= 3) {
+        return 'low';
+    }
+    if ($cost <= 8) {
+        return 'mid';
+    }
+    if ($cost <= 12) {
+        return 'high';
+    }
+    return 'top';
+}
+
+function deckgenMembersInCostTier(array $pool, string $tier): array {
+    return array_values(array_filter($pool, function ($c) use ($tier) {
+        return deckgenMemberCostTier(intval($c['cost'] ?? 0)) === $tier;
+    }));
+}
+
+function deckgenMemberCurveSortScore(array $card): int {
+    $tierWeight = match (deckgenMemberCostTier(intval($card['cost'] ?? 0))) {
+        'top'   => 50,
+        'high'  => 38,
+        'mid'   => 24,
+        'ramp4' => 12,
+        'low'   => 4,
+        default => 0,
+    };
+    return $tierWeight * 100 + deckgenMemberBuildScore($card);
+}
+
+function deckgenFillCostTierPool(
+    array $tierPool,
+    int $targetCopies,
+    int $pickCount,
+    array &$main,
+    array &$counts,
+    ?array $owned,
+    callable $scoreFn
+): int {
+    if ($targetCopies <= 0 || empty($tierPool)) {
+        return 0;
+    }
+    $picks = deckgenPickCandidates($tierPool, min($pickCount, count($tierPool)), $scoreFn);
+    if (empty($picks)) {
+        return 0;
+    }
+    $added = 0;
+    $n = count($picks);
+    $base = intdiv($targetCopies, $n);
+    $rem = $targetCopies % $n;
+    foreach ($picks as $i => $c) {
+        $want = $base + ($i < $rem ? 1 : 0);
+        if ($want <= 0) {
+            continue;
+        }
+        $added += deckgenAddCopies($main, $c['card_no'], $want, $counts, $owned);
+    }
+    return $added;
+}
+
+/**
+ * Build 48 member slots with a balanced curve: fewer chaff, more mid/high/top.
+ * Targets (48 total): 8× cost-4 ramp · 6× low · 12× mid · 14× high (9–12) · 8× top (13+).
+ */
+function deckgenBuildBalancedMemberMain(array $memberPool, ?array $owned, ?callable $scoreFn = null): array {
+    $scoreFn ??= fn($c) => deckgenMemberBuildScore($c);
+    $main = [];
+    $counts = [];
+    $membersAdded = 0;
+
+    $tierTargets = [
+        'ramp4' => ['copies' => 8,  'picks' => 3],
+        'low'   => ['copies' => 6,  'picks' => 2],
+        'mid'   => ['copies' => 12, 'picks' => 4],
+        'high'  => ['copies' => 14, 'picks' => 3],
+        'top'   => ['copies' => 8,  'picks' => 2],
+    ];
+
+    foreach ($tierTargets as $tier => $cfg) {
+        $membersAdded += deckgenFillCostTierPool(
+            deckgenMembersInCostTier($memberPool, $tier),
+            $cfg['copies'],
+            $cfg['picks'],
+            $main,
+            $counts,
+            $owned,
+            $scoreFn
+        );
+    }
+
+    $fillOrder = ['mid', 'high', 'top', 'ramp4', 'low'];
+    $guard = 0;
+    while ($membersAdded < DECKGEN_MEMBER_SLOTS && $guard++ < 800) {
+        $progress = false;
+        foreach ($fillOrder as $tier) {
+            if ($membersAdded >= DECKGEN_MEMBER_SLOTS) {
+                break 2;
+            }
+            $pool = deckgenMembersInCostTier($memberPool, $tier);
+            usort($pool, fn($a, $b) => $scoreFn($b) <=> $scoreFn($a));
+            foreach ($pool as $c) {
+                $added = deckgenAddCopies($main, $c['card_no'], 1, $counts, $owned);
+                if ($added > 0) {
+                    $membersAdded += $added;
+                    $progress = true;
+                    break;
+                }
+            }
+            if ($progress) {
+                break;
+            }
+        }
+        if (!$progress) {
+            break;
+        }
+    }
+
+    if ($membersAdded < DECKGEN_MEMBER_SLOTS) {
+        $ranked = $memberPool;
+        usort($ranked, fn($a, $b) => deckgenMemberCurveSortScore($b) <=> deckgenMemberCurveSortScore($a));
+        $rankIdx = 0;
+        $guard = 0;
+        while ($membersAdded < DECKGEN_MEMBER_SLOTS && $guard++ < 800) {
+            if ($rankIdx >= count($ranked)) {
+                $rankIdx = 0;
+            }
+            $c = $ranked[$rankIdx++];
+            $added = deckgenAddCopies($main, $c['card_no'], 1, $counts, $owned);
+            if ($added > 0) {
+                $membersAdded += $added;
+            }
+        }
+    }
+
+    while ($membersAdded > DECKGEN_MEMBER_SLOTS) {
+        array_pop($main);
+        $membersAdded--;
+    }
+
+    return $main;
 }
 
 function deckgenLiveBuildScore(array $live, array $colorCounts): int {
@@ -449,90 +600,13 @@ function generateRandomDeckLists(array $allCards, ?string $forcedGroup = null): 
         $nameEn       = "Random ($display)";
         $nameJp       = "ランダム（$display）";
     }
-    $byCost = [];
-    foreach ($memberPool as $c) {
-        $byCost[intval($c['cost'] ?? 0)][] = $c;
-    }
-
-    $main    = [];
-    $counts  = [];
-    $membersAdded = 0;
-
-    $cost4Picks = deckgenPickCandidates(
-        $byCost[4] ?? [],
-        rand(2, 3),
-        fn($c) => deckgenMemberHeartTotal($c)
-    );
-    $ramp4Target = rand(8, 12);
-    foreach ($cost4Picks as $i => $c) {
-        $share = intdiv($ramp4Target, max(1, count($cost4Picks)));
-        $want  = $share + ($i === 0 ? ($ramp4Target % max(1, count($cost4Picks))) : 0);
-        $membersAdded += deckgenAddCopies($main, $c['card_no'], $want, $counts);
-    }
-
-    $cost9Picks = deckgenPickCandidates($byCost[9] ?? [], 1, fn($c) => intval($c['blade'] ?? 0));
-    if (!empty($cost9Picks)) {
-        $membersAdded += deckgenAddCopies(
-            $main,
-            $cost9Picks[0]['card_no'],
-            rand(4, min(8, DECKGEN_MAX_COPIES)),
-            $counts
-        );
-    }
-
-    $cost15Picks = deckgenPickCandidates($byCost[15] ?? [], 1, fn($c) => intval($c['blade'] ?? 0));
-    if (!empty($cost15Picks)) {
-        $membersAdded += deckgenAddCopies(
-            $main,
-            $cost15Picks[0]['card_no'],
-            rand(2, 4),
-            $counts
-        );
-    }
-
-    $fillers = array_values(array_filter($memberPool, function ($c) use ($counts) {
-        $cost = intval($c['cost'] ?? 0);
-        if ($cost < 2 || $cost > 6 || $cost === 4) {
-            return false;
-        }
-        if (($counts[$c['card_no']] ?? 0) >= DECKGEN_MAX_COPIES) {
-            return false;
-        }
-        return deckgenMemberHeartTotal($c) > 0;
-    }));
-    usort($fillers, fn($a, $b) => deckgenMemberHeartTotal($b) <=> deckgenMemberHeartTotal($a));
-
-    $guard = 0;
-    while ($membersAdded < DECKGEN_MEMBER_SLOTS && $guard++ < 500) {
-        if (empty($fillers)) {
-            break;
-        }
-        $c     = $fillers[array_rand($fillers)];
-        $added = deckgenAddCopies($main, $c['card_no'], rand(1, 2), $counts);
-        if ($added === 0) {
-            $fillers = array_values(array_filter(
-                $fillers,
-                fn($x) => ($counts[$x['card_no']] ?? 0) < DECKGEN_MAX_COPIES
-            ));
-            continue;
-        }
-        $membersAdded += $added;
-    }
-
-    $guard = 0;
-    while ($membersAdded < DECKGEN_MEMBER_SLOTS && $guard++ < 500) {
-        $c     = $memberPool[array_rand($memberPool)];
-        $added = deckgenAddCopies($main, $c['card_no'], 1, $counts);
-        if ($added > 0) {
-            $membersAdded += $added;
-        }
-    }
-
-    while ($membersAdded > DECKGEN_MEMBER_SLOTS) {
-        array_pop($main);
-        $membersAdded--;
-    }
+    $main = deckgenBuildBalancedMemberMain($memberPool, null);
     $counts = deckgenRebuildCounts($main);
+    $membersAdded = count($main);
+
+    if ($membersAdded < DECKGEN_MEMBER_SLOTS) {
+        throw new Exception('Could not assemble a random deck.');
+    }
 
     $colorCounts = deckgenColorCountsFromMain($main, $cardMap);
     $liveNos     = deckgenPickLives($lives, $liveGroup, $colorCounts);
@@ -623,102 +697,8 @@ function generateCollectionDeckLists(array $allCards, array $owned, ?string $for
     $display = $group === 'mixed' ? 'Mixed' : deckgenGroupDisplay($group);
     $nameEn  = "Auto-built ($display)";
 
-    $byCost = [];
-    foreach ($memberPool as $c) {
-        $byCost[intval($c['cost'] ?? 0)][] = $c;
-    }
-
-    $main         = [];
-    $counts       = [];
-    $membersAdded = 0;
-
-    $cost4Picks = deckgenPickCandidates(
-        $byCost[4] ?? [],
-        min(3, count($byCost[4] ?? [])),
-        fn($c) => deckgenMemberBuildScore($c)
-    );
-    $ramp4Target = min(12, max(6, count($cost4Picks) * 3));
-    foreach ($cost4Picks as $i => $c) {
-        $share = intdiv($ramp4Target, max(1, count($cost4Picks)));
-        $want  = $share + ($i === 0 ? ($ramp4Target % max(1, count($cost4Picks))) : 0);
-        $membersAdded += deckgenAddCopies($main, $c['card_no'], $want, $counts, $owned);
-    }
-
-    $cost9Picks = deckgenPickCandidates(
-        $byCost[9] ?? [],
-        1,
-        fn($c) => deckgenMemberBuildScore($c)
-    );
-    if (!empty($cost9Picks)) {
-        $membersAdded += deckgenAddCopies(
-            $main,
-            $cost9Picks[0]['card_no'],
-            min(8, max(3, intval($owned[$cost9Picks[0]['card_no']] ?? 0))),
-            $counts,
-            $owned
-        );
-    }
-
-    $cost15Picks = deckgenPickCandidates(
-        $byCost[15] ?? [],
-        1,
-        fn($c) => deckgenMemberBuildScore($c)
-    );
-    if (!empty($cost15Picks)) {
-        $membersAdded += deckgenAddCopies(
-            $main,
-            $cost15Picks[0]['card_no'],
-            min(4, max(2, intval($owned[$cost15Picks[0]['card_no']] ?? 0))),
-            $counts,
-            $owned
-        );
-    }
-
-    $fillers = array_values(array_filter($memberPool, function ($c) use ($counts, $owned) {
-        $no = $c['card_no'] ?? '';
-        $cost = intval($c['cost'] ?? 0);
-        if ($cost < 2 || $cost > 6 || $cost === 4) {
-            return false;
-        }
-        if (($counts[$no] ?? 0) >= DECKGEN_MAX_COPIES) {
-            return false;
-        }
-        if (($counts[$no] ?? 0) >= ($owned[$no] ?? 0)) {
-            return false;
-        }
-        return deckgenMemberHeartTotal($c) > 0;
-    }));
-    usort($fillers, fn($a, $b) => deckgenMemberBuildScore($b) <=> deckgenMemberBuildScore($a));
-
-    $guard = 0;
-    while ($membersAdded < DECKGEN_MEMBER_SLOTS && $guard++ < 800) {
-        if (empty($fillers)) {
-            break;
-        }
-        $c     = $fillers[0];
-        $added = deckgenAddCopies($main, $c['card_no'], 2, $counts, $owned);
-        if ($added === 0) {
-            array_shift($fillers);
-            continue;
-        }
-        $membersAdded += $added;
-        usort($fillers, fn($a, $b) => deckgenMemberBuildScore($b) <=> deckgenMemberBuildScore($a));
-    }
-
-    $rankedMembers = $memberPool;
-    usort($rankedMembers, fn($a, $b) => deckgenMemberBuildScore($b) <=> deckgenMemberBuildScore($a));
-    $guard = 0;
-    $rankIdx = 0;
-    while ($membersAdded < DECKGEN_MEMBER_SLOTS && $guard++ < 800) {
-        if ($rankIdx >= count($rankedMembers)) {
-            $rankIdx = 0;
-        }
-        $c = $rankedMembers[$rankIdx++];
-        $added = deckgenAddCopies($main, $c['card_no'], 1, $counts, $owned);
-        if ($added > 0) {
-            $membersAdded += $added;
-        }
-    }
+    $main = deckgenBuildBalancedMemberMain($memberPool, $owned);
+    $membersAdded = count($main);
 
     if ($membersAdded < DECKGEN_MEMBER_SLOTS) {
         if ($starterFallback !== null) {
@@ -759,7 +739,7 @@ function generateCollectionDeckLists(array $allCards, array $owned, ?string $for
         'energy_deck'  => $energyDeck,
         'member_count' => count($main),
         'live_count'   => count($liveNos),
-        'summary'      => $display . ' · 4→9→15 ramp · hearts + color-matched Lives',
+        'summary'      => $display . ' · balanced curve · hearts + color-matched Lives',
     ];
 }
 
