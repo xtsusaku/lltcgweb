@@ -313,12 +313,13 @@ function spBp2SwapMemberSlots(array &$state, string $pid, string $holderId, stri
     $p['stage'][$fromSlot] = $other;
     if ($other) {
         $other['moved_this_turn'] = true;
+        $other['moved_from_slot'] = $toSlot;
         spBp2ApplyMovedByGroupEffect($other, $state);
         $p['stage'][$fromSlot] = $other;
-        $state = spBp2OnMemberAreaMove($state, $pid, $other['instance_id'] ?? '', $fromSlot, $toSlot);
+        $state = spBp2OnMemberAreaMove($state, $pid, $other['instance_id'] ?? '', $toSlot, $fromSlot);
     }
     $member['moved_this_turn'] = true;
-    spBp2ApplyMovedByGroupEffect($member, $state);
+    $member['moved_from_slot'] = $fromSlot;
     $p['stage'][$toSlot] = $member;
     $state = spBp2OnMemberAreaMove($state, $pid, $holderId, $fromSlot, $toSlot);
     spBp2ClearEffectAreaMove($state);

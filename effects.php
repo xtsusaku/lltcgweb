@@ -3212,7 +3212,10 @@ function resolveAutoAreaMoveAbilities(array $state, string $pid, string $memberI
             }
         }
         $toSlot = findMemberSlot($p, $memberInstanceId) ?? $slot;
-        $state = spBp2OnMemberAreaMove($state, $pid, $memberInstanceId, $fromSlot, $toSlot);
+        $fromSlotEffective = $fromSlot !== '' ? $fromSlot : ($member['moved_from_slot'] ?? $toSlot);
+        unset($member['moved_from_slot']);
+        $p['stage'][$toSlot] = $member;
+        $state = spBp2OnMemberAreaMove($state, $pid, $memberInstanceId, $fromSlotEffective, $toSlot);
         break;
     }
     unset($member);
@@ -12673,12 +12676,14 @@ function actionResolvePrompt(array $state, string $pid, array $data): array {
         $ownerP['stage'][$srcSlot] = $other;
         if ($other) {
             $other['moved_this_turn'] = true;
+            $other['moved_from_slot'] = $srcSlot;
             $ownerP['stage'][$srcSlot] = $other;
-            $state = resolveAutoAreaMoveAbilities($state, $owner, $other['instance_id'] ?? '');
+            $state = resolveAutoAreaMoveAbilities($state, $owner, $other['instance_id'] ?? '', $srcSlot);
         }
         $member['moved_this_turn'] = true;
+        $member['moved_from_slot'] = $srcSlot;
         $ownerP['stage'][$slot] = $member;
-        $state = resolveAutoAreaMoveAbilities($state, $owner, $srcId);
+        $state = resolveAutoAreaMoveAbilities($state, $owner, $srcId, $srcSlot);
         $state = addLog($state, $state['players'][$owner]['name'] .
             " — [" . ($prompt['source_name'] ?? 'Member') . "] moved to $slot.");
         unset($state['pending_prompt']);
