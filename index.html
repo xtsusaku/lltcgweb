@@ -4457,7 +4457,8 @@ body.tcg-debug-on .llc-menu-item.tcg-debug-only{display:flex}
 .banner-crop-preview-label{font-size:12px;color:rgba(255,255,255,.7);margin-bottom:5px;text-align:center}
 .banner-crop-preview.rank-banner-wrap{
   width:100%;height:auto;aspect-ratio:3.5 / 1;border-radius:8px;overflow:hidden;
-  border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);box-sizing:border-box}
+  border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);box-sizing:border-box;
+  contain:paint}
 .banner-crop-actions{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;flex-shrink:0}
 @media (max-width:640px){
   .banner-crop-workspace{grid-template-columns:1fr;justify-items:center}
@@ -11775,7 +11776,12 @@ function bannerCropWindowTopPx(stage, win) {
 }
 
 function bannerCropWindowInnerTop(stage, win) {
-  return bannerCropWindowTopPx(stage, win) + BANNER_CROP_WINDOW_BORDER;
+  if (!win) return 0;
+  const topStyle = win.style.top;
+  if (topStyle !== '') {
+    return (parseFloat(topStyle) || 0) + BANNER_CROP_WINDOW_BORDER;
+  }
+  return (win.offsetTop || 0) + BANNER_CROP_WINDOW_BORDER;
 }
 
 function bannerCropWindowInnerHeight(win) {
@@ -11820,16 +11826,28 @@ function bannerCropFromWindow() {
 }
 
 function syncBannerCropPreview() {
+  const preview = el('banner-crop-preview');
   const img = el('banner-crop-img');
   const cardNo = bannerCropState.cardNo;
-  if (!img.src || !cardNo) return;
+  if (!preview || !img?.src || !cardNo) return;
   const crop = bannerCropFromWindow();
   Object.assign(bannerCropState, crop);
-  applyRankBanner(el('banner-crop-preview'), {
-    card_no: cardNo,
-    image: img.src,
-    crop,
-  });
+  preview.classList.remove('empty');
+  let previewImg = preview.querySelector('.rank-banner-img');
+  if (!previewImg) {
+    previewImg = document.createElement('img');
+    previewImg.className = 'rank-banner-img';
+    preview.appendChild(previewImg);
+  }
+  const alt = cardLocaleName({ card_no: cardNo, name: img.alt }) || cardNo;
+  if (previewImg.alt !== alt) previewImg.alt = alt;
+  if (previewImg.src !== img.src) previewImg.src = img.src;
+  const paint = () => {
+    if (!previewImg.naturalWidth || !img.naturalWidth) return;
+    applyRankBannerStyles(previewImg, bannerNormalizeCropForImage(img, crop));
+  };
+  if (previewImg.complete) paint();
+  else previewImg.onload = paint;
 }
 
 function layoutBannerCropWindow() {
@@ -11862,22 +11880,20 @@ function bindBannerCropDrag() {
   const win = el('banner-crop-window');
   if (win.dataset.bound) return;
   win.dataset.bound = '1';
-  let startX = 0;
   let startY = 0;
-  let originLeft = 0;
-  let originTop = 0;
+  let originInnerTop = 0;
+  let activePointer = null;
   const onDown = e => {
+    if (activePointer != null) return;
+    activePointer = e.pointerId;
     bannerCropState.dragging = true;
-    const p = e.touches ? e.touches[0] : e;
-    startX = p.clientX;
-    startY = p.clientY;
-    originLeft = parseFloat(win.style.left) || win.offsetLeft;
-    originTop = bannerCropWindowInnerTop(stage, win);
+    startY = e.clientY;
+    originInnerTop = bannerCropWindowInnerTop(stage, win);
+    try { win.setPointerCapture(e.pointerId); } catch (_) {}
     e.preventDefault();
   };
   const onMove = e => {
-    if (!bannerCropState.dragging) return;
-    const p = e.touches ? e.touches[0] : e;
+    if (!bannerCropState.dragging || e.pointerId !== activePointer) return;
     const img = el('banner-crop-img');
     const r = bannerCropDisplayedImageRect(stage, img);
     if (!r) return;
@@ -11885,8 +11901,7 @@ function bindBannerCropDrag() {
     const innerH = bannerCropWindowInnerHeight(win);
     const minInnerY = r.oy;
     const maxInnerY = r.oy + r.dh - innerH;
-    const originInnerTop = bannerCropWindowInnerTop(stage, win);
-    const nextInnerY = Math.max(minInnerY, Math.min(maxInnerY, originInnerTop + (p.clientY - startY)));
+    const nextInnerY = Math.max(minInnerY, Math.min(maxInnerY, originInnerTop + (e.clientY - startY)));
     win.style.top = (nextInnerY - B) + 'px';
     win.style.left = (r.ox - B) + 'px';
     const synced = bannerStageToImageCrop(stage, img, win);
@@ -11894,13 +11909,16 @@ function bindBannerCropDrag() {
     syncBannerCropPreview();
     e.preventDefault();
   };
-  const onUp = () => { bannerCropState.dragging = false; };
+  const onUp = e => {
+    if (e.pointerId !== activePointer) return;
+    bannerCropState.dragging = false;
+    activePointer = null;
+    try { win.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
   win.addEventListener('pointerdown', onDown);
-  window.addEventListener('pointermove', onMove);
-  window.addEventListener('pointerup', onUp);
-  win.addEventListener('touchstart', onDown, { passive: false });
-  window.addEventListener('touchmove', onMove, { passive: false });
-  window.addEventListener('touchend', onUp);
+  win.addEventListener('pointermove', onMove);
+  win.addEventListener('pointerup', onUp);
+  win.addEventListener('pointercancel', onUp);
 }
 
 function getBannerOwnedCards() {
@@ -11986,6 +12004,7 @@ function loadBannerCropCard(cardNo) {
   if (!cardNo) {
     img.removeAttribute('src');
     el('banner-crop-preview').replaceChildren();
+    el('banner-crop-preview').classList.add('empty');
     return;
   }
   const c = enrichCard(G.allCards[cardNo]);
