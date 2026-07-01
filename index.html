@@ -11768,13 +11768,6 @@ function defaultBannerCropForImage(img) {
   return bannerNormalizeCropForImage(img, null);
 }
 
-function bannerCropWindowTopPx(stage, win) {
-  if (!stage || !win) return 0;
-  const sr = stage.getBoundingClientRect();
-  const wr = win.getBoundingClientRect();
-  return wr.top - sr.top;
-}
-
 function bannerCropWindowInnerTop(stage, win) {
   if (!win) return 0;
   const topStyle = win.style.top;
