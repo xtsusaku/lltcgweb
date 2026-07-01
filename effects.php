@@ -1303,6 +1303,7 @@ function clearLiveModifiers(array $state): array {
                 continue;
             }
             unset($mbr['bonus_hearts'], $mbr['live_blade_bonus'], $mbr['live_score_bonus']);
+            unset($mbr['on_enter_or_live_start_fired']);
         }
         unset($mbr, $p);
     }
@@ -4941,6 +4942,23 @@ function logAbilityChain(array $state, string $pid, array $source, string $trigg
     );
 }
 
+function markMemberDualEnterLiveStartFired(array $state, string $pid, string $instanceId): array {
+    if ($instanceId === '') {
+        return $state;
+    }
+    $slot = findMemberSlot($state['players'][$pid] ?? [], $instanceId);
+    if ($slot === '' || empty($state['players'][$pid]['stage'][$slot])) {
+        return $state;
+    }
+    $state['players'][$pid]['stage'][$slot]['on_enter_or_live_start_fired'] = true;
+    return $state;
+}
+
+function shouldSkipDualEnterLiveStartAtLiveStart(array $member, array $ab): bool {
+    return ($ab['trigger'] ?? '') === 'on_enter_or_live_start'
+        && !empty($member['on_enter_or_live_start_fired']);
+}
+
 function resolveOnEnterAbilities(array $state, string $pid, array $member, string $slot = ''): array {
     $abilities = getAbilitiesByTrigger($member, 'on_enter');
     if (empty($abilities)) {
@@ -4948,6 +4966,9 @@ function resolveOnEnterAbilities(array $state, string $pid, array $member, strin
     }
     $state = logAbilityChain($state, $pid, $member, 'on_enter');
     foreach ($abilities as $ab) {
+        if (($ab['trigger'] ?? '') === 'on_enter_or_live_start') {
+            $state = markMemberDualEnterLiveStartFired($state, $pid, $member['instance_id'] ?? '');
+        }
         $state = resolveAbilityEffect($state, $pid, $member, $ab, [
             'slot'  => $slot,
             'phase' => 'on_enter',
@@ -4980,6 +5001,7 @@ function resolveLiveStartAbilities(array $state, string $pid): array {
         $abilities = array_values(array_filter(
             getAbilitiesByTrigger($member, 'live_start'),
             fn($ab) => !isQueuedOptionalLiveStart($ab)
+                && !shouldSkipDualEnterLiveStartAtLiveStart($member, $ab)
         ));
         if (empty($abilities)) continue;
         $state = logAbilityChain($state, $pid, $member, 'live_start');
@@ -5135,6 +5157,7 @@ function collectOptionalLiveStartAbilities(array $state): array {
             foreach ($card['abilities'] ?? [] as $idx => $ab) {
                 $trigger = $ab['trigger'] ?? '';
                 if ($trigger !== 'live_start' && $trigger !== 'on_enter_or_live_start') continue;
+                if (isMemberCard($card) && shouldSkipDualEnterLiveStartAtLiveStart($card, $ab)) continue;
                 if (!isQueuedOptionalLiveStart($ab)) continue;
                 if (!empty($ab['requires_success_lives']) && empty($p['success_lives'])) continue;
                 if (!empty($ab['requires_other_stage_member'])
