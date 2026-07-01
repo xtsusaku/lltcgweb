@@ -7335,6 +7335,15 @@ function sfxCardMoveSound(m) {
   return 'card_fly';
 }
 
+function sfxForZoneMove(fromZone, toZone) {
+  if (!fromZone && !toZone) return;
+  sfxPlayCard(sfxCardMoveSound({ from: { zone: fromZone }, to: { zone: toZone } }));
+}
+
+function sfxCardPick() {
+  sfxPlayCard('card_slide', { volume: 0.34 });
+}
+
 function syncSfxVolumeUi() {
   const wrap = el('options-sfx-volume-wrap');
   const rng = el('rng-sfx-volume');
@@ -18251,8 +18260,7 @@ async function executeCardMoveAnimation(m, opts) {
       })();
     };
     if (fr && tr) {
-      const skipMoveSfx = playerHandReveal && isHiddenSourceToHand(m);
-      if (!skipMoveSfx) sfxPlayCard(sfxCardMoveSound(m));
+      sfxPlayCard(sfxCardMoveSound(m));
       await flyCard(m.card, fr, tr, delayMs, {
         fromZone: m.from?.zone,
         toZone: m.to?.zone,
@@ -18334,6 +18342,7 @@ async function playAnimSpecFlyOnly(spec, playback, finalState, myId, delayMs, ha
       })();
     };
     if (fr && tr) {
+      sfxForZoneMove(fromLoc?.zone, toLoc?.zone);
       await flyCard(card, fr, tr, delayMs, {
         fromZone: fromLoc?.zone,
         toZone: toLoc?.zone,
@@ -18483,6 +18492,7 @@ async function playAnimSpec(spec, playback, finalState, myId, delayMs = 0) {
       })();
     };
     if (fr && tr) {
+      sfxForZoneMove(fromLoc?.zone, toLoc?.zone);
       await flyCard(card, fr, tr, delayMs, {
         fromZone: fromLoc?.zone,
         toZone: toLoc?.zone,
@@ -18614,6 +18624,7 @@ async function playTailMoveAnimations(playback, final, myId, opts = {}) {
           finishCardMoveHandoff(m.iid, handoffOpts);
         })();
       };
+      sfxPlayCard(sfxCardMoveSound(m));
       await flyCard(m.card, fr, trBeforeRender, 0, flyOpts);
     } else {
       await applyTailMoveState();
@@ -18622,8 +18633,10 @@ async function playTailMoveAnimations(playback, final, myId, opts = {}) {
         || targetRectForLoc(m.to, { iid: m.iid, pid: m.to?.pid }, final, myId,
           { before: handBefore, after: collectHandSlotRects() }, false)
         || projectFieldCardRect(m.to, m.card, myId);
-      if (fr && tr) await flyCard(m.card, fr, tr, 0, flyOpts);
-      else finishCardMoveHandoff(m.iid, handoffOpts);
+      if (fr && tr) {
+        sfxPlayCard(sfxCardMoveSound(m));
+        await flyCard(m.card, fr, tr, 0, flyOpts);
+      } else finishCardMoveHandoff(m.iid, handoffOpts);
     }
   }
   } finally {
@@ -31318,6 +31331,7 @@ function togglePlaySelect(iid, s, myId) {
   if (G.selCard === iid) {
     clearPlaySelection();
   } else {
+    sfxCardPick();
     G.selCard = iid;
     G.previewSlot = null;
     const card = findHand(iid, s, myId);
@@ -32336,6 +32350,7 @@ function openLookedDeckPick(pr){
         else {
           if(G.pickMarked.size>=need){ toast(`Select at most ${need}`); return; }
           G.pickMarked.add(card.instance_id);
+          sfxCardPick();
         }
         [...g.children].forEach(c=>{
           if(c.classList?.contains('pickcard'))
@@ -32612,6 +32627,7 @@ function openWrMembersDeckTopPick(pr){
       else {
         if(G.pickMarked.size>=need){ toast(`Select at most ${need}`); return; }
         G.pickMarked.add(card.instance_id);
+        sfxCardPick();
       }
       [...g.children].forEach(c=>c.classList.toggle('sel',G.pickMarked.has(c.dataset.id)));
       el('pick-count').textContent=formatSelectedCount(G.pickMarked.size, need);
@@ -32665,6 +32681,7 @@ function openMemberWaitPick(pr, myId){
       else {
         if(G.pickMarked.size>=max){ toast(`Select at most ${max}`); return; }
         G.pickMarked.add(card.instance_id);
+        sfxCardPick();
       }
       [...g.children].forEach(c=>c.classList.toggle('sel',G.pickMarked.has(c.dataset.id)));
       el('pick-count').textContent=formatSelectedCount(G.pickMarked.size, max);
@@ -32765,6 +32782,7 @@ function openHandPick({hand,count,title,msg,onConfirm,onCancel,min,allowCancel=t
       else {
         if(G.pickMarked.size>=ctx.count){ toast(`Select at most ${ctx.count}`); return; }
         G.pickMarked.add(card.instance_id);
+        sfxCardPick();
       }
       [...fan.children].forEach(c=>c.classList.toggle('sel',G.pickMarked.has(c.dataset.id)));
       el('hpick-count').textContent=formatSelectedCount(G.pickMarked.size, ctx.count);
@@ -34409,7 +34427,7 @@ function openMull(hand, opts = {}){
     const m=document.createElement('div'); m.className='mullmark'; m.textContent='✕'; d.appendChild(m);
     bindMullCardPress(d, card, readonly ? null : () => {
       if(G.mullMarked.has(card.instance_id)){ G.mullMarked.delete(card.instance_id); d.classList.remove('mk'); }
-      else { G.mullMarked.add(card.instance_id); d.classList.add('mk'); }
+      else { G.mullMarked.add(card.instance_id); d.classList.add('mk'); sfxCardPick(); }
       const n=G.mullMarked.size;
       updateMulliganButtonText(n);
     });
@@ -34699,6 +34717,7 @@ function toggleLiveSelect(iid, s, myId) {
     G.liveSel.splice(idx, 1);
   } else if (G.liveSel.length < slots) {
     G.liveSel.push(iid);
+    sfxCardPick();
     showHoverCardPreview(card, s, myId);
   } else {
     toast(slots ? t(slots > 1 ? 'toast.maxLiveStoragePlural' : 'toast.maxLiveStorage', { slots }) : t('toast.liveStorageFull'));

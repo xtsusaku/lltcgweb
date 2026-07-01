@@ -141,6 +141,7 @@
       [
         'menu_tap', 'menu_confirm', 'card_draw', 'card_slide', 'card_flip',
         'card_place', 'match_found', 'card_play', 'card_fly', 'card_to_wr',
+        'energy_chip',
       ].forEach(warm);
       return m;
     });
