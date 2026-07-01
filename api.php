@@ -497,7 +497,11 @@ function ping(array $body): array {
     $roomId = $body['room_id'] ?? '';
     $token  = $body['token']   ?? '';
     if ($roomId && $token) {
-        touchPresence($roomId, $token);
+        if (tcgIsSpectatorToken($token)) {
+            tcgTouchSpectatorPresence($roomId, $token);
+        } else {
+            touchPresence($roomId, $token);
+        }
     }
     return ['ok' => true, 'time' => time()];
 }

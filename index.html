@@ -6823,6 +6823,7 @@ const RANKED_SEARCH_ACTIVE_KEY = 'tcg_ranked_search_active';
 const CASUAL_QUEUE_ID_KEY = 'tcg_casual_queue_id';
 const CASUAL_SEARCH_ACTIVE_KEY = 'tcg_casual_search_active';
 const ACTIVE_GAME_KEY = 'tcg_active_game';
+const ACTIVE_SPECTATOR_KEY = 'tcg_active_spectator';
 const PERF_SPECTACLE_DONE_STORAGE_KEY = 'tcg_perf_spectacle_done';
 const EXPERIMENT_PASSWORDS_KEY = 'tcg_experiment_passwords';
 const LAST_EXPERIMENT_PASSWORD_KEY = 'tcg_last_experiment_password';
@@ -8095,6 +8096,35 @@ function readActiveGameSession() {
   }
 }
 
+function saveSpectatorSession() {
+  if (!G.isSpectator || !G.roomId || !G.token) return;
+  try {
+    sessionStorage.setItem(ACTIVE_SPECTATOR_KEY, JSON.stringify({
+      roomId: G.roomId,
+      token: G.token,
+      p1Name: G._spectateP1Name || null,
+      p2Name: G._spectateP2Name || null,
+      returnScreen: G._spectateReturnScreen || 'lobby',
+    }));
+  } catch (e) {}
+}
+
+function clearSpectatorSession() {
+  try { sessionStorage.removeItem(ACTIVE_SPECTATOR_KEY); } catch (e) {}
+}
+
+function readSpectatorSession() {
+  try {
+    const raw = sessionStorage.getItem(ACTIVE_SPECTATOR_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    if (!saved?.roomId || !saved?.token) return null;
+    return saved;
+  } catch (e) {
+    return null;
+  }
+}
+
 async function fetchGameStateForReconnect(roomId, token) {
   const r = await fetchWithTimeout(
     `${API}?action=get_state&room_id=${encodeURIComponent(roomId)}&token=${encodeURIComponent(token)}&seq=0&poll=0`,
@@ -8195,10 +8225,56 @@ async function reconnectToGame(saved) {
   }
 }
 
+async function reconnectToSpectator(saved) {
+  if (!saved?.roomId || !saved?.token) return false;
+  try {
+    const s = await fetchGameStateForReconnect(saved.roomId, saved.token);
+    if (s.error || s.status === 'finished') {
+      clearSpectatorSession();
+      return false;
+    }
+    G.isSpectator = true;
+    G._spectateReturnScreen = saved.returnScreen || 'lobby';
+    G._spectateP1Name = saved.p1Name || null;
+    G._spectateP2Name = saved.p2Name || null;
+    G.roomId = saved.roomId;
+    G.token = saved.token;
+    G.playerId = 'p1';
+    G.isCPU = false;
+    G.cpuToken = null;
+    G.cpuPlayerId = null;
+    document.body.classList.add('tcg-spectator-mode');
+    const bar = el('spectate-bar');
+    const barLabel = el('spectate-bar-label');
+    if (bar) bar.hidden = false;
+    if (barLabel) {
+      barLabel.textContent = `Spectating ${saved.p1Name || 'P1'} vs ${saved.p2Name || 'P2'}`;
+    }
+    prepareClientReconnectState(s);
+    G.gameState = s;
+    showScr('game');
+    renderGame(s);
+    startPoll();
+    toast('Reconnected to spectating.', 2600);
+    return true;
+  } catch (e) {
+    clearSpectatorSession();
+    return false;
+  }
+}
+
+async function resumeSpectatorSessionIfAny() {
+  if (G.isTutorial || G.roomId) return false;
+  const saved = readSpectatorSession();
+  if (!saved) return false;
+  return reconnectToSpectator(saved);
+}
+
 async function resumeActiveGameIfAny() {
   if (G.isTutorial || G.roomId) return false;
   const saved = readActiveGameSession();
   if (saved && await reconnectToGame(saved)) return true;
+  if (await resumeSpectatorSessionIfAny()) return true;
   if (!getAuthToken()) return false;
   try {
     const res = await accountGet('active_game');
@@ -11713,6 +11789,9 @@ function resetMatchTransientState() {
   G.replayStep = 0;
   G.replayTotal = 0;
   G.isSpectator = false;
+  G._spectateP1Name = null;
+  G._spectateP2Name = null;
+  clearSpectatorSession();
   document.body.classList.remove('tcg-spectator-mode');
   const spectateBar = el('spectate-bar');
   if (spectateBar) spectateBar.hidden = true;
@@ -14337,7 +14416,7 @@ function setCardDetailImage(card) {
 let G = {
   roomId:null, token:null, cpuToken:null, playerId:null, isCPU:false, cpuDifficulty:'easy',
   replayMode:false, replayHandoff:false, replayStep:0, replayTotal:0, replayPlaying:false, replayPlayTimer:null,
-  isSpectator:false, _spectateReturnScreen:'lobby',
+  isSpectator:false, _spectateReturnScreen:'lobby', _spectateP1Name:null, _spectateP2Name:null,
   cpuPlayerId:null,
   _pendingReplayFile:null,
   gameState:null, allCards:{}, starterDecks:{},
@@ -15006,13 +15085,13 @@ let G = {
   on('btn-win-debug-save-log', 'click', onDebugSaveLogClick);
   on('btn-win-debug-copy-log', 'click', onDebugCopyLogClick);
   on('btn-win-debug-save-bundle', 'click', () => { void saveDebugBundle(); });
-  on('btn-resign','click', () => { if (G.isTutorial) return; confirm('Resign?') && sendAct('resign',{}); });
+  on('btn-resign','click', () => { if (G.isTutorial || G.isSpectator) return; confirm('Resign?') && sendAct('resign',{}); });
   on('btn-again', 'click', onWinPlayAgain);
   on('btn-win-hub', 'click', onWinReturnToMenu);
   on('btn-win-leaderboard', 'click', onWinViewLeaderboard);
   on('btn-mull',  'click', confirmMull);
   on('btn-phase-primary', 'click', () => {
-    if (G.isTutorial) return;
+    if (G.isTutorial || G.isSpectator) return;
     const s = G.gameState;
     const myId = G.playerId;
     if (!s) return;
@@ -16262,7 +16341,8 @@ function startPoll() {
   clearTimeout(G.watchdogTimer);
   G.polling = true;
   G._syncFailCount = 0;
-  saveActiveGameSession();
+  if (G.isSpectator) saveSpectatorSession();
+  else saveActiveGameSession();
   if (G.isTutorial) return;
   void beginGameSync();
 }
@@ -16286,10 +16366,7 @@ async function doPollLegacy() {
     const r = await fetch(`${API}?action=get_state&room_id=${encodeURIComponent(G.roomId)}&token=${G.token}&seq=${G.lastSeq}`);
     const d = await r.json();
     if (d.error) {
-      if (G.isSpectator) {
-        void leaveSpectatorMode({ toastMsg: d.error || 'Spectator session ended.' });
-        return;
-      }
+      if (handleSpectatorPollError(d.error)) return;
       TCG_DEBUG.warn('poll', 'error', d.error);
     } else onState(d);
   } catch (e) { TCG_DEBUG.warn('poll', 'fetch failed', e); }
@@ -18586,11 +18663,12 @@ function syncAntiSoftlockButton(s, myId) {
   const btn = el('btn-anti-softlock');
   if (!btn) return;
   const onGame = el('screen-game')?.classList.contains('active');
-  const show = !!(onGame && hasAntiSoftlockTarget(s, myId));
+  const show = !!(onGame && !G.isSpectator && hasAntiSoftlockTarget(s, myId));
   btn.hidden = !show;
 }
 
 async function antiSoftlockSkipPrompt() {
+  if (G.isSpectator) return;
   const s = G.gameState;
   const myId = G.playerId;
   if (!hasAntiSoftlockTarget(s, myId)) return;
@@ -27776,6 +27854,12 @@ async function presentLiveRound(prev, next, myId, opts = {}) {
   return { reveal: needsLiveReveal, spectacle: spectacleRan, empty: emptySkip };
 }
 
+function handleSpectatorPollError(msg) {
+  if (!G.isSpectator) return false;
+  void leaveSpectatorMode({ toastMsg: msg || 'Spectator session ended.' });
+  return true;
+}
+
 async function pullLatestState(force) {
   if (!G.polling || G.isTutorial || !G.roomId || !G.token) return;
   if (!force && pollPresentationBlocked()) {
@@ -27788,7 +27872,7 @@ async function pullLatestState(force) {
     const r = await fetch(`${API}?action=get_state&room_id=${encodeURIComponent(G.roomId)}&token=${encodeURIComponent(G.token)}&seq=${G.lastSeq}&poll=0`);
     const d = await r.json();
     if (!d.error) onState(d);
-    else TCG_DEBUG.warn('poll', 'pullLatestState error', d.error);
+    else if (!handleSpectatorPollError(d.error)) TCG_DEBUG.warn('poll', 'pullLatestState error', d.error);
   } catch (e) { TCG_DEBUG.warn('poll', 'pullLatestState failed', e); }
 }
 
@@ -28092,6 +28176,7 @@ function shouldHideOpponentLiveStorageFaces(s) {
 }
 
 function shouldHoldStateForLocalPrompt(incoming) {
+  if (G.isSpectator) return false;
   const cur = G.gameState;
   if (!cur || !isMyBlockingPromptOpen(cur)) return false;
   if (!incoming || incoming.seq <= (cur.seq ?? 0)) return false;
@@ -37969,6 +38054,8 @@ async function bootSpectatorSession({ roomId, token, p1Name, p2Name }) {
   resetMatchTransientState();
   G.isSpectator = true;
   G._spectateReturnScreen = G._spectateReturnScreen || 'lobby';
+  G._spectateP1Name = p1Name || null;
+  G._spectateP2Name = p2Name || null;
   G.roomId = roomId;
   G.token = token;
   G.playerId = 'p1';
@@ -37983,22 +38070,29 @@ async function bootSpectatorSession({ roomId, token, p1Name, p2Name }) {
   closeM('overlay-spectate-list');
   const s = await fetchGameStateForReconnect(roomId, token);
   if (s.error) throw new Error(s.error);
+  prepareClientReconnectState(s);
+  G.gameState = s;
   showScr('game');
-  onState(s);
+  renderGame(s);
+  saveSpectatorSession();
   startPoll();
 }
 
 async function leaveSpectatorMode(opts = {}) {
   const roomId = G.roomId;
   const token = G.token;
-  if (G.isSpectator && roomId && token) {
+  const explicitLeave = opts.explicitLeave !== false;
+  if (explicitLeave && G.isSpectator && roomId && token) {
     try { await apiPost('spectate_leave', { room_id: roomId, token }); } catch (e) {}
   }
+  clearSpectatorSession();
   stopPoll();
   document.body.classList.remove('tcg-spectator-mode');
   const bar = el('spectate-bar');
   if (bar) bar.hidden = true;
   G.isSpectator = false;
+  G._spectateP1Name = null;
+  G._spectateP2Name = null;
   G.roomId = null;
   G.token = null;
   G.gameState = null;
