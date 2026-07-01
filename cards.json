@@ -63727,6 +63727,59 @@
       ]
     },
     {
+      "card_no": "PL!SP-bp4-023-SRL",
+      "name": "Dazzling Game",
+      "name_en": "Dazzling Game",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "purple",
+          "count": 11
+        },
+        {
+          "color": "any",
+          "count": 8
+        }
+      ],
+      "blade_hearts": [],
+      "rarity": "SRL",
+      "text": "[Live Start] Choose 1 of \"Kanon Shibuya\", \"Wien Margarete\", or \"Tomari Onitsuka\" on your Stage and 1 other Liella! Member on your Stage. Those Members gain +1 Blade until this Live ends.\n[Live Start] Until this Live ends, Pink, Red, Yellow, Green, and Blue Blade hearts revealed for Yell become Purple Blade hearts.",
+      "text_jp": "ライブ終了時まで、自分のステージにいる、「澁谷かのん」「ウィーン・マルガレーテ」「鬼塚冬毬」のうちのメンバー1人と、これにより選んだメンバー以外の『Liella!』のメンバー1人は、を得る。\n\nライブ終了時まで、エールによって公開される自分のカードが持つ[桃ブレード]、[赤ブレード]、[黄ブレード]、[緑ブレード]、[青ブレード]、は、すべて[紫ブレード]になる。",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-bp4-023-SRL.png",
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "pick_named_members_grant_blade",
+          "names": [
+            "Kanon Shibuya",
+            "Wien Margarete",
+            "Tomari Onitsuka"
+          ],
+          "group": "Superstar",
+          "blade": 1
+        },
+        {
+          "trigger": "live_start",
+          "type": "yell_blades_to_color",
+          "color": "purple"
+        }
+      ],
+      "score": 8,
+      "required_hearts": [
+        {
+          "color": "purple",
+          "count": 11
+        },
+        {
+          "color": "any",
+          "count": 8
+        }
+      ]
+    },
+    {
       "card_no": "PL!SP-bp4-024-L",
       "name": "ノンフィクション!!",
       "name_en": "Nonfiction!!",
@@ -63789,6 +63842,130 @@
       ]
     },
     {
+      "card_no": "PL!SP-bp4-024-SECL",
+      "name": "ノンフィクション!!",
+      "name_en": "Nonfiction!!",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "red",
+          "count": 3
+        },
+        {
+          "color": "yellow",
+          "count": 5
+        },
+        {
+          "color": "any",
+          "count": 7
+        }
+      ],
+      "blade_hearts": [
+        "yellow"
+      ],
+      "rarity": "L",
+      "text": "[Live Start] If the Liella! Member in your Center area has higher cost than your opponent's Center Member, this card's score +1.\n[Live Start] If a Liella! Member in your Left Side area has 3 or more Red hearts, that Member gains +2 Blade until this Live ends.",
+      "text_jp": "自分のセンターエリアにいる『Liella!』のメンバーのコストが、相手のセンターエリアにいるメンバーより高い場合、このカードのスコアを＋１する。\n\n自分のステージの左サイドエリアにいる『Liella!』のメンバーがを3つ以上持つ場合、そのメンバーは、ライブ終了時まで、を得る。",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-bp4-024-SECL.png",
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "score_if_center_cost_higher",
+          "group": "Superstar",
+          "amount": 1
+        },
+        {
+          "trigger": "live_start",
+          "type": "grant_blade_if_slot_colored_hearts",
+          "slot": "left",
+          "group": "Superstar",
+          "heart_color": "red",
+          "min_hearts": 3,
+          "blade": 2
+        }
+      ],
+      "score": 6,
+      "required_hearts": [
+        {
+          "color": "red",
+          "count": 3
+        },
+        {
+          "color": "yellow",
+          "count": 5
+        },
+        {
+          "color": "any",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "card_no": "PL!SP-bp4-024-SRL",
+      "name": "ノンフィクション!!",
+      "name_en": "Nonfiction!!",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "red",
+          "count": 3
+        },
+        {
+          "color": "yellow",
+          "count": 5
+        },
+        {
+          "color": "any",
+          "count": 7
+        }
+      ],
+      "blade_hearts": [
+        "yellow"
+      ],
+      "rarity": "SRL",
+      "text": "[Live Start] If the Liella! Member in your Center area has higher cost than your opponent's Center Member, this card's score +1.\n[Live Start] If a Liella! Member in your Left Side area has 3 or more Red hearts, that Member gains +2 Blade until this Live ends.",
+      "text_jp": "自分のセンターエリアにいる『Liella!』のメンバーのコストが、相手のセンターエリアにいるメンバーより高い場合、このカードのスコアを＋１する。\n\n自分のステージの左サイドエリアにいる『Liella!』のメンバーがを3つ以上持つ場合、そのメンバーは、ライブ終了時まで、を得る。",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-bp4-024-SRL.png",
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "score_if_center_cost_higher",
+          "group": "Superstar",
+          "amount": 1
+        },
+        {
+          "trigger": "live_start",
+          "type": "grant_blade_if_slot_colored_hearts",
+          "slot": "left",
+          "group": "Superstar",
+          "heart_color": "red",
+          "min_hearts": 3,
+          "blade": 2
+        }
+      ],
+      "score": 6,
+      "required_hearts": [
+        {
+          "color": "red",
+          "count": 3
+        },
+        {
+          "color": "yellow",
+          "count": 5
+        },
+        {
+          "color": "any",
+          "count": 7
+        }
+      ]
+    },
+    {
       "card_no": "PL!SP-bp4-025-L",
       "name": "Special Color",
       "name_en": "Special Color",
@@ -63807,6 +63984,47 @@
       "text": "[Live Start] Until this Live ends, Liella! Members in your Center area have 3 printed Blades.\n[Live Success] If a Liella! Member in your Center area moved this turn, this card's score +1.",
       "text_jp": "ライブ終了時まで、自分のステージのセンターエリアにいる『Liella!』のメンバーが元々持つの数は3つになる。\n\n自分のステージのセンターエリアにいる『Liella!』のメンバーが、このターン中に移動している場合、このカードのスコアを＋１する。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/BP04/PL!SP-bp4-025-L.png",
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "set_center_group_blades",
+          "group": "Superstar",
+          "blade_count": 3
+        },
+        {
+          "trigger": "live_success",
+          "type": "score_if_center_group_moved",
+          "group": "Superstar",
+          "amount": 1
+        }
+      ],
+      "score": 2,
+      "required_hearts": [
+        {
+          "color": "any",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "card_no": "PL!SP-bp4-025-SRL",
+      "name": "Special Color",
+      "name_en": "Special Color",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "any",
+          "count": 7
+        }
+      ],
+      "blade_hearts": [],
+      "rarity": "SRL",
+      "text": "[Live Start] Until this Live ends, Liella! Members in your Center area have 3 printed Blades.\n[Live Success] If a Liella! Member in your Center area moved this turn, this card's score +1.",
+      "text_jp": "ライブ終了時まで、自分のステージのセンターエリアにいる『Liella!』のメンバーが元々持つの数は3つになる。\n\n自分のステージのセンターエリアにいる『Liella!』のメンバーが、このターン中に移動している場合、このカードのスコアを＋１する。",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-bp4-025-SRL.png",
       "abilities": [
         {
           "trigger": "live_start",
@@ -63897,6 +64115,73 @@
       ]
     },
     {
+      "card_no": "PL!SP-bp4-026-SRL",
+      "name": "Wish Song",
+      "name_en": "Wish Song",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "red",
+          "count": 1
+        },
+        {
+          "color": "yellow",
+          "count": 1
+        },
+        {
+          "color": "purple",
+          "count": 3
+        },
+        {
+          "color": "any",
+          "count": 6
+        }
+      ],
+      "blade_hearts": [],
+      "rarity": "SRL",
+      "text": "[Live Success] If cards revealed for Yell include 5 or more differently named Liella! Member cards, this card's score +1.\n[Live Success] If you have 11 or more Energy, draw 2 cards and put 1 card from your hand into the Waiting Room.",
+      "text_jp": "エールにより公開された自分のカードの中に名前が異なる『Liella!』のメンバーカードが5枚以上ある場合、このカードのスコアを＋１する。\n\n自分のエネルギーが11枚以上ある場合、カードを2枚引き、手札を1枚控え室に置く。",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-bp4-026-SRL.png",
+      "abilities": [
+        {
+          "trigger": "live_success",
+          "type": "score_if_yell_distinct_members",
+          "group": "Superstar",
+          "min_distinct": 5,
+          "amount": 1
+        },
+        {
+          "trigger": "live_success",
+          "type": "draw_discard_if_min_energy",
+          "min_energy": 11,
+          "draw": 2,
+          "discard": 1
+        }
+      ],
+      "score": 4,
+      "required_hearts": [
+        {
+          "color": "red",
+          "count": 1
+        },
+        {
+          "color": "yellow",
+          "count": 1
+        },
+        {
+          "color": "purple",
+          "count": 3
+        },
+        {
+          "color": "any",
+          "count": 6
+        }
+      ]
+    },
+    {
       "card_no": "PL!SP-bp4-027-L",
       "name": "Chance Day, Chance Way!",
       "name_en": "Chance Day, Chance Way!",
@@ -63919,6 +64204,48 @@
       "text": "[Live Success] If every Member on your Stage is Liella!, you may formation-change your Stage Members (move each to any area; no area may have 2 Members).",
       "text_jp": "自分のステージにいるメンバーが『Liella!』のみの場合、自分のステージにいるメンバーをフォーメーションチェンジしてもよい。(メンバーをそれぞれ好きなエリアに移動させる。この効果で1つのエリアに2人以上のメンバーを移動させることはできない。)",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/BP04/PL!SP-bp4-027-L.png",
+      "abilities": [
+        {
+          "trigger": "live_success",
+          "type": "optional_formation_change_group",
+          "group": "Superstar"
+        }
+      ],
+      "score": 1,
+      "required_hearts": [
+        {
+          "color": "red",
+          "count": 1
+        },
+        {
+          "color": "any",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "card_no": "PL!SP-bp4-027-SRL",
+      "name": "Chance Day, Chance Way!",
+      "name_en": "Chance Day, Chance Way!",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "red",
+          "count": 1
+        },
+        {
+          "color": "any",
+          "count": 2
+        }
+      ],
+      "blade_hearts": [],
+      "rarity": "SRL",
+      "text": "[Live Success] If every Member on your Stage is Liella!, you may formation-change your Stage Members (move each to any area; no area may have 2 Members).",
+      "text_jp": "自分のステージにいるメンバーが『Liella!』のみの場合、自分のステージにいるメンバーをフォーメーションチェンジしてもよい。(メンバーをそれぞれ好きなエリアに移動させる。この効果で1つのエリアに2人以上のメンバーを移動させることはできない。)",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-bp4-027-SRL.png",
       "abilities": [
         {
           "trigger": "live_success",
@@ -63991,6 +64318,58 @@
       ]
     },
     {
+      "card_no": "PL!SP-bp4-028-SRL",
+      "name": "DAISUKI FULL POWER",
+      "name_en": "DAISUKI FULL POWER",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "red",
+          "count": 3
+        },
+        {
+          "color": "yellow",
+          "count": 3
+        },
+        {
+          "color": "any",
+          "count": 7
+        }
+      ],
+      "blade_hearts": [
+        "red"
+      ],
+      "rarity": "SRL",
+      "text": "[Live Start] If you have 1 or more active Energy, this card's score +1.",
+      "text_jp": "アクティブ状態の自分のエネルギーがある場合、このカードのスコアを＋１する。",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-bp4-028-SRL.png",
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "score_if_active_energy",
+          "amount": 1
+        }
+      ],
+      "score": 5,
+      "required_hearts": [
+        {
+          "color": "red",
+          "count": 3
+        },
+        {
+          "color": "yellow",
+          "count": 3
+        },
+        {
+          "color": "any",
+          "count": 7
+        }
+      ]
+    },
+    {
       "card_no": "PL!SP-bp4-029-L",
       "name": "追いかける夢の先で",
       "name_en": "Oikakeru Yume no Saki de",
@@ -64036,6 +64415,51 @@
       ]
     },
     {
+      "card_no": "PL!SP-bp4-029-SRL",
+      "name": "追いかける夢の先で",
+      "name_en": "Oikakeru Yume no Saki de",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "yellow",
+          "count": 3
+        },
+        {
+          "color": "purple",
+          "count": 3
+        },
+        {
+          "color": "any",
+          "count": 4
+        }
+      ],
+      "blade_hearts": [
+        "purple"
+      ],
+      "rarity": "SRL",
+      "text": "",
+      "text_jp": "",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-bp4-029-SRL.png",
+      "score": 4,
+      "required_hearts": [
+        {
+          "color": "yellow",
+          "count": 3
+        },
+        {
+          "color": "purple",
+          "count": 3
+        },
+        {
+          "color": "any",
+          "count": 4
+        }
+      ]
+    },
+    {
       "card_no": "PL!SP-bp4-030-L",
       "name": "Second Sparkle",
       "name_en": "Second Sparkle",
@@ -64058,6 +64482,41 @@
       "text": "",
       "text_jp": "",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/BP04/PL!SP-bp4-030-L.png",
+      "score": 2,
+      "required_hearts": [
+        {
+          "color": "yellow",
+          "count": 2
+        },
+        {
+          "color": "any",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "card_no": "PL!SP-bp4-030-SRL",
+      "name": "Second Sparkle",
+      "name_en": "Second Sparkle",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "yellow",
+          "count": 2
+        },
+        {
+          "color": "any",
+          "count": 3
+        }
+      ],
+      "blade_hearts": [],
+      "rarity": "SRL",
+      "text": "",
+      "text_jp": "",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-bp4-030-SRL.png",
       "score": 2,
       "required_hearts": [
         {
@@ -68488,6 +68947,56 @@
       ]
     },
     {
+      "card_no": "PL!SP-pb1-023-SRL",
+      "name": "ディストーション",
+      "name_en": "Distortion",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "red",
+          "count": 4
+        },
+        {
+          "color": "any",
+          "count": 4
+        }
+      ],
+      "blade_hearts": [],
+      "rarity": "SRL",
+      "text": "[Live Start] If you have 2 or more differently named CatChu! Members on your Stage, activate up to 6 Energy. Then, if all your Energy is active, this card's score +1.",
+      "text_jp": "自分のステージに名前の異なる『CatChu!』のメンバーが2人以上いる場合、エネルギーを6枚までアクティブにする。その後、自分のエネルギーがすべてアクティブ状態の場合、このカードのスコアを＋１する。",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb1-023-SRL.png",
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "activate_energy_up_to_if_distinct_subunit",
+          "subunit": "CatChu!",
+          "min_distinct": 2,
+          "max": 6
+        },
+        {
+          "trigger": "live_start",
+          "type": "score_if_all_energy_active",
+          "amount": 1
+        }
+      ],
+      "subunit": "CatChu!",
+      "score": 3,
+      "required_hearts": [
+        {
+          "color": "red",
+          "count": 4
+        },
+        {
+          "color": "any",
+          "count": 4
+        }
+      ]
+    },
+    {
       "card_no": "PL!SP-pb1-024-L",
       "name": "ニュートラル",
       "name_en": "Neutral",
@@ -68531,6 +69040,53 @@
           "subunit": "KALEIDOSCORE",
           "min_distinct": 2,
           "amount": 1
+        }
+      ]
+    },
+    {
+      "card_no": "PL!SP-pb1-024-SRL",
+      "name": "ニュートラル",
+      "name_en": "Neutral",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "purple",
+          "count": 8
+        },
+        {
+          "color": "any",
+          "count": 7
+        }
+      ],
+      "blade_hearts": [
+        "purple"
+      ],
+      "rarity": "SRL",
+      "text": "[Live Start] If you have 2 or more differently named KALEIDOSCORE Members on your Stage, this card's score +1.",
+      "text_jp": "自分のステージに名前の異なる『KALEIDOSCORE』のメンバーが2人以上いる場合、このカードのスコアを＋１する。",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb1-024-SRL.png",
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "score_if_distinct_subunit",
+          "subunit": "KALEIDOSCORE",
+          "min_distinct": 2,
+          "amount": 1
+        }
+      ],
+      "subunit": "KALEIDOSCORE",
+      "score": 6,
+      "required_hearts": [
+        {
+          "color": "purple",
+          "count": 8
+        },
+        {
+          "color": "any",
+          "count": 7
         }
       ]
     },
@@ -68584,6 +69140,59 @@
           "subunit": "5yncri5e!",
           "per_member": 1,
           "reduce_heart_color": "gray"
+        }
+      ]
+    },
+    {
+      "card_no": "PL!SP-pb1-025-SRL",
+      "name": "Jellyfish",
+      "name_en": "Jellyfish",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "red",
+          "count": 4
+        },
+        {
+          "color": "purple",
+          "count": 4
+        },
+        {
+          "color": "any",
+          "count": 6
+        }
+      ],
+      "blade_hearts": [],
+      "rarity": "SRL",
+      "text": "[Live Start] For each 5yncri5e! Member on your Stage that entered or moved this turn, reduce this card's Required Hearts by 1 Gray Heart.",
+      "text_jp": "自分のステージにいる、このターン中に登場、またはエリアを移動した『5yncri5e!』のメンバー1人につき、このカードを成功させるための必要ハートを減らす。",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb1-025-SRL.png",
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "reduce_hearts_per_entered_moved_subunit",
+          "subunit": "5yncri5e!",
+          "per_member": 1,
+          "reduce_heart_color": "gray"
+        }
+      ],
+      "subunit": "5yncri5e!",
+      "score": 6,
+      "required_hearts": [
+        {
+          "color": "red",
+          "count": 4
+        },
+        {
+          "color": "purple",
+          "count": 4
+        },
+        {
+          "color": "any",
+          "count": 6
         }
       ]
     },
@@ -68661,6 +69270,51 @@
       "text": "",
       "text_jp": "",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP/PL!SP-pb1-026-L2.png",
+      "score": 4,
+      "required_hearts": [
+        {
+          "color": "red",
+          "count": 3
+        },
+        {
+          "color": "purple",
+          "count": 3
+        },
+        {
+          "color": "any",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "card_no": "PL!SP-pb1-026-SRL",
+      "name": "Jump Into the New World",
+      "name_en": "Jump Into the New World",
+      "card_type": "ライブ",
+      "card_type_en": "Live",
+      "group": "Superstar",
+      "booster_pack": "プレミアムブースター ラブライブ！スーパースター!! DUO",
+      "hearts": [
+        {
+          "color": "red",
+          "count": 3
+        },
+        {
+          "color": "purple",
+          "count": 3
+        },
+        {
+          "color": "any",
+          "count": 4
+        }
+      ],
+      "blade_hearts": [
+        "purple"
+      ],
+      "rarity": "SRL",
+      "text": "",
+      "text_jp": "",
+      "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb1-026-SRL.png",
       "score": 4,
       "required_hearts": [
         {
