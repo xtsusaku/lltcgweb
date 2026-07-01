@@ -14,6 +14,62 @@ const TCG_STAR_GEMS_PER_DUPE = 10;
 const TCG_STAR_GEMS_PACK_COST = 100;
 const TCG_STAR_GEMS_BOX_COST = 3000;
 
+/** Star Gems awarded when a duplicate is converted (above deck copy limit). */
+function tcgStarGemsForDupe(?array $card, string $cardNo = ''): int {
+    $rarity = strtoupper(trim((string)($card['rarity'] ?? '')));
+    if ($rarity === '') {
+        return TCG_STAR_GEMS_PER_DUPE;
+    }
+
+    $typeEn = (string)($card['card_type_en'] ?? '');
+    if ($typeEn === '') {
+        $typeEn = match ((string)($card['card_type'] ?? '')) {
+            'メンバー' => 'Member',
+            'ライブ' => 'Live',
+            'エネルギー' => 'Energy',
+            default => '',
+        };
+    }
+
+    if ($rarity === 'CL') {
+        return 50;
+    }
+
+    if ($typeEn === 'Energy') {
+        return match ($rarity) {
+            'PE' => 10,
+            'PR', 'PR+' => 10,
+            'P', 'RE' => 30,
+            'PE+' => 50,
+            'SRE' => 80,
+            'LLE', 'SECE', 'SEC+', 'SECS' => 100,
+            default => TCG_STAR_GEMS_PER_DUPE,
+        };
+    }
+
+    if ($typeEn === 'Live') {
+        return match ($rarity) {
+            'L' => 10,
+            'P', 'R' => 20,
+            'R+' => 30,
+            'L+' => 50,
+            'SECL' => 100,
+            default => TCG_STAR_GEMS_PER_DUPE,
+        };
+    }
+
+    // Member (and unknown types default to member table)
+    return match ($rarity) {
+        'N' => 10,
+        'R', 'P' => 20,
+        'R+' => 30,
+        'P+' => 50,
+        'AR', 'RM' => 80,
+        'SEC' => 100,
+        default => TCG_STAR_GEMS_PER_DUPE,
+    };
+}
+
 function tcgDb(): PDO {
     static $pdo = null;
     if ($pdo instanceof PDO) {
@@ -372,11 +428,12 @@ function tcgApplyBoosterPullWithGems(string $discordId, array $cardNos, array $c
         $max = tcgGetDeckMaxCopies(is_array($card) ? $card : null, $no);
         $have = intval($owned[$no] ?? 0);
         if ($have >= $max) {
-            $gemsEarned += TCG_STAR_GEMS_PER_DUPE;
+            $dupeGems = tcgStarGemsForDupe(is_array($card) ? $card : null, $no);
+            $gemsEarned += $dupeGems;
             $pulls[] = [
                 'card_no' => $no,
                 'converted' => true,
-                'star_gems' => TCG_STAR_GEMS_PER_DUPE,
+                'star_gems' => $dupeGems,
             ];
         } else {
             $owned[$no] = $have + 1;
@@ -452,7 +509,8 @@ function tcgMigrateDuplicateToStarGems(string $discordId, array $cardMap): array
         $max = tcgGetDeckMaxCopies(is_array($card) ? $card : null, $no);
         if ($qty > $max) {
             $excess = $qty - $max;
-            $gemsGained += $excess * TCG_STAR_GEMS_PER_DUPE;
+            $dupeGems = tcgStarGemsForDupe(is_array($card) ? $card : null, (string)$no);
+            $gemsGained += $excess * $dupeGems;
             $cardsConverted += $excess;
             $updates[$no] = $max;
         }
