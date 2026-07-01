@@ -7257,6 +7257,21 @@ function sfxPlay(id, opts) {
   try { window.LLTCG_SFX?.play(id, opts); } catch (e) {}
 }
 
+function sfxPlayCard(id, opts) {
+  sfxPlay(id, opts);
+}
+
+function sfxCardMoveSound(m) {
+  const toZ = m?.to?.zone;
+  const fromZ = m?.from?.zone;
+  if (toZ === 'hand') return 'card_draw';
+  if (toZ === 'waiting_room') return 'card_to_wr';
+  if (toZ === 'stage' || toZ === 'live') return 'card_place';
+  if (toZ === 'energy') return 'energy_chip';
+  if (fromZ === 'hand') return 'card_place';
+  return 'card_fly';
+}
+
 function syncSfxVolumeUi() {
   const wrap = el('options-sfx-volume-wrap');
   const rng = el('rng-sfx-volume');
@@ -7334,6 +7349,9 @@ function bindMenuSfx() {
 
 const SFX_PHASE_MAP = {
   coin_flip: 'coin_flip',
+  setup: 'notify',
+  active_first: 'active_refresh',
+  active_second: 'active_refresh',
   main_first: 'phase_main',
   main_second: 'phase_main',
   live_set: 'phase_live',
@@ -15037,6 +15055,7 @@ function playShiftAnimation(nodes, beforeByEl, skipFn) {
     shifting.push(node);
   });
   if (!shifting.length) return;
+  sfxPlayCard('card_slide');
   void document.documentElement.offsetWidth;
   requestAnimationFrame(() => {
     shifting.forEach(node => {
@@ -15110,6 +15129,7 @@ function playSurveilShiftAnimation(beforeByKey) {
     shifting.push({ node, inWr });
   });
   if (!shifting.length) return;
+  sfxPlayCard('card_slide', { volume: 0.85 });
   void document.documentElement.offsetWidth;
   requestAnimationFrame(() => {
     shifting.forEach(({ node, inWr }) => {
@@ -16782,6 +16802,7 @@ function ensureHandDrawRevealCard(iid, state, myId) {
 
 function beginHandDrawReveal(iid, state, myId) {
   if (!iid || !state) return;
+  sfxPlayCard('card_draw');
   const cardEl = ensureHandDrawRevealCard(iid, state, myId);
   if (cardEl) scheduleHandDrawReveal(cardEl, iid);
   else {
@@ -17884,6 +17905,7 @@ function scheduleCardFlipReveal(cardEl, flipKey, flipKeys, opts = {}) {
   const run = () => {
     setTimeout(() => {
       if (typeof beforeFlip === 'function') beforeFlip();
+      sfxPlayCard('card_flip');
       requestAnimationFrame(() => requestAnimationFrame(() => {
         cardEl.classList.add('revealed');
         setTimeout(() => {
@@ -18160,6 +18182,7 @@ async function executeCardMoveAnimation(m, opts) {
       })();
     };
     if (fr && tr) {
+      sfxPlayCard(sfxCardMoveSound(m));
       await flyCard(m.card, fr, tr, delayMs, {
         fromZone: m.from?.zone,
         toZone: m.to?.zone,
@@ -27317,6 +27340,7 @@ async function perfRevealYellCardFromDeck(chip, deckEl, isMine, pace = 1) {
   layer.appendChild(fly);
   chip.style.visibility = 'hidden';
   deckEl.classList.add('perf-deck-draw');
+  sfxPlayCard('yell_reveal');
   await perfSleepYell(40, pace);
   if (G._perfSpectacleAborted) {
     fly.remove();
@@ -27367,6 +27391,7 @@ async function perfFlyMemberHeartToPanel(fromEl, heartsEl, color, opts = {}) {
   fly.style.transition = `transform ${heartFlyDur}s ease-out, opacity ${heartFadeDur}s ease`;
   layer.appendChild(fly);
   fromEl?.classList?.add('perf-member-heart-pulse');
+  sfxPlayCard('hearts_gain');
   await perfSleepYell(40, pace);
   if (G._perfSpectacleAborted) { fly.remove(); fromEl?.classList?.remove('perf-member-heart-pulse'); return; }
   const to = perfHeartFlyTargetRect(heartsEl, display);
@@ -27407,6 +27432,7 @@ async function perfFlyBladeHeartToPanel(fromEl, heartsEl, color, chip, displayCo
   layer.appendChild(fly);
   const bladeWrap = fromEl.closest?.('.perf-yell-blade-hearts');
   fromEl.remove();
+  sfxPlayCard('hearts_gain');
   await perfSleepYell(40, pace);
   if (G._perfSpectacleAborted) { fly.remove(); return; }
   const to = perfHeartFlyTargetRect(heartsEl, color);
@@ -28686,6 +28712,7 @@ async function perfAnimateOutcomesForPid(ctx, pid) {
     out.appendChild(b);
     await perfSleep(80);
     b.classList.add('show');
+    sfxPlayCard(att.success ? 'live_success' : 'live_fail', { volume: att.success ? 0.7 : 0.65 });
     await perfSleep(350);
   }
 }
@@ -29239,6 +29266,7 @@ function showCenterBannerNow({ title, subtitle, detail, kind = 'phase', duration
     if (!root) { resolve(); return; }
     if (!String(title || '').trim()) { resolve(); return; }
     if (!shouldShowMatchSplash()) { resolve(); return; }
+    if (/^Turn \d+/.test(String(title || ''))) sfxPlayCard('turn_tick');
     setSplashTitle(el('cb-title'), title || '');
     el('cb-sub').textContent = subtitle || '';
     const det = el('cb-detail');
@@ -29719,7 +29747,12 @@ function updateOpponentSkillWaitBanner(s, myId) {
     root.classList.remove('show');
     if (sub) sub.textContent = '';
     clearOpponentSkillWaitLogKey();
+    G._sfxOppSkillWait = false;
     return;
+  }
+  if (!G._sfxOppSkillWait) {
+    G._sfxOppSkillWait = true;
+    sfxPlayCard('skill_tick');
   }
   const oppName = s.players?.[oppId]?.name || 'Opponent';
   const src = pr?.source_name || '';
@@ -31539,14 +31572,14 @@ function playToSlot(card, slot, s, myId, existing) {
         return;
       }
       sendAct('play_member',{card_id:card.instance_id,slot,baton_id:exist2.instance_id});
-      sfxPlay('card_play');
+      sfxPlayCard('card_play');
       return;
     }
     if (mode === 'overplay') {
       const ae=(me.energy_zone||[]).filter(energyChipActive).length;
       if(ae<ec){ toast(`Need ${energyCostHtml(ec)} to overplay`, 2500, true); return; }
       sendAct('play_member',{card_id:card.instance_id,slot});
-      sfxPlay('card_play');
+      sfxPlayCard('card_play');
       return;
     }
     toast('Cannot play to this slot');
@@ -31555,7 +31588,7 @@ function playToSlot(card, slot, s, myId, existing) {
     const ae=(me.energy_zone||[]).filter(energyChipActive).length;
     if(ae<ec){ toast(`Need ${energyCostHtml(ec)}`, 2500, true); return; }
     sendAct('play_member',{card_id:card.instance_id,slot});
-    sfxPlay('card_play');
+    sfxPlayCard('card_play');
   }
 }
 
@@ -34624,6 +34657,7 @@ async function confirmLiveSetFromHand() {
     renderGame(cur, { skipLog: true });
   }
   if (ids.length) {
+    sfxPlayCard('card_place');
     await sendAct('set_live_cards', { card_ids: ids });
     if (G.gameState?.phase === 'live_set' && liveStorageHasCards(G.gameState)) {
       G._liveSetStorageBaseline = deepCloneState(G.gameState);

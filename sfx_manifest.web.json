@@ -1,347 +1,902 @@
 {
-  "version": 1,
+  "version": 2,
   "source": "LLSIFAS Menu+Story WAV",
   "events": {
     "menu_tap": {
-      "file": "menu_tap.wav",
-      "source": "se_010_0117 (3).wav",
-      "source_category": "Menu",
-      "duration_ms": 152.6,
-      "tags": [
-        "click",
-        "loud",
-        "menu"
-      ],
-      "score": 1.526,
-      "centroid_hz": 2987.4
+      "variants": [
+        {
+          "file": "menu_tap_1.wav",
+          "source": "se_010_0117 (3).wav",
+          "source_category": "Menu",
+          "duration_ms": 152.6,
+          "tags": [
+            "click",
+            "loud",
+            "menu"
+          ],
+          "score": 1.526,
+          "volume": 1.0,
+          "centroid_hz": 2987.4
+        },
+        {
+          "file": "menu_tap_2.wav",
+          "source": "se_010_0117 (4).wav",
+          "source_category": "Menu",
+          "duration_ms": 158.3,
+          "tags": [
+            "click",
+            "menu"
+          ],
+          "score": 1.4891,
+          "volume": 1.0,
+          "centroid_hz": 3250.5
+        },
+        {
+          "file": "menu_tap_3.wav",
+          "source": "se_010_0033.wav",
+          "source_category": "Menu",
+          "duration_ms": 159.3,
+          "tags": [
+            "click",
+            "menu"
+          ],
+          "score": 1.4813,
+          "volume": 1.0,
+          "centroid_hz": 3129.2
+        },
+        {
+          "file": "menu_tap_4.wav",
+          "source": "se_010_0001.wav",
+          "source_category": "Menu",
+          "duration_ms": 165.8,
+          "tags": [
+            "click",
+            "menu"
+          ],
+          "score": 1.4222,
+          "volume": 1.0,
+          "centroid_hz": 1548.3
+        }
+      ]
     },
     "menu_confirm": {
-      "file": "menu_confirm.wav",
-      "source": "se_010_0012.wav",
-      "source_category": "Menu",
-      "duration_ms": 278.0,
-      "tags": [
-        "short",
-        "quiet",
-        "bright",
-        "menu"
-      ],
-      "score": 1.3198,
-      "centroid_hz": 3741.8
+      "variants": [
+        {
+          "file": "menu_confirm_1.wav",
+          "source": "se_010_0012.wav",
+          "source_category": "Menu",
+          "duration_ms": 278.0,
+          "tags": [
+            "short",
+            "quiet",
+            "bright",
+            "menu"
+          ],
+          "score": 1.3198,
+          "volume": 1.0,
+          "centroid_hz": 3741.8
+        },
+        {
+          "file": "menu_confirm_2.wav",
+          "source": "se_010_0117.wav",
+          "source_category": "Menu",
+          "duration_ms": 244.4,
+          "tags": [
+            "short",
+            "bright",
+            "menu"
+          ],
+          "score": 1.2632,
+          "volume": 1.0,
+          "centroid_hz": 4601.9
+        },
+        {
+          "file": "menu_confirm_3.wav",
+          "source": "se_010_0114.wav",
+          "source_category": "Menu",
+          "duration_ms": 238.8,
+          "tags": [
+            "short",
+            "bright",
+            "menu"
+          ],
+          "score": 1.2444,
+          "volume": 1.0,
+          "centroid_hz": 3743.2
+        }
+      ]
     },
     "menu_cancel": {
-      "file": "menu_cancel.wav",
-      "source": "se_010_0020.wav",
-      "source_category": "Menu",
-      "duration_ms": 233.4,
-      "tags": [
-        "short",
-        "quiet",
-        "bright",
-        "noisy",
-        "menu"
-      ],
-      "score": 0.9165,
-      "centroid_hz": 5505.4
+      "variants": [
+        {
+          "file": "menu_cancel_1.wav",
+          "source": "se_010_0020.wav",
+          "source_category": "Menu",
+          "duration_ms": 233.4,
+          "tags": [
+            "short",
+            "quiet",
+            "bright",
+            "noisy",
+            "menu"
+          ],
+          "score": 0.9165,
+          "volume": 1.0,
+          "centroid_hz": 5505.4
+        },
+        {
+          "file": "menu_cancel_2.wav",
+          "source": "se_120_0058.wav",
+          "source_category": "Story",
+          "duration_ms": 199.5,
+          "tags": [
+            "click",
+            "story"
+          ],
+          "score": 0.85,
+          "volume": 1.0,
+          "centroid_hz": 2776.2
+        }
+      ]
     },
     "menu_back": {
-      "file": "menu_back.wav",
-      "source": "se_010_0001.wav",
-      "source_category": "Menu",
-      "duration_ms": 165.8,
-      "tags": [
-        "click",
-        "menu"
-      ],
-      "score": 0.8817,
-      "centroid_hz": 1548.3
+      "variants": [
+        {
+          "file": "menu_back_1.wav",
+          "source": "se_110_0053.wav",
+          "source_category": "Story",
+          "duration_ms": 161.7,
+          "tags": [
+            "click",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 0.8698,
+          "volume": 1.0,
+          "centroid_hz": 7004.3
+        },
+        {
+          "file": "menu_back_2.wav",
+          "source": "se_110_0074.wav",
+          "source_category": "Story",
+          "duration_ms": 159.0,
+          "tags": [
+            "click",
+            "loud",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 0.8604,
+          "volume": 1.0,
+          "centroid_hz": 5467.2
+        }
+      ]
     },
     "screen_open": {
-      "file": "screen_open.wav",
-      "source": "se_110_0164.wav",
-      "source_category": "Story",
-      "duration_ms": 554.6,
-      "tags": [
-        "medium",
-        "loud",
-        "bright",
-        "story"
-      ],
-      "score": 0.9594,
-      "centroid_hz": 4771.6
+      "variants": [
+        {
+          "file": "screen_open_1.wav",
+          "source": "se_110_0164.wav",
+          "source_category": "Story",
+          "duration_ms": 554.6,
+          "tags": [
+            "medium",
+            "loud",
+            "bright",
+            "story"
+          ],
+          "score": 0.9594,
+          "volume": 1.0,
+          "centroid_hz": 4771.6
+        },
+        {
+          "file": "screen_open_2.wav",
+          "source": "se_110_0232.wav",
+          "source_category": "Story",
+          "duration_ms": 555.6,
+          "tags": [
+            "medium",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 0.9569,
+          "volume": 1.0,
+          "centroid_hz": 5028.6
+        }
+      ]
     },
     "match_found": {
-      "file": "match_found.wav",
-      "source": "se_110_0132.wav",
-      "source_category": "Story",
-      "duration_ms": 851.4,
-      "tags": [
-        "medium",
-        "loud",
-        "bright",
-        "story"
-      ],
-      "score": 1.7425,
-      "centroid_hz": 3830.8
+      "variants": [
+        {
+          "file": "match_found.wav",
+          "source": "se_110_0132.wav",
+          "source_category": "Story",
+          "duration_ms": 851.4,
+          "tags": [
+            "medium",
+            "loud",
+            "bright",
+            "story"
+          ],
+          "score": 1.7425,
+          "volume": 1.0,
+          "centroid_hz": 3830.8
+        }
+      ]
     },
     "card_draw": {
-      "file": "card_draw.wav",
-      "source": "se_110_0143.wav",
-      "source_category": "Story",
-      "duration_ms": 255.3,
-      "tags": [
-        "short",
-        "bright",
-        "noisy",
-        "story"
-      ],
-      "score": 1.0985,
-      "centroid_hz": 8488.0
+      "variants": [
+        {
+          "file": "card_draw_1.wav",
+          "source": "se_120_0070.wav",
+          "source_category": "Story",
+          "duration_ms": 301.3,
+          "tags": [
+            "short",
+            "quiet",
+            "story"
+          ],
+          "score": 0.8532,
+          "volume": 0.42,
+          "centroid_hz": 2850.0
+        },
+        {
+          "file": "card_draw_2.wav",
+          "source": "se_120_0074.wav",
+          "source_category": "Story",
+          "duration_ms": 301.3,
+          "tags": [
+            "short",
+            "quiet",
+            "story"
+          ],
+          "score": 0.8532,
+          "volume": 0.42,
+          "centroid_hz": 2991.4
+        },
+        {
+          "file": "card_draw_3.wav",
+          "source": "se_120_0075.wav",
+          "source_category": "Story",
+          "duration_ms": 301.3,
+          "tags": [
+            "short",
+            "quiet",
+            "story"
+          ],
+          "score": 0.8532,
+          "volume": 0.42,
+          "centroid_hz": 2991.4
+        }
+      ]
+    },
+    "card_slide": {
+      "variants": [
+        {
+          "file": "card_slide_1.wav",
+          "source": "se_010_0008.wav",
+          "source_category": "Menu",
+          "duration_ms": 65.2,
+          "tags": [
+            "click",
+            "quiet",
+            "bright",
+            "noisy",
+            "menu"
+          ],
+          "score": 0.9375,
+          "volume": 0.26,
+          "centroid_hz": 8108.5
+        },
+        {
+          "file": "card_slide_2.wav",
+          "source": "se_110_0072.wav",
+          "source_category": "Story",
+          "duration_ms": 141.2,
+          "tags": [
+            "click",
+            "loud",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 0.817,
+          "volume": 0.26,
+          "centroid_hz": 6340.1
+        },
+        {
+          "file": "card_slide_3.wav",
+          "source": "se_110_0071.wav",
+          "source_category": "Story",
+          "duration_ms": 96.7,
+          "tags": [
+            "click",
+            "bright",
+            "story"
+          ],
+          "score": 0.8045,
+          "volume": 0.26,
+          "centroid_hz": 5366.9
+        }
+      ]
+    },
+    "card_flip": {
+      "variants": [
+        {
+          "file": "card_flip_1.wav",
+          "source": "se_010_0117 (2).wav",
+          "source_category": "Menu",
+          "duration_ms": 202.6,
+          "tags": [
+            "click",
+            "bright",
+            "menu"
+          ],
+          "score": 1.1391,
+          "volume": 0.34,
+          "centroid_hz": 3540.2
+        },
+        {
+          "file": "card_flip_2.wav",
+          "source": "se_110_0265.wav",
+          "source_category": "Story",
+          "duration_ms": 211.8,
+          "tags": [
+            "click",
+            "loud",
+            "noisy",
+            "story"
+          ],
+          "score": 0.92,
+          "volume": 0.34,
+          "centroid_hz": 3283.6
+        }
+      ]
+    },
+    "card_place": {
+      "variants": [
+        {
+          "file": "card_place_1.wav",
+          "source": "se_010_0010.wav",
+          "source_category": "Menu",
+          "duration_ms": 321.3,
+          "tags": [
+            "short",
+            "menu"
+          ],
+          "score": 0.9319,
+          "volume": 0.36,
+          "centroid_hz": 2424.6
+        },
+        {
+          "file": "card_place_2.wav",
+          "source": "se_110_0166.wav",
+          "source_category": "Story",
+          "duration_ms": 275.2,
+          "tags": [
+            "short",
+            "bright",
+            "story"
+          ],
+          "score": 0.8991,
+          "volume": 0.36,
+          "centroid_hz": 4089.7
+        }
+      ]
+    },
+    "card_fly": {
+      "variants": [
+        {
+          "file": "card_fly_1.wav",
+          "source": "se_110_0317.wav",
+          "source_category": "Story",
+          "duration_ms": 236.6,
+          "tags": [
+            "short",
+            "loud",
+            "story"
+          ],
+          "score": 0.6905,
+          "volume": 0.3,
+          "centroid_hz": 2634.4
+        },
+        {
+          "file": "card_fly_2.wav",
+          "source": "se_110_0143.wav",
+          "source_category": "Story",
+          "duration_ms": 255.3,
+          "tags": [
+            "short",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 0.621,
+          "volume": 0.3,
+          "centroid_hz": 8488.0
+        }
+      ]
+    },
+    "card_to_wr": {
+      "variants": [
+        {
+          "file": "card_to_wr_1.wav",
+          "source": "se_010_0117 (1).wav",
+          "source_category": "Menu",
+          "duration_ms": 212.6,
+          "tags": [
+            "click",
+            "loud",
+            "bright",
+            "menu"
+          ],
+          "score": 0.7197,
+          "volume": 0.32,
+          "centroid_hz": 4282.0
+        },
+        {
+          "file": "card_to_wr_2.wav",
+          "source": "se_110_0214.wav",
+          "source_category": "Story",
+          "duration_ms": 256.3,
+          "tags": [
+            "short",
+            "bright",
+            "story"
+          ],
+          "score": 0.6897,
+          "volume": 0.32,
+          "centroid_hz": 3644.4
+        }
+      ]
     },
     "card_play": {
-      "file": "card_play.wav",
-      "source": "se_010_0010.wav",
-      "source_category": "Menu",
-      "duration_ms": 321.3,
-      "tags": [
-        "short",
-        "menu"
-      ],
-      "score": 1.0,
-      "centroid_hz": 2424.6
+      "variants": [
+        {
+          "file": "card_play.wav",
+          "source": "se_110_0277.wav",
+          "source_category": "Story",
+          "duration_ms": 320.5,
+          "tags": [
+            "short",
+            "bright",
+            "story"
+          ],
+          "score": 0.85,
+          "volume": 0.48,
+          "centroid_hz": 3687.3
+        }
+      ]
     },
     "card_discard": {
-      "file": "card_discard.wav",
-      "source": "se_110_0265.wav",
-      "source_category": "Story",
-      "duration_ms": 211.8,
-      "tags": [
-        "click",
-        "loud",
-        "noisy",
-        "story"
-      ],
-      "score": 0.9959,
-      "centroid_hz": 3283.6
+      "variants": [
+        {
+          "file": "card_discard.wav",
+          "source": "se_110_0304.wav",
+          "source_category": "Story",
+          "duration_ms": 272.1,
+          "tags": [
+            "short",
+            "loud",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 0.8457,
+          "volume": 0.4,
+          "centroid_hz": 3789.5
+        }
+      ]
+    },
+    "energy_chip": {
+      "variants": [
+        {
+          "file": "energy_chip_1.wav",
+          "source": "se_010_0137.wav",
+          "source_category": "Menu",
+          "duration_ms": 66.7,
+          "tags": [
+            "click",
+            "bright",
+            "noisy",
+            "menu"
+          ],
+          "score": 0.543,
+          "volume": 0.38,
+          "centroid_hz": 4816.7
+        },
+        {
+          "file": "energy_chip_2.wav",
+          "source": "se_160_0004.wav",
+          "source_category": "Story",
+          "duration_ms": 71.3,
+          "tags": [
+            "click",
+            "bright",
+            "story"
+          ],
+          "score": 0.457,
+          "volume": 0.38,
+          "centroid_hz": 7499.9
+        }
+      ]
     },
     "coin_flip": {
-      "file": "coin_flip.wav",
-      "source": "se_110_0234.wav",
-      "source_category": "Story",
-      "duration_ms": 353.7,
-      "tags": [
-        "short",
-        "bright",
-        "noisy",
-        "story"
-      ],
-      "score": 1.0997,
-      "centroid_hz": 8270.4
+      "variants": [
+        {
+          "file": "coin_flip.wav",
+          "source": "se_110_0234.wav",
+          "source_category": "Story",
+          "duration_ms": 353.7,
+          "tags": [
+            "short",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 1.0997,
+          "volume": 1.0,
+          "centroid_hz": 8270.4
+        }
+      ]
     },
     "coin_land": {
-      "file": "coin_land.wav",
-      "source": "se_110_0053.wav",
-      "source_category": "Story",
-      "duration_ms": 161.7,
-      "tags": [
-        "click",
-        "bright",
-        "noisy",
-        "story"
-      ],
-      "score": 1.1597,
-      "centroid_hz": 7004.3
+      "variants": [
+        {
+          "file": "coin_land.wav",
+          "source": "se_120_0014.wav",
+          "source_category": "Story",
+          "duration_ms": 49.5,
+          "tags": [
+            "click",
+            "loud",
+            "bright",
+            "story"
+          ],
+          "score": 0.2111,
+          "volume": 1.0,
+          "centroid_hz": 7505.8
+        }
+      ]
     },
     "mulligan_keep": {
-      "file": "mulligan_keep.wav",
-      "source": "se_010_0016.wav",
-      "source_category": "Menu",
-      "duration_ms": 441.8,
-      "tags": [
-        "short",
-        "menu"
-      ],
-      "score": 0.9619,
-      "centroid_hz": 2744.2
+      "variants": [
+        {
+          "file": "mulligan_keep.wav",
+          "source": "se_010_0016.wav",
+          "source_category": "Menu",
+          "duration_ms": 441.8,
+          "tags": [
+            "short",
+            "menu"
+          ],
+          "score": 0.9619,
+          "volume": 1.0,
+          "centroid_hz": 2744.2
+        }
+      ]
     },
     "phase_main": {
-      "file": "phase_main.wav",
-      "source": "se_010_0064.wav",
-      "source_category": "Menu",
-      "duration_ms": 474.8,
-      "tags": [
-        "short",
-        "menu"
-      ],
-      "score": 0.9921,
-      "centroid_hz": 3045.9
+      "variants": [
+        {
+          "file": "phase_main.wav",
+          "source": "se_010_0064.wav",
+          "source_category": "Menu",
+          "duration_ms": 474.8,
+          "tags": [
+            "short",
+            "menu"
+          ],
+          "score": 0.9921,
+          "volume": 1.0,
+          "centroid_hz": 3045.9
+        }
+      ]
     },
     "phase_live": {
-      "file": "phase_live.wav",
-      "source": "se_120_0050.wav",
-      "source_category": "Story",
-      "duration_ms": 705.4,
-      "tags": [
-        "medium",
-        "loud",
-        "bright",
-        "noisy",
-        "story"
-      ],
-      "score": 1.2097,
-      "centroid_hz": 4263.7
+      "variants": [
+        {
+          "file": "phase_live.wav",
+          "source": "se_120_0050.wav",
+          "source_category": "Story",
+          "duration_ms": 705.4,
+          "tags": [
+            "medium",
+            "loud",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 1.2097,
+          "volume": 1.0,
+          "centroid_hz": 4263.7
+        }
+      ]
     },
     "phase_performance": {
-      "file": "phase_performance.wav",
-      "source": "se_110_0021.wav",
-      "source_category": "Story",
-      "duration_ms": 852.6,
-      "tags": [
-        "medium",
-        "loud",
-        "bright",
-        "story"
-      ],
-      "score": 1.2,
-      "centroid_hz": 3696.8
+      "variants": [
+        {
+          "file": "phase_performance.wav",
+          "source": "se_110_0021.wav",
+          "source_category": "Story",
+          "duration_ms": 852.6,
+          "tags": [
+            "medium",
+            "loud",
+            "bright",
+            "story"
+          ],
+          "score": 1.2,
+          "volume": 1.0,
+          "centroid_hz": 3696.8
+        }
+      ]
+    },
+    "active_refresh": {
+      "variants": [
+        {
+          "file": "active_refresh.wav",
+          "source": "se_010_0066.wav",
+          "source_category": "Menu",
+          "duration_ms": 458.2,
+          "tags": [
+            "short",
+            "quiet",
+            "bright",
+            "noisy",
+            "menu"
+          ],
+          "score": 1.1293,
+          "volume": 0.4,
+          "centroid_hz": 5241.1
+        }
+      ]
+    },
+    "turn_tick": {
+      "variants": [
+        {
+          "file": "turn_tick.wav",
+          "source": "se_110_0298.wav",
+          "source_category": "Story",
+          "duration_ms": 314.5,
+          "tags": [
+            "short",
+            "loud",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 0.8792,
+          "volume": 0.36,
+          "centroid_hz": 3944.7
+        }
+      ]
+    },
+    "skill_tick": {
+      "variants": [
+        {
+          "file": "skill_tick.wav",
+          "source": "se_120_0011.wav",
+          "source_category": "Story",
+          "duration_ms": 362.8,
+          "tags": [
+            "short",
+            "loud",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 1.0998,
+          "volume": 0.38,
+          "centroid_hz": 8570.2
+        }
+      ]
     },
     "live_success": {
-      "file": "live_success.wav",
-      "source": "se_110_0181.wav",
-      "source_category": "Story",
-      "duration_ms": 1100.0,
-      "tags": [
-        "medium",
-        "loud",
-        "bright",
-        "story"
-      ],
-      "score": 1.1891,
-      "centroid_hz": 3629.9
+      "variants": [
+        {
+          "file": "live_success.wav",
+          "source": "se_110_0181.wav",
+          "source_category": "Story",
+          "duration_ms": 1100.0,
+          "tags": [
+            "medium",
+            "loud",
+            "bright",
+            "story"
+          ],
+          "score": 1.1891,
+          "volume": 1.0,
+          "centroid_hz": 3629.9
+        }
+      ]
     },
     "live_fail": {
-      "file": "live_fail.wav",
-      "source": "se_010_0067.wav",
-      "source_category": "Menu",
-      "duration_ms": 571.7,
-      "tags": [
-        "medium",
-        "dull",
-        "menu"
-      ],
-      "score": 1.089,
-      "centroid_hz": 1021.1
+      "variants": [
+        {
+          "file": "live_fail.wav",
+          "source": "se_010_0067.wav",
+          "source_category": "Menu",
+          "duration_ms": 571.7,
+          "tags": [
+            "medium",
+            "dull",
+            "menu"
+          ],
+          "score": 1.089,
+          "volume": 1.0,
+          "centroid_hz": 1021.1
+        }
+      ]
     },
     "hearts_gain": {
-      "file": "hearts_gain.wav",
-      "source": "se_120_0070.wav",
-      "source_category": "Story",
-      "duration_ms": 301.3,
-      "tags": [
-        "short",
-        "quiet",
-        "story"
-      ],
-      "score": 1.1999,
-      "centroid_hz": 2850.0
+      "variants": [
+        {
+          "file": "hearts_gain.wav",
+          "source": "se_110_0213.wav",
+          "source_category": "Story",
+          "duration_ms": 293.8,
+          "tags": [
+            "short",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 1.1984,
+          "volume": 0.44,
+          "centroid_hz": 4170.1
+        }
+      ]
     },
     "yell_reveal": {
-      "file": "yell_reveal.wav",
-      "source": "se_010_0070.wav",
-      "source_category": "Menu",
-      "duration_ms": 449.2,
-      "tags": [
-        "short",
-        "bright",
-        "noisy",
-        "menu"
-      ],
-      "score": 1.1,
-      "centroid_hz": 4526.1
+      "variants": [
+        {
+          "file": "yell_reveal.wav",
+          "source": "se_010_0070.wav",
+          "source_category": "Menu",
+          "duration_ms": 449.2,
+          "tags": [
+            "short",
+            "bright",
+            "noisy",
+            "menu"
+          ],
+          "score": 1.1,
+          "volume": 0.45,
+          "centroid_hz": 4526.1
+        }
+      ]
     },
     "win": {
-      "file": "win.wav",
-      "source": "se_110_0201.wav",
-      "source_category": "Story",
-      "duration_ms": 1464.5,
-      "tags": [
-        "long",
-        "loud",
-        "story"
-      ],
-      "score": 1.2612,
-      "centroid_hz": 3468.9
+      "variants": [
+        {
+          "file": "win.wav",
+          "source": "se_110_0201.wav",
+          "source_category": "Story",
+          "duration_ms": 1464.5,
+          "tags": [
+            "long",
+            "loud",
+            "story"
+          ],
+          "score": 1.2612,
+          "volume": 1.0,
+          "centroid_hz": 3468.9
+        }
+      ]
     },
     "lose": {
-      "file": "lose.wav",
-      "source": "se_110_0110.wav",
-      "source_category": "Story",
-      "duration_ms": 714.5,
-      "tags": [
-        "medium",
-        "dull",
-        "story"
-      ],
-      "score": 0.8526,
-      "centroid_hz": 831.4
+      "variants": [
+        {
+          "file": "lose.wav",
+          "source": "se_110_0110.wav",
+          "source_category": "Story",
+          "duration_ms": 714.5,
+          "tags": [
+            "medium",
+            "dull",
+            "story"
+          ],
+          "score": 0.8526,
+          "volume": 1.0,
+          "centroid_hz": 831.4
+        }
+      ]
     },
     "error": {
-      "file": "error.wav",
-      "source": "se_120_0011.wav",
-      "source_category": "Story",
-      "duration_ms": 362.8,
-      "tags": [
-        "short",
-        "loud",
-        "bright",
-        "noisy",
-        "story"
-      ],
-      "score": 1.1932,
-      "centroid_hz": 8570.2
+      "variants": [
+        {
+          "file": "error.wav",
+          "source": "se_110_0124.wav",
+          "source_category": "Story",
+          "duration_ms": 363.9,
+          "tags": [
+            "short",
+            "loud",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 1.192,
+          "volume": 1.0,
+          "centroid_hz": 7467.3
+        }
+      ]
     },
     "notify": {
-      "file": "notify.wav",
-      "source": "se_010_0066.wav",
-      "source_category": "Menu",
-      "duration_ms": 458.2,
-      "tags": [
-        "short",
-        "quiet",
-        "bright",
-        "noisy",
-        "menu"
-      ],
-      "score": 0.8729,
-      "centroid_hz": 5241.1
+      "variants": [
+        {
+          "file": "notify_1.wav",
+          "source": "se_110_0297.wav",
+          "source_category": "Story",
+          "duration_ms": 378.3,
+          "tags": [
+            "short",
+            "loud",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 0.8499,
+          "volume": 1.0,
+          "centroid_hz": 3973.5
+        },
+        {
+          "file": "notify_2.wav",
+          "source": "se_110_0131.wav",
+          "source_category": "Story",
+          "duration_ms": 376.4,
+          "tags": [
+            "short",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 0.8498,
+          "volume": 1.0,
+          "centroid_hz": 5487.7
+        }
+      ]
     },
     "pack_open": {
-      "file": "pack_open.wav",
-      "source": "se_110_0232.wav",
-      "source_category": "Story",
-      "duration_ms": 555.6,
-      "tags": [
-        "medium",
-        "bright",
-        "noisy",
-        "story"
-      ],
-      "score": 1.0996,
-      "centroid_hz": 5028.6
+      "variants": [
+        {
+          "file": "pack_open.wav",
+          "source": "se_110_0165.wav",
+          "source_category": "Story",
+          "duration_ms": 557.9,
+          "tags": [
+            "medium",
+            "bright",
+            "story"
+          ],
+          "score": 1.0991,
+          "volume": 1.0,
+          "centroid_hz": 5777.2
+        }
+      ]
     },
     "pack_reveal": {
-      "file": "pack_reveal.wav",
-      "source": "se_110_0054.wav",
-      "source_category": "Story",
-      "duration_ms": 417.1,
-      "tags": [
-        "short",
-        "bright",
-        "noisy",
-        "story"
-      ],
-      "score": 1.0998,
-      "centroid_hz": 5327.7
+      "variants": [
+        {
+          "file": "pack_reveal.wav",
+          "source": "se_110_0054.wav",
+          "source_category": "Story",
+          "duration_ms": 417.1,
+          "tags": [
+            "short",
+            "bright",
+            "noisy",
+            "story"
+          ],
+          "score": 1.0998,
+          "volume": 1.0,
+          "centroid_hz": 5327.7
+        }
+      ]
     }
   }
 }

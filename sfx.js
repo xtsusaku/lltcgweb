@@ -9,7 +9,8 @@
   var manifest = null;
   var pool = Object.create(null);
   var lastPlay = Object.create(null);
-  var MIN_GAP_MS = 45;
+  var DEFAULT_GAP_MS = 45;
+  var CARD_GAP_MS = 22;
 
   function enabled() {
     try { return localStorage.getItem(SFX_KEY) !== '0'; } catch (e) { return true; }
@@ -41,7 +42,7 @@
 
   function loadManifest() {
     if (manifest) return Promise.resolve(manifest);
-    return fetch('./sfx_manifest.web.json?v=1', { cache: 'no-store' })
+    return fetch('./sfx_manifest.web.json?v=2', { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('sfx manifest HTTP ' + r.status);
         return r.json();
@@ -56,34 +57,63 @@
       });
   }
 
-  function metaFor(id) {
+  function eventMeta(id) {
     return manifest && manifest.events && manifest.events[id];
   }
 
-  function warm(id) {
-    var meta = metaFor(id);
-    if (!meta || !meta.file) return;
-    if (!pool[meta.file]) {
-      var a = new Audio(BASE + meta.file);
-      a.preload = 'auto';
-      pool[meta.file] = a;
+  function pickVariant(id) {
+    var ev = eventMeta(id);
+    if (!ev) return null;
+    var variants = ev.variants;
+    if (variants && variants.length) {
+      return variants[Math.floor(Math.random() * variants.length)];
     }
+    if (ev.file) {
+      return {
+        file: ev.file,
+        volume: ev.volume != null ? ev.volume : 1,
+      };
+    }
+    return null;
+  }
+
+  function warmFile(file) {
+    if (!file) return;
+    if (!pool[file]) {
+      var a = new Audio(BASE + file);
+      a.preload = 'auto';
+      pool[file] = a;
+    }
+  }
+
+  function warm(id) {
+    var pick = pickVariant(id);
+    if (pick && pick.file) warmFile(pick.file);
+  }
+
+  function gapFor(id) {
+    return id && String(id).indexOf('card_') === 0 ? CARD_GAP_MS : DEFAULT_GAP_MS;
   }
 
   function play(id, opts) {
     if (!enabled()) return;
-    var meta = metaFor(id);
-    if (!meta || !meta.file) return;
+    var pick = pickVariant(id);
+    if (!pick || !pick.file) return;
     var now = Date.now();
-    if (lastPlay[id] && now - lastPlay[id] < MIN_GAP_MS) return;
-    lastPlay[id] = now;
-    var scale = opts && opts.volume != null ? Number(opts.volume) : 1;
-    if (!Number.isFinite(scale)) scale = 1;
-    var vol = getVolume() * scale;
+    var gapKey = pick.file;
+    var minGap = gapFor(id);
+    if (lastPlay[gapKey] && now - lastPlay[gapKey] < minGap) return;
+    lastPlay[gapKey] = now;
+    var userScale = opts && opts.volume != null ? Number(opts.volume) : 1;
+    if (!Number.isFinite(userScale)) userScale = 1;
+    var eventScale = pick.volume != null ? Number(pick.volume) : 1;
+    if (!Number.isFinite(eventScale)) eventScale = 1;
+    var vol = getVolume() * userScale * eventScale;
     vol = Math.max(0, Math.min(1, vol));
+    if (vol <= 0.001) return;
     try {
-      warm(id);
-      var node = pool[meta.file].cloneNode();
+      warmFile(pick.file);
+      var node = pool[pick.file].cloneNode();
       node.volume = vol;
       void node.play();
     } catch (e) { /* autoplay / missing file */ }
@@ -91,7 +121,10 @@
 
   function init() {
     return loadManifest().then(function (m) {
-      ['menu_tap', 'menu_confirm', 'match_found', 'card_play'].forEach(warm);
+      [
+        'menu_tap', 'menu_confirm', 'card_draw', 'card_slide', 'card_flip',
+        'card_place', 'match_found', 'card_play',
+      ].forEach(warm);
       return m;
     });
   }
