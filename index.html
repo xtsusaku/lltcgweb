@@ -6712,7 +6712,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 
 <script src="i18n.js?v=3"></script>
 <script src="log_i18n.js?v=2"></script>
-<script src="sfx.js?v=7"></script>
+<script src="sfx.js?v=8"></script>
 <!-- Early auth guard: separate script so a main-bundle parse error cannot leave auth stuck forever. -->
 <script>
 (function () {
@@ -7359,6 +7359,10 @@ function sfxCardPick() {
   sfxPlayCard('card_slide', { volume: 0.34 });
 }
 
+function sfxPerf(id, volume = 0.55) {
+  sfxPlay(id, { volume });
+}
+
 function syncSfxVolumeUi() {
   const wrap = el('options-sfx-volume-wrap');
   const rng = el('rng-sfx-volume');
@@ -7449,13 +7453,19 @@ const SFX_PHASE_MAP = {
   live_start_effects: 'notify',
 };
 
+const SFX_PHASE_OPTS = {
+  phase_live: { volume: 0.82 },
+  phase_performance: { volume: 0.85 },
+  live_success: { volume: 0.78 },
+};
+
 function maybePlayPhaseSfx(s) {
   if (!s?.phase || G.isTutorial || G.isSpectator) return;
   const ph = s.phase;
   if (G._sfxPhase === ph) return;
   G._sfxPhase = ph;
   const id = SFX_PHASE_MAP[ph];
-  if (id) sfxPlay(id);
+  if (id) sfxPlay(id, SFX_PHASE_OPTS[id]);
 }
 
 function packResultRarityClass(rarity) {
@@ -27056,6 +27066,7 @@ async function perfFlashSplash(text, ms, variant) {
   setSplashTitle(txt, text);
   splash.classList.toggle('live-start', variant === 'live-start');
   splash.classList.add('show');
+  if (variant === 'live-start') sfxPerf('phase_performance', 0.4);
   await perfSleep(ms);
   splash.classList.remove('show', 'live-start');
   if (coupleBanner) dismissCenterBannerIfShowing();
@@ -27438,7 +27449,7 @@ async function perfRevealYellCardFromDeck(chip, deckEl, isMine, pace = 1) {
   layer.appendChild(fly);
   chip.style.visibility = 'hidden';
   deckEl.classList.add('perf-deck-draw');
-  sfxPlayCard('yell_reveal');
+  sfxPlayCard('yell_reveal', { volume: 0.38 });
   await perfSleepYell(40, pace);
   if (G._perfSpectacleAborted) {
     fly.remove();
@@ -27489,7 +27500,7 @@ async function perfFlyMemberHeartToPanel(fromEl, heartsEl, color, opts = {}) {
   fly.style.transition = `transform ${heartFlyDur}s ease-out, opacity ${heartFadeDur}s ease`;
   layer.appendChild(fly);
   fromEl?.classList?.add('perf-member-heart-pulse');
-  sfxPlayCard('hearts_gain');
+  sfxPlayCard('hearts_gain', { volume: 0.34 });
   await perfSleepYell(40, pace);
   if (G._perfSpectacleAborted) { fly.remove(); fromEl?.classList?.remove('perf-member-heart-pulse'); return; }
   const to = perfHeartFlyTargetRect(heartsEl, display);
@@ -27530,7 +27541,7 @@ async function perfFlyBladeHeartToPanel(fromEl, heartsEl, color, chip, displayCo
   layer.appendChild(fly);
   const bladeWrap = fromEl.closest?.('.perf-yell-blade-hearts');
   fromEl.remove();
-  sfxPlayCard('hearts_gain');
+  sfxPlayCard('hearts_gain', { volume: 0.34 });
   await perfSleepYell(40, pace);
   if (G._perfSpectacleAborted) { fly.remove(); return; }
   const to = perfHeartFlyTargetRect(heartsEl, color);
@@ -28293,6 +28304,7 @@ async function perfAnimateCount(el, from, to, ms = 420) {
       if (t < 1) requestAnimationFrame(tick);
       else {
         el.classList.add('tick');
+        sfxPerf('skill_tick', 0.3);
         setTimeout(() => el.classList.remove('tick'), 180);
         resolve();
       }
@@ -28711,6 +28723,7 @@ async function perfAnimateYellSide(ctx, pid) {
   const grantHeartCount = grants.reduce((n, g) => n + (g.hearts?.length || 0), 0);
   const yellSteps = Math.max(yellCards.length, totalBlade, 1);
   const introPace = perfYellPaceScale(totalBlade, 0, yellSteps + grantHeartCount);
+  sfxPerf('turn_tick', 0.48);
   await perfSleepYell(400, introPace);
   layoutPerfRailSlots();
   layoutPerfYellRail(yellRail);
@@ -28792,6 +28805,7 @@ async function perfAnimateYellSide(ctx, pid) {
   perfFillHearts(heartsEl, finalHearts);
   yellRow.querySelectorAll('.perf-yell-blade-hearts').forEach(w => w.remove());
   heartsEl.classList.add('pulse');
+  sfxPerf('hearts_gain', 0.32);
   layoutPerfYellRail(yellRail);
   layoutPerfColSides();
   await perfSleepYell(350, tailPace);
@@ -28810,7 +28824,7 @@ async function perfAnimateOutcomesForPid(ctx, pid) {
     out.appendChild(b);
     await perfSleep(80);
     b.classList.add('show');
-    sfxPlayCard(att.success ? 'live_success' : 'live_fail', { volume: att.success ? 0.7 : 0.65 });
+    sfxPlayCard(att.success ? 'live_success' : 'live_fail', { volume: att.success ? 0.48 : 0.44 });
     await perfSleep(350);
   }
 }
@@ -28855,6 +28869,7 @@ async function perfAnimateJudge(ctx) {
     soloEl.textContent = solo.text;
     soloEl.className = 'perf-judge-solo ' + solo.cls;
     requestAnimationFrame(() => soloEl.classList.add('show'));
+    sfxPerf(solo.cls === 'win' ? 'live_success' : 'live_fail', 0.42);
     if (verdictEl) {
       verdictEl.textContent = '';
       verdictEl.className = 'perf-verdict';
@@ -28878,6 +28893,7 @@ async function perfAnimateJudge(ctx) {
     setTimeout(() => {
       badge.classList.add('show');
       if (!reduced) badge.classList.add('punch');
+      sfxPlayCard('card_place', { volume: 0.26 });
     }, reduced ? 0 : i * badgeStagger);
   });
   oppSuccesses.forEach((att, i) => {
@@ -28890,6 +28906,7 @@ async function perfAnimateJudge(ctx) {
     setTimeout(() => {
       badge.classList.add('show');
       if (!reduced) badge.classList.add('punch');
+      sfxPlayCard('card_place', { volume: 0.26 });
     }, reduced ? 0 : i * badgeStagger);
   });
 
@@ -28911,8 +28928,10 @@ async function perfAnimateJudge(ctx) {
     titleEl?.classList.add('show');
     duelEl?.classList.add('show');
   });
+  sfxPerf('skill_tick', 0.38);
   await perfSleep(reduced ? 60 : 220);
 
+  if (mineBadges.length || oppBadges.length) sfxPlayCard('card_fly', { volume: 0.32 });
   await Promise.all([
     perfFlyScoreBadges(mineBadges, myNum),
     perfFlyScoreBadges(oppBadges, oppNum),
@@ -28940,6 +28959,7 @@ async function perfAnimateJudge(ctx) {
   if (verdictEl) {
     verdictEl.textContent = verdict.text;
     verdictEl.className = 'perf-verdict show ' + verdict.cls;
+    sfxPerf(verdict.cls === 'win' ? 'live_success' : (verdict.cls === 'lose' ? 'live_fail' : 'turn_tick'), 0.4);
   }
   await perfSleep(reduced ? 400 : 950);
 }

@@ -364,7 +364,7 @@
             "menu"
           ],
           "score": 0.9921,
-          "volume": 1.0,
+          "volume": 0.78,
           "centroid_hz": 3045.9
         }
       ]
@@ -384,7 +384,7 @@
             "story"
           ],
           "score": 1.2097,
-          "volume": 1.0,
+          "volume": 0.5,
           "centroid_hz": 4263.7
         }
       ]
@@ -403,7 +403,7 @@
             "story"
           ],
           "score": 1.2,
-          "volume": 1.0,
+          "volume": 0.54,
           "centroid_hz": 3696.8
         }
       ]
@@ -482,7 +482,7 @@
             "story"
           ],
           "score": 1.1891,
-          "volume": 1.0,
+          "volume": 0.62,
           "centroid_hz": 3629.9
         }
       ]
@@ -500,7 +500,7 @@
             "menu"
           ],
           "score": 1.089,
-          "volume": 1.0,
+          "volume": 0.58,
           "centroid_hz": 1021.1
         }
       ]
@@ -612,7 +612,7 @@
             "menu"
           ],
           "score": 0.9263,
-          "volume": 1.0,
+          "volume": 0.68,
           "centroid_hz": 2424.6
         }
       ]

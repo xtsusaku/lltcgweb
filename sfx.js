@@ -52,7 +52,7 @@
 
   function loadManifest() {
     if (manifest) return Promise.resolve(manifest);
-    return fetch('./sfx_manifest.web.json?v=7', { cache: 'no-store' })
+    return fetch('./sfx_manifest.web.json?v=8', { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('sfx manifest HTTP ' + r.status);
         return r.json();
@@ -141,7 +141,8 @@
       [
         'menu_tap', 'menu_confirm', 'card_draw', 'card_slide', 'card_flip',
         'card_place', 'match_found', 'card_play', 'card_fly', 'card_to_wr',
-        'energy_chip',
+        'energy_chip', 'phase_live', 'phase_performance', 'turn_tick', 'skill_tick',
+        'yell_reveal', 'hearts_gain', 'live_success', 'live_fail',
       ].forEach(warm);
       return m;
     });
