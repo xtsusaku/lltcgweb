@@ -18915,7 +18915,7 @@ async function playLogSyncedSequence(prev, final, newEntries, myId) {
     applyTurnPrepEntriesToState(settled, settled, newEntries);
     if (!batchEmpty) {
       if (prev && prev.phase !== settled.phase) {
-        if (!livePlaybackBlocksMainPhaseUi(settled, prev) && !liveSetPlacementInProgress(settled)) {
+        if (!livePlaybackBlocksMainPhaseUi(settled, prev) && !phaseBannerBlockedByLivePlacement(prev, settled)) {
           if (leavingEmptyLivePipeline(prev, settled)) {
             queueMainPhaseBannerAfterEmptyLiveSkip(settled, myId);
           } else {
@@ -24842,6 +24842,16 @@ function isLeavingLiveSetPhase(prev, next) {
   return isLiveSetPhase(prev?.phase) && !isLiveSetPhase(next?.phase);
 }
 
+/** First poll entering live_set — placement is open but the LIVE Phase splash should still show. */
+function isEnteringLiveSetPhase(prev, next) {
+  return !!prev && !!next && prev.phase !== next.phase && isLiveSetPhase(next.phase);
+}
+
+/** Block phase-transition banners during live_set placement, except the entry splash. */
+function phaseBannerBlockedByLivePlacement(prev, s) {
+  return liveSetPlacementInProgress(s) && !isEnteringLiveSetPhase(prev, s);
+}
+
 /** LIVE placement (entering or staying in live_set) — not performance/judge yet. */
 function isLiveSetPlacementOnly(prev, next) {
   return isLiveSetPhase(next?.phase) && !isLeavingLiveSetPhase(prev, next);
@@ -29626,9 +29636,12 @@ function queueStateAnnouncements(prev, s, myId, opts = {}) {
   if (document.querySelector('#screen-game')?.classList.contains('active') === false) return;
   const holdLivePlayback = !!opts.holdLivePlayback || isLiveRoundPlaybackActive();
   const placementOpen = liveSetPlacementInProgress(s);
+  const enteringLiveSet = isEnteringLiveSetPhase(prev, s);
 
-  if (prev && prev.phase !== s.phase && !holdLivePlayback && !livePlaybackBlocksMainPhaseUi(s, prev) && !placementOpen) {
+  if (prev && prev.phase !== s.phase && !holdLivePlayback && !livePlaybackBlocksMainPhaseUi(s, prev) && (!placementOpen || enteringLiveSet)) {
     showPhaseTransitionBanner(s, myId, prev);
+    G._lastPhase = s.phase;
+  } else if (prev && prev.phase !== s.phase) {
     G._lastPhase = s.phase;
   } else if (G._lastPhase == null) {
     G._lastPhase = s.phase;
