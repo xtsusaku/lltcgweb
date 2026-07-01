@@ -25373,6 +25373,50 @@ function handToLiveStorageMoves(prev, next, pid = null) {
   });
 }
 
+/** Fill live slot indices on hand→live moves from the post-placement board. */
+function enrichHandToLiveMoveTargets(next, moves) {
+  for (const m of moves) {
+    if (m.to?.zone !== 'live' || !m.iid) continue;
+    const pid = m.to.pid || m.from?.pid;
+    if (!pid || m.to.index != null) continue;
+    const zone = next?.players?.[pid]?.live_zone || [];
+    const idx = zone.findIndex(c => c.instance_id === m.iid);
+    if (idx >= 0) m.to.index = liveZoneSlot(zone[idx], idx);
+  }
+}
+
+/** Stage invisible live-slot destinations before flight so handoff has no blank gap. */
+function primeHandToLiveStorageDestinations(prev, next, myId, moves) {
+  if (!moves?.length || !prev?.players || !next?.players) return;
+  enrichHandToLiveMoveTargets(next, moves);
+  const oppId = myId === 'p1' ? 'p2' : 'p1';
+  const zones = {
+    [myId]: [...(prev.players[myId]?.live_zone || [])],
+    [oppId]: [...(prev.players[oppId]?.live_zone || [])],
+  };
+  for (const m of moves) {
+    const pid = m.from?.pid || m.to?.pid;
+    const card = findCardInState(next, m.iid, pid);
+    if (!pid || !card || zones[pid].some(c => c.instance_id === m.iid)) continue;
+    const slot = m.to?.index != null ? m.to.index : liveZoneFirstEmptySlotClient(zones[pid]);
+    if (slot < 0) continue;
+    zones[pid].push({ ...card, live_slot: slot });
+    if (m.to && m.to.index == null) m.to.index = slot;
+  }
+  const savedState = G.gameState;
+  G.gameState = {
+    ...savedState,
+    players: {
+      ...savedState.players,
+      [myId]: { ...savedState.players[myId], live_zone: zones[myId] },
+      [oppId]: { ...savedState.players[oppId], live_zone: zones[oppId] },
+    },
+  };
+  renderLiveSlots('my', zones[myId], true, myId);
+  renderLiveSlots('opp', zones[oppId], false, oppId);
+  G.gameState = savedState;
+}
+
 /** Face-down hand → live storage flights (live_set placement, same morph as WR discards). */
 async function playHandToLiveStoragePlacements(prev, next, myId, movesOverride = null) {
   const moves = movesOverride || handToLiveStorageMoves(prev, next);
@@ -25386,6 +25430,7 @@ async function playHandToLiveStoragePlacements(prev, next, myId, movesOverride =
   const deferOpp = shouldDeferOpponentHandLayout(moves, prev, myId);
   G.gameState = prev;
   renderGame(prev, { skipLog: true, skipHand: deferHand, skipOppHand: deferOpp });
+  primeHandToLiveStorageDestinations(prev, next, myId, moves);
   layoutLiveSlots('my');
   layoutLiveSlots('opp');
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -34969,7 +35014,12 @@ async function confirmLiveSetFromHand() {
     const oppId = myId === 'p1' ? 'p2' : 'p1';
     renderPhaseBar(settled, settled.players[myId], settled.players[oppId], myId, oppId);
     G.gameState = settled;
-    renderGame(settled, { skipLog: true });
+    if (!placementMoves.length) {
+      renderGame(settled, { skipLog: true });
+    } else {
+      syncLiveStorageSlotsFromState(settled, myId);
+      syncHandDomAfterDeferredLayout(settled, myId);
+    }
   }
   if (ids.length) {
     await sendAct('set_live_cards', { card_ids: ids });
