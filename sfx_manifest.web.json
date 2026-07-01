@@ -6,18 +6,17 @@
       "variants": [
         {
           "file": "menu_tap.wav",
-          "source": "se_010_0012.wav",
+          "source": "se_010_0033.wav",
           "source_category": "Menu",
-          "duration_ms": 278.0,
+          "duration_ms": 159.3,
           "tags": [
-            "short",
-            "quiet",
-            "bright",
+            "click",
+            "rustle",
             "menu"
           ],
-          "score": 0.975,
-          "volume": 1.0,
-          "centroid_hz": 3741.8
+          "score": 0.9559,
+          "volume": 0.88,
+          "centroid_hz": 3129.2
         }
       ]
     },
@@ -25,18 +24,17 @@
       "variants": [
         {
           "file": "menu_confirm.wav",
-          "source": "se_010_0012.wav",
+          "source": "se_010_0033.wav",
           "source_category": "Menu",
-          "duration_ms": 278.0,
+          "duration_ms": 159.3,
           "tags": [
-            "short",
-            "quiet",
-            "bright",
+            "click",
+            "rustle",
             "menu"
           ],
-          "score": 1.1807,
-          "volume": 1.0,
-          "centroid_hz": 3741.8
+          "score": 0.7227,
+          "volume": 0.88,
+          "centroid_hz": 3129.2
         }
       ]
     },
@@ -52,7 +50,7 @@
             "menu"
           ],
           "score": 0.8984,
-          "volume": 1.0,
+          "volume": 0.82,
           "centroid_hz": 1548.3
         }
       ]
@@ -69,7 +67,7 @@
             "menu"
           ],
           "score": 0.8499,
-          "volume": 1.0,
+          "volume": 0.82,
           "centroid_hz": 1548.3
         }
       ]
@@ -209,17 +207,17 @@
       "variants": [
         {
           "file": "card_to_wr.wav",
-          "source": "se_010_0033.wav",
+          "source": "se_010_0117 (4).wav",
           "source_category": "Menu",
-          "duration_ms": 159.3,
+          "duration_ms": 158.3,
           "tags": [
             "click",
             "rustle",
             "menu"
           ],
-          "score": 0.5593,
+          "score": 0.5554,
           "volume": 0.32,
-          "centroid_hz": 3129.2
+          "centroid_hz": 3250.5
         }
       ]
     },
@@ -266,17 +264,18 @@
       "variants": [
         {
           "file": "energy_chip.wav",
-          "source": "se_010_0117 (4).wav",
+          "source": "se_010_0117 (3).wav",
           "source_category": "Menu",
-          "duration_ms": 158.3,
+          "duration_ms": 152.6,
           "tags": [
             "click",
+            "loud",
             "rustle",
             "menu"
           ],
-          "score": 1.3196,
+          "score": 1.3126,
           "volume": 0.38,
-          "centroid_hz": 3250.5
+          "centroid_hz": 2987.4
         }
       ]
     },

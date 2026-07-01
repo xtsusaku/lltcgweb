@@ -6693,7 +6693,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 
 <script src="i18n.js?v=2"></script>
 <script src="log_i18n.js?v=2"></script>
-<script src="sfx.js?v=3"></script>
+<script src="sfx.js?v=4"></script>
 <!-- Early auth guard: separate script so a main-bundle parse error cannot leave auth stuck forever. -->
 <script>
 (function () {
@@ -7329,20 +7329,18 @@ function bindMenuSfx() {
     const btn = e.target.closest('button, .llc-menu-item');
     if (!btn || btn.disabled) return;
     const id = btn.id || '';
-    if (/back|hub$/i.test(id) || id === 'btn-cancel') {
-      sfxPlay('menu_back');
+    if (/back|hub$/i.test(id) || id === 'btn-cancel' || /cancel/i.test(id)) {
+      sfxPlay('menu_back', { volume: 0.85 });
       return;
     }
-    if (/cancel/i.test(id)) {
-      sfxPlay('menu_cancel');
-      return;
-    }
-    if (btn.classList.contains('btn-grad')) {
-      sfxPlay('menu_confirm');
-      return;
-    }
-    if (btn.classList.contains('llc-menu-item') || btn.classList.contains('btn-out') || btn.classList.contains('btn-ghost') || btn.classList.contains('btn-solo')) {
-      sfxPlay('menu_tap');
+    if (
+      btn.classList.contains('btn-grad')
+      || btn.classList.contains('llc-menu-item')
+      || btn.classList.contains('btn-out')
+      || btn.classList.contains('btn-ghost')
+      || btn.classList.contains('btn-solo')
+    ) {
+      sfxPlay('menu_tap', { volume: 0.9 });
     }
   }, true);
 }
@@ -36468,8 +36466,7 @@ function showScr(n){
     syncCompactDesktopLayout();
     G._sfxPhase = null;
   } else if (n !== prevActive?.replace('screen-', '')) {
-    const menuScreens = new Set(['hub', 'deck', 'booster', 'ranked', 'leaderboard', 'lobby', 'options', 'starter', 'pack-results', 'waiting']);
-    if (menuScreens.has(n)) sfxPlay('screen_open', { volume: 0.75 });
+    // Menu navigation uses button SFX only (no screen_open overlay).
   }
   tcgUpdatePhoneFsUI();
 }
