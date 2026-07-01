@@ -7243,6 +7243,73 @@ function initFoilFxSetting() {
   });
 }
 
+function sfxPlay(id, opts) {
+  try { window.LLTCG_SFX?.play(id, opts); } catch (e) {}
+}
+
+function initSfxSetting() {
+  const chk = el('chk-sfx');
+  if (!chk) return;
+  try {
+    if (localStorage.getItem('tcg_sfx_enabled') === null) localStorage.setItem('tcg_sfx_enabled', '1');
+  } catch (e) {}
+  chk.checked = window.LLTCG_SFX?.enabled() !== false;
+  if (chk.dataset.bound) return;
+  chk.dataset.bound = '1';
+  chk.addEventListener('change', () => {
+    window.LLTCG_SFX?.setEnabled(chk.checked);
+  });
+}
+
+function bindMenuSfx() {
+  if (document.body.dataset.menuSfxBound) return;
+  document.body.dataset.menuSfxBound = '1';
+  document.addEventListener('click', (e) => {
+    if (el('screen-game')?.classList.contains('active')) return;
+    const btn = e.target.closest('button, .llc-menu-item');
+    if (!btn || btn.disabled) return;
+    const id = btn.id || '';
+    if (/back|hub$/i.test(id) || id === 'btn-cancel') {
+      sfxPlay('menu_back');
+      return;
+    }
+    if (/cancel/i.test(id)) {
+      sfxPlay('menu_cancel');
+      return;
+    }
+    if (btn.classList.contains('btn-grad')) {
+      sfxPlay('menu_confirm');
+      return;
+    }
+    if (btn.classList.contains('llc-menu-item') || btn.classList.contains('btn-out') || btn.classList.contains('btn-ghost') || btn.classList.contains('btn-solo')) {
+      sfxPlay('menu_tap');
+    }
+  }, true);
+}
+
+const SFX_PHASE_MAP = {
+  coin_flip: 'coin_flip',
+  main_first: 'phase_main',
+  main_second: 'phase_main',
+  live_set: 'phase_live',
+  live_set_first: 'phase_live',
+  live_set_second: 'phase_live',
+  live_performance_first: 'phase_performance',
+  live_performance_second: 'phase_performance',
+  live_judge: 'phase_performance',
+  live_success_effects: 'live_success',
+  live_start_effects: 'notify',
+};
+
+function maybePlayPhaseSfx(s) {
+  if (!s?.phase || G.isTutorial || G.isSpectator) return;
+  const ph = s.phase;
+  if (G._sfxPhase === ph) return;
+  G._sfxPhase = ph;
+  const id = SFX_PHASE_MAP[ph];
+  if (id) sfxPlay(id);
+}
+
 function packResultRarityClass(rarity) {
   const r = String(rarity || '').toUpperCase();
   if (['SECE', 'SEC', 'SECL', 'SEC+', 'LLE'].includes(r)) return 'rarity-chase';
@@ -7316,6 +7383,7 @@ function showPackResults(cards, boxName, { godPack = false, faceSrcByIndex = nul
   });
   updatePackAgainButton(mode);
   updateStarGemsUI();
+  sfxPlay('pack_reveal');
   showScr('pack-results');
 }
 
@@ -8193,6 +8261,7 @@ function syncBoosterOpenButton(remaining, hasBox) {
 }
 
 async function runBoosterOpen(payment) {
+  sfxPlay('pack_open');
   const res = await accountPost('open_booster', { box_id: A.boxPick, payment });
   const open = res.open || {};
   syncStarGemsFromOpen(open);
@@ -11985,10 +12054,7 @@ function initRankedMatchSoundCheckbox() {
 
 function playRankedMatchSound() {
   if (!isRankedMatchSoundEnabled()) return;
-  try {
-    const audio = new Audio('./assets/SeComaGauge.m4a');
-    audio.play().catch(() => {});
-  } catch (e) {}
+  sfxPlay('match_found', { volume: 0.95 });
 }
 
 function updateRankedQueueStats(stats) {
@@ -23986,6 +24052,7 @@ function handLayoutUnchanged(a, b, myId) {
 
 function renderGame(s, opts = {}) {
   if(!s?.players) return;
+  maybePlayPhaseSfx(s);
   const myId=G.playerId, oppId=myId==='p1'?'p2':'p1';
   const me=s.players[myId], opp=s.players[oppId];
   if(!me||!opp) return;
@@ -34649,6 +34716,7 @@ function showWin(s){
   el('btn-win-leaderboard').hidden = !(pvp && s.mode === 'ranked');
   el('btn-again').textContent = (pvp && (s.mode === 'ranked' || G.casualRandomMatch)) ? t('win.findAnother') : t('win.playAgain');
   el('overlay-win').classList.add('open');
+  sfxPlay(win ? 'win' : 'lose');
 }
 // ── TUTORIAL MODE ────────────────────────────────────
 const TUTORIAL_TARGETS = {
