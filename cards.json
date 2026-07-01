@@ -69593,7 +69593,15 @@
       "text_jp": "このターン、自分の『Liella!』のカードの効果によってこのメンバーがエリアを移動していた場合、ライブの合計スコアを＋１する。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-003-PP.png",
       "subunit": "5yncri5e!",
-      "blade": 3
+      "blade": 3,
+      "abilities": [
+        {
+          "trigger": "live_success",
+          "type": "score_if_moved_by_group_effect",
+          "group": "Superstar",
+          "amount": 1
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-003-R",
@@ -69626,7 +69634,15 @@
       "text_jp": "このターン、自分の『Liella!』のカードの効果によってこのメンバーがエリアを移動していた場合、ライブの合計スコアを＋１する。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-003-R.png",
       "subunit": "5yncri5e!",
-      "blade": 3
+      "blade": 3,
+      "abilities": [
+        {
+          "trigger": "live_success",
+          "type": "score_if_moved_by_group_effect",
+          "group": "Superstar",
+          "amount": 1
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-004-PP",
@@ -69651,7 +69667,14 @@
       "text_jp": "自分のライブカード置き場の中に元々のスコアより高いスコアのライブカードがあるか、エールにより公開された自分のカードの中にを持つライブカードがある場合、カードを1枚引く。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-004-PP.png",
       "subunit": "CatChu!",
-      "blade": 1
+      "blade": 1,
+      "abilities": [
+        {
+          "trigger": "on_enter",
+          "type": "draw_if_live_zone_score_up_or_yell_score_icon",
+          "draw": 1
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-004-R",
@@ -69676,7 +69699,14 @@
       "text_jp": "自分のライブカード置き場の中に元々のスコアより高いスコアのライブカードがあるか、エールにより公開された自分のカードの中にを持つライブカードがある場合、カードを1枚引く。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-004-R.png",
       "subunit": "CatChu!",
-      "blade": 1
+      "blade": 1,
+      "abilities": [
+        {
+          "trigger": "on_enter",
+          "type": "draw_if_live_zone_score_up_or_yell_score_icon",
+          "draw": 1
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-005-PP",
@@ -69709,7 +69739,19 @@
       "text_jp": "バトンタッチして登場した場合、このバトンタッチで控え室に置かれた『Liella!』のメンバーカードを1枚、このメンバーの下に置く。\n\nこのメンバーは、このメンバーの下に置かれている『Liella!』のメンバーカードが持つ能力をすべて得る。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-005-PP.png",
       "subunit": "KALEIDOSCORE",
-      "blade": 6
+      "blade": 6,
+      "abilities": [
+        {
+          "trigger": "on_enter",
+          "type": "stack_baton_wr_member_under",
+          "group": "Superstar"
+        },
+        {
+          "trigger": "continuous",
+          "type": "inherit_stacked_group_abilities",
+          "group": "Superstar"
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-005-R",
@@ -69742,7 +69784,19 @@
       "text_jp": "バトンタッチして登場した場合、このバトンタッチで控え室に置かれた『Liella!』のメンバーカードを1枚、このメンバーの下に置く。\n\nこのメンバーは、このメンバーの下に置かれている『Liella!』のメンバーカードが持つ能力をすべて得る。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-005-R.png",
       "subunit": "KALEIDOSCORE",
-      "blade": 6
+      "blade": 6,
+      "abilities": [
+        {
+          "trigger": "on_enter",
+          "type": "stack_baton_wr_member_under",
+          "group": "Superstar"
+        },
+        {
+          "trigger": "continuous",
+          "type": "inherit_stacked_group_abilities",
+          "group": "Superstar"
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-006-PP",
@@ -69763,10 +69817,25 @@
         "yellow"
       ],
       "rarity": "PP",
-      "text": "[Continuous] This Member's cost +1 for each Liella! Member card under it.\n[Auto] When your Live succeeds or this Member moves areas, add 1 Liella! card from your Waiting Room to your hand.",
+      "text": "[Continuous] This Member's cost +1 for each Liella! Member card under it.\n[Auto] When your Live succeeds or this Member moves areas, put 1 Liella! Member card from your Waiting Room under this Member.",
       "text_jp": "このメンバーの下にある『Liella!』のメンバーカード1枚につき、このメンバーのコストを＋１する。\n\n自分のライブが成功するか、このメンバーがエリアを移動したとき、自分の控え室にある『Liella!』のメンバーカードを1枚、このメンバーの下に置く。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-006-PP.png",
-      "subunit": "5yncri5e!"
+      "subunit": "5yncri5e!",
+      "abilities": [
+        {
+          "trigger": "continuous",
+          "type": "cost_per_stacked_group_member",
+          "group": "Superstar",
+          "per_card": 1
+        },
+        {
+          "trigger": "auto",
+          "type": "auto_stack_wr_group_member_under",
+          "group": "Superstar",
+          "filter": "member",
+          "optional": true
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-006-R",
@@ -69787,10 +69856,25 @@
         "yellow"
       ],
       "rarity": "R",
-      "text": "[Continuous] This Member's cost +1 for each Liella! Member card under it.\n[Auto] When your Live succeeds or this Member moves areas, add 1 Liella! card from your Waiting Room to your hand.",
+      "text": "[Continuous] This Member's cost +1 for each Liella! Member card under it.\n[Auto] When your Live succeeds or this Member moves areas, put 1 Liella! Member card from your Waiting Room under this Member.",
       "text_jp": "このメンバーの下にある『Liella!』のメンバーカード1枚につき、このメンバーのコストを＋１する。\n\n自分のライブが成功するか、このメンバーがエリアを移動したとき、自分の控え室にある『Liella!』のメンバーカードを1枚、このメンバーの下に置く。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-006-R.png",
-      "subunit": "5yncri5e!"
+      "subunit": "5yncri5e!",
+      "abilities": [
+        {
+          "trigger": "continuous",
+          "type": "cost_per_stacked_group_member",
+          "group": "Superstar",
+          "per_card": 1
+        },
+        {
+          "trigger": "auto",
+          "type": "auto_stack_wr_group_member_under",
+          "group": "Superstar",
+          "filter": "member",
+          "optional": true
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-007-PP",
@@ -69909,7 +69993,17 @@
       "text_jp": "エールにより公開された自分のカードの中にあるブレードハートを持たない『Liella!』のメンバーカード2枚につき、ライブの合計スコアを＋１する。この能力では合計スコアは２までしか増えない。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-008-PP.png",
       "subunit": "5yncri5e!",
-      "blade": 7
+      "blade": 7,
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "score_per_yell_group_no_blade",
+          "group": "Superstar",
+          "per_count": 2,
+          "amount": 1,
+          "max_amount": 2
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-008-R",
@@ -69940,7 +70034,17 @@
       "text_jp": "エールにより公開された自分のカードの中にあるブレードハートを持たない『Liella!』のメンバーカード2枚につき、ライブの合計スコアを＋１する。この能力では合計スコアは２までしか増えない。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-008-R.png",
       "subunit": "5yncri5e!",
-      "blade": 7
+      "blade": 7,
+      "abilities": [
+        {
+          "trigger": "live_start",
+          "type": "score_per_yell_group_no_blade",
+          "group": "Superstar",
+          "per_count": 2,
+          "amount": 1,
+          "max_amount": 2
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-009-PP",
@@ -69967,7 +70071,15 @@
       "text_jp": "/『Liella!』のメンバー1人をウェイトにしてもよい：相手のステージにいる元々持つの数がこれによりウェイトにしたメンバーが元々持つの数より2つ以上少ないメンバー1人をウェイトにする。（ウェイト状態のメンバーが持つは、エールで公開する枚数を増やさない。）",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-009-PP.png",
       "subunit": "5yncri5e!",
-      "blade": 2
+      "blade": 2,
+      "abilities": [
+        {
+          "trigger": "on_enter",
+          "type": "optional_wait_self_opp_heart_gap",
+          "group": "Superstar",
+          "heart_gap": 2
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-009-R",
@@ -69994,7 +70106,15 @@
       "text_jp": "/『Liella!』のメンバー1人をウェイトにしてもよい：相手のステージにいる元々持つの数がこれによりウェイトにしたメンバーが元々持つの数より2つ以上少ないメンバー1人をウェイトにする。（ウェイト状態のメンバーが持つは、エールで公開する枚数を増やさない。）",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-009-R.png",
       "subunit": "5yncri5e!",
-      "blade": 2
+      "blade": 2,
+      "abilities": [
+        {
+          "trigger": "on_enter",
+          "type": "optional_wait_self_opp_heart_gap",
+          "group": "Superstar",
+          "heart_gap": 2
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-010-PP",
@@ -70115,7 +70235,13 @@
       "text_jp": "自分のステージのセンターエリアにいるメンバーがエリアを移動したとき、以下から1つを選ぶ。\n\n・ライブ終了時まで、を得る。\n\n・相手のステージにいる元々持つの数が2つ以下のメンバー1人をウェイトにする。\n\n・カードを1枚引く。\n\nこのメンバーをポジションチェンジしてもよい。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-011-PP.png",
       "subunit": "5yncri5e!",
-      "blade": 4
+      "blade": 4,
+      "abilities": [
+        {
+          "trigger": "auto",
+          "type": "auto_on_center_move_choose"
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-011-R",
@@ -70146,7 +70272,13 @@
       "text_jp": "自分のステージのセンターエリアにいるメンバーがエリアを移動したとき、以下から1つを選ぶ。\n\n・ライブ終了時まで、を得る。\n\n・相手のステージにいる元々持つの数が2つ以下のメンバー1人をウェイトにする。\n\n・カードを1枚引く。\n\nこのメンバーをポジションチェンジしてもよい。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-011-R.png",
       "subunit": "5yncri5e!",
-      "blade": 4
+      "blade": 4,
+      "abilities": [
+        {
+          "trigger": "auto",
+          "type": "auto_on_center_move_choose"
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-012-P＋",
@@ -71005,7 +71137,20 @@
       "text_jp": "自分のステージにいる『5yncri5e!』のメンバーがセンターエリアに移動したとき、ライブ終了時まで、を得る。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-022-P2.png",
       "subunit": "5yncri5e!",
-      "blade": 5
+      "blade": 5,
+      "abilities": [
+        {
+          "trigger": "auto",
+          "type": "auto_on_move_to_center_subunit_heart",
+          "subunit": "5yncri5e!",
+          "hearts": [
+            {
+              "color": "any",
+              "count": 1
+            }
+          ]
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-022-R",
@@ -71038,7 +71183,20 @@
       "text_jp": "自分のステージにいる『5yncri5e!』のメンバーがセンターエリアに移動したとき、ライブ終了時まで、を得る。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-022-R.png",
       "subunit": "5yncri5e!",
-      "blade": 5
+      "blade": 5,
+      "abilities": [
+        {
+          "trigger": "auto",
+          "type": "auto_on_move_to_center_subunit_heart",
+          "subunit": "5yncri5e!",
+          "hearts": [
+            {
+              "color": "any",
+              "count": 1
+            }
+          ]
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-023-N",
@@ -71182,7 +71340,20 @@
       "text_jp": "自分のアクティブ状態のエネルギーがあるかぎり、を得る。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-026-N.png",
       "subunit": "CatChu!",
-      "blade": 4
+      "blade": 4,
+      "abilities": [
+        {
+          "trigger": "continuous",
+          "type": "hearts_if_active_energy",
+          "min_active": 1,
+          "hearts": [
+            {
+              "color": "any",
+              "count": 1
+            }
+          ]
+        }
+      ]
     },
     {
       "card_no": "PL!SP-pb2-027-N",
@@ -71910,7 +72081,7 @@
       ],
       "blade_hearts": [],
       "rarity": "L",
-      "text": "自分のステージにいるメンバーが持つ能力は発動しない。\n\n自分のステージに能力を持つメンバーがいる場合、このカードのスコアを＋１する。",
+      "text": "[Continuous] Abilities of Members on your Stage do not activate.\n[Continuous] If you have any Members with abilities on your Stage, this card's score +1.",
       "text_jp": "自分のステージにいるメンバーが持つ能力は発動しない。\n\n自分のステージに能力を持つメンバーがいる場合、このカードのスコアを＋１する。",
       "image": "https://llofficial-cardgame.com/wordpress/wp-content/images/cardlist/PBSP02/PL!SP-pb2-046-L.png",
       "score": 2,
@@ -71922,6 +72093,17 @@
         {
           "color": "any",
           "count": 3
+        }
+      ],
+      "abilities": [
+        {
+          "trigger": "continuous",
+          "type": "continuous_negate_stage_member_abilities"
+        },
+        {
+          "trigger": "continuous",
+          "type": "live_score_if_stage_has_ability_members",
+          "amount": 1
         }
       ]
     },

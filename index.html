@@ -23216,6 +23216,41 @@ function cpuResolvePromptBody(s, cpu, pr) {
     else cpuAct('resolve_prompt',{choice:'skip'});
     return;
   }
+  if(pr.type==='spbp2_stack_wr_member'){
+    const id=pr.candidates?.[0]?.instance_id;
+    if(id) cpuAct('resolve_prompt',{pick_id:id});
+    else cpuAct('resolve_prompt',{choice:'skip'});
+    return;
+  }
+  if(pr.type==='spbp2_wait_self_opp_heart_gap'){
+    if(pr.step==='confirm'){
+      cpuAct('resolve_prompt',{choice: pr.self_candidates?.length ? 'yes' : 'no'});
+      return;
+    }
+    if(pr.step==='pick_self'){
+      const slot=pr.self_candidates?.[0]?.slot||pr.candidates?.[0]?.slot;
+      if(slot) cpuAct('resolve_prompt',{slot});
+      return;
+    }
+    if(pr.step==='pick_opp'){
+      const slot=pr.candidates?.[0]?.slot;
+      if(slot) cpuAct('resolve_prompt',{slot});
+      return;
+    }
+    return;
+  }
+  if(pr.type==='spbp2_center_move_choose'){
+    cpuAct('resolve_prompt',{choice:'heart'});
+    return;
+  }
+  if(pr.type==='spbp2_center_move_position'){
+    if(pr.choices?.includes('no')||!pr.target_slots?.length){
+      cpuAct('resolve_prompt',{choice:'no'});
+    } else {
+      cpuAct('resolve_prompt',{choice:'yes', target_slot:pr.target_slots[0]});
+    }
+    return;
+  }
   if(pr.type==='discard_subunit_hand_draw'){
     const ids=(pr.candidates||[]).slice(0,1).map(c=>c.instance_id).filter(Boolean);
     cpuAct('resolve_prompt',{discard_ids:ids});
@@ -35094,6 +35129,68 @@ function renderPrompt(s, myId){
   if(pr?.type==='batch99_stack_wr_member'&&pr.responder===myId){
     ovl.classList.remove('open');
     openBatch99StackWrPick(pr);
+    return;
+  }
+  if(pr?.type==='spbp2_stack_wr_member'&&pr.responder===myId){
+    ovl.classList.remove('open');
+    openBatch99StackWrPick(pr);
+    return;
+  }
+  if(pr?.type==='spbp2_wait_self_opp_heart_gap'&&pr.responder===myId){
+    ovl.classList.remove('open');
+    if(pr.step==='confirm'){
+      el('prompt-ttl').textContent=pr.source_name||'Wait chain';
+      el('prompt-msg').textContent=pr.prompt||'Optional Wait effect';
+      const box=el('prompt-btns'); box.innerHTML='';
+      (pr.choice_labels||['Yes','No']).forEach((label,i)=>{
+        const b=document.createElement('button');
+        b.className='btn-grad';
+        b.textContent=label;
+        b.onclick=()=>{ closeM('overlay-prompt'); sendAct('resolve_prompt',{choice:i===0?'yes':'no'}); };
+        box.appendChild(b);
+      });
+      ovl.classList.add('open');
+      return;
+    }
+    openStageSlotPick(pr);
+    return;
+  }
+  if((pr?.type==='spbp2_center_move_choose'||pr?.type==='spbp2_center_move_position')&&pr.responder===myId){
+    ovl.classList.remove('open');
+    if(pr.type==='spbp2_center_move_position'&&pr.choices?.includes('yes')){
+      el('prompt-ttl').textContent=pr.source_name||'Position change';
+      el('prompt-msg').textContent=pr.prompt||'Position-change this Member?';
+      const box=el('prompt-btns'); box.innerHTML='';
+      ['Yes — Position change','No — Done'].forEach((label,i)=>{
+        const b=document.createElement('button');
+        b.className='btn-grad';
+        b.textContent=label;
+        b.onclick=()=>{
+          closeM('overlay-prompt');
+          if(i===0&&pr.target_slots?.length){
+            openStageSlotPick({...pr, candidates:pr.target_slots.map(s=>({slot:s,name_en:slotLabel(s)}))});
+          } else {
+            sendAct('resolve_prompt',{choice:'no'});
+          }
+        };
+        box.appendChild(b);
+      });
+      ovl.classList.add('open');
+      return;
+    }
+    el('prompt-ttl').textContent=pr.source_name||'Center moved';
+    el('prompt-msg').textContent=pr.prompt||'Choose one effect';
+    const box=el('prompt-btns'); box.innerHTML='';
+    const choices=pr.choices||['heart','wait_opp','draw'];
+    const labels=pr.choice_labels||choices;
+    choices.forEach((c,i)=>{
+      const b=document.createElement('button');
+      b.className='btn-grad';
+      b.textContent=labels[i]||c;
+      b.onclick=()=>{ closeM('overlay-prompt'); sendAct('resolve_prompt',{choice:c}); };
+      box.appendChild(b);
+    });
+    ovl.classList.add('open');
     return;
   }
   if(pr?.type==='discard_subunit_hand_draw'&&pr.responder===myId){

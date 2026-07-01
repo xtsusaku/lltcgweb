@@ -1562,6 +1562,7 @@ function resolvePerformancePhase(array $state, string $pid, bool $continueAfter 
     $state['_last_yell_live_count_' . $pid] = countYellLiveCards($yellCards);
     $state['_last_yell_cards'] = $yellCards;
     $state = resolveAutoYellAbilities($state, $pid, $yellCards);
+    $state = spBp2ApplyDeferredYellLiveStartBonuses($state, $pid, $yellCards);
     if (!empty($state['pending_prompt'])) {
         $state['phase'] = 'live_success_effects';
         $state['_performance_continue'] = $pid;

@@ -124,7 +124,7 @@ function estimateBatonWrEnergyActivation(array $leaving, array $incoming, array 
 
 function getAbilitiesByTrigger(array $card, string $trigger): array {
     if (!cardHasAbilities($card)) return [];
-    return array_values(array_filter($card['abilities'], function ($a) use ($trigger) {
+    $abs = array_values(array_filter($card['abilities'], function ($a) use ($trigger) {
         $t = $a['trigger'] ?? '';
         if ($t === $trigger) return true;
         if ($trigger === 'on_enter' && $t === 'on_enter_or_live_start') return true;
@@ -133,6 +133,10 @@ function getAbilitiesByTrigger(array $card, string $trigger): array {
         if ($trigger === 'auto' && $t === 'on_enter_or_auto') return true;
         return false;
     }));
+    if (isMemberCard($card)) {
+        $abs = array_merge($abs, spBp2InheritedAbilitiesForTrigger($card, $trigger));
+    }
+    return $abs;
 }
 
 // ─────────────────────────────────────────────
@@ -1943,6 +1947,7 @@ function collectContinuousPerformanceHeartGrants(array $state, string $pid): arr
             }
             $memberHearts = plMuseGapApplyContinuousHearts($state, $pid, $member, $ab, $memberHearts);
             $memberHearts = spBp5ApplyContinuousHearts($state, $pid, $member, $slot, $memberHearts);
+            $memberHearts = spBp2ApplyContinuousHearts($state, $pid, $member, $ab, $memberHearts);
             $memberHearts = batch99ApplyContinuousHearts($state, $pid, $member, $slot, $memberHearts);
             if (($ab['type'] ?? '') === 'blade_if_exact_stage_members' && !empty($ab['hearts'])) {
                 if (countStageMembers($state['players'][$pid]) === intval($ab['count'] ?? 2)) {
@@ -2040,7 +2045,7 @@ function resolveLiveSuccessAbilities(
         if (!$member) {
             continue;
         }
-        $abilities = batch99MemberLiveSuccessAbilities($member);
+        $abilities = spBp2MemberLiveSuccessAbilities($member);
         if (empty($abilities)) {
             continue;
         }
@@ -2057,6 +2062,10 @@ function resolveLiveSuccessAbilities(
                 return $state;
             }
         }
+    }
+    $state = spBp2OnLiveSuccess($state, $pid);
+    if (!empty($state['pending_prompt'])) {
+        return $state;
     }
     return $state;
 }
@@ -2484,7 +2493,7 @@ function getEffectiveStageMemberCost(array $state, string $pid, array $member): 
             $base += $stacked * intval($ab['cost_plus_per'] ?? 4);
         }
     }
-    return $base;
+    return spBp2ApplyContinuousMemberCost($member, $base);
 }
 
 function getMemberBlade(array $member, array $state, string $pid, string $slot = ''): int {
@@ -3122,11 +3131,15 @@ function countDistinctNamedOnStage(array $p, array $names): int {
     return count($found);
 }
 
-function resolveAutoAreaMoveAbilities(array $state, string $pid, string $memberInstanceId): array {
+function resolveAutoAreaMoveAbilities(array $state, string $pid, string $memberInstanceId, string $fromSlot = ''): array {
     $p = &$state['players'][$pid];
+    if ($fromSlot === '') {
+        $fromSlot = findMemberSlot($p, $memberInstanceId) ?? '';
+    }
     foreach ($p['stage'] as $slot => &$member) {
         if (!$member || ($member['instance_id'] ?? '') !== $memberInstanceId) continue;
         $member['moved_this_turn'] = true;
+        spBp2ApplyMovedByGroupEffect($member, $state);
         foreach ($member['abilities'] ?? [] as $idx => $ab) {
             $trigger = $ab['trigger'] ?? '';
             $type = $ab['type'] ?? '';
@@ -3198,9 +3211,12 @@ function resolveAutoAreaMoveAbilities(array $state, string $pid, string $memberI
                     " — [$mName] drew $drawn (area move).");
             }
         }
+        $toSlot = findMemberSlot($p, $memberInstanceId) ?? $slot;
+        $state = spBp2OnMemberAreaMove($state, $pid, $memberInstanceId, $fromSlot, $toSlot);
         break;
     }
     unset($member);
+    spBp2ClearEffectAreaMove($state);
     return $state;
 }
 
@@ -5563,6 +5579,9 @@ function finishLiveStartEffects(array $state, bool $advancePerformance = true): 
 
 function resolveAbilityEffect(array $state, string $pid, array $source, array $ab, array $ctx = []): array {
     $type = $ab['type'] ?? '';
+    if (isMemberCard($source) && spBp2StageMemberAbilitiesSuppressed($state, $pid)) {
+        return $state;
+    }
     $p = &$state['players'][$pid];
     $name = $source['name_en'] ?? $source['name'] ?? 'Card';
 
@@ -9272,9 +9291,34 @@ function resolveAbilityEffect(array $state, string $pid, array $source, array $a
 
         case 'formation_rotate_all':
             if (!stageAllMembersInSubunit($p, $ab['requires_subunit_only'] ?? '')) break;
+            spBp2MarkEffectAreaMove($state, $source);
             foreach (['p1', 'p2'] as $id) {
+                $before = [];
+                foreach (['center', 'left', 'right'] as $s) {
+                    $mbr = $state['players'][$id]['stage'][$s] ?? null;
+                    if ($mbr) {
+                        $before[$mbr['instance_id'] ?? ''] = $s;
+                    }
+                }
                 formationRotatePlayerStage($state['players'][$id]['stage']);
+                foreach (['center', 'left', 'right'] as $s) {
+                    $mbr = $state['players'][$id]['stage'][$s] ?? null;
+                    if (!$mbr) {
+                        continue;
+                    }
+                    $from = $before[$mbr['instance_id'] ?? ''] ?? $s;
+                    spBp2ApplyMovedByGroupEffect($mbr, $state);
+                    $state['players'][$id]['stage'][$s] = $mbr;
+                    if ($from !== $s) {
+                        $state = resolveAutoAreaMoveAbilities($state, $id, $mbr['instance_id'] ?? '', $from);
+                        if (!empty($state['pending_prompt'])) {
+                            spBp2ClearEffectAreaMove($state);
+                            return $state;
+                        }
+                    }
+                }
             }
+            spBp2ClearEffectAreaMove($state);
             $state = addLog($state, $state['players'][$pid]['name'] .
                 ' — [' . $name . '] both players rotated Stage formation.');
             break;
@@ -9685,6 +9729,10 @@ function resolveAbilityEffect(array $state, string $pid, array $source, array $a
         return batch99ResolveEffect($state, $pid, $source, $ab, $ctx);
     }
 
+    if (spBp2IsHandlerType($type)) {
+        return spBp2ResolveEffect($state, $pid, $source, $ab, $ctx);
+    }
+
     return $state;
 }
 
@@ -9723,6 +9771,9 @@ function actionActivateAbility(array $state, string $pid, array $data): array {
 
     $ab = $abilities[$abilityIdx];
     $trigger = $ab['trigger'] ?? '';
+    if ($zone === 'stage' && spBp2StageMemberAbilitiesSuppressed($state, $pid)) {
+        throw new Exception('Member abilities are currently suppressed');
+    }
     if ($onEnterWr && $trigger === 'on_enter') {
         $state = logAbilityChain($state, $pid, $member, 'on_enter');
         $state = resolveAbilityEffect($state, $pid, $member, $ab, [
@@ -11315,6 +11366,11 @@ function actionResolvePrompt(array $state, string $pid, array $data): array {
     $batch99Prompt = batch99ResolvePrompt($state, $owner, $prompt, $choice, $data);
     if ($batch99Prompt !== null) {
         return $batch99Prompt;
+    }
+
+    $spBp2Prompt = spBp2ResolvePrompt($state, $owner, $prompt, $choice, $data);
+    if ($spBp2Prompt !== null) {
+        return $spBp2Prompt;
     }
 
     if ($promptType === 'surveil_arrange') {
