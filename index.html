@@ -28621,7 +28621,8 @@ async function perfReAnimateYellSideIfChanged(ctx, nextState, pid, prevSig) {
 }
 
 async function awaitMidSpectacleYellRetryPrompts(ctx, myId) {
-  let cur = G._deferredLiveState || G.gameState || ctx.next;
+  let workCtx = ctx;
+  let cur = G._deferredLiveState || G.gameState || workCtx.next;
   while (isMidSpectacleYellRetryPrompt(cur)) {
     const pr = cur.pending_prompt;
     const owner = pr.owner || pr.responder;
@@ -28639,15 +28640,15 @@ async function awaitMidSpectacleYellRetryPrompts(ctx, myId) {
     if (G._deferredLiveState) {
       G.gameState = cur;
     }
-    ctx = await perfReAnimateYellSideIfChanged(ctx, cur, owner, sigBefore);
-    G._perfSpectaclePhase = owner === perfFirstPlayerId(ctx) ? 'yell_mine' : 'yell_opp';
+    workCtx = await perfReAnimateYellSideIfChanged(workCtx, cur, owner, sigBefore);
+    G._perfSpectaclePhase = owner === perfFirstPlayerId(workCtx) ? 'yell_mine' : 'yell_opp';
   }
   const final = G._deferredLiveState || G.gameState || cur;
-  if (final && final !== ctx.next) {
-    Object.assign(ctx, perfBuildContext(ctx.prev, final, ctx.myId));
+  if (final && final !== workCtx.next) {
+    Object.assign(workCtx, perfBuildContext(workCtx.prev, final, workCtx.myId));
     if (G._deferredLiveState) G._deferredLiveState = final;
   }
-  return ctx;
+  return workCtx;
 }
 
 async function perfSeekPhase(prev, next, myId, targetPhase, { forward = true, animate = true } = {}) {
@@ -28679,7 +28680,7 @@ async function perfSeekPhase(prev, next, myId, targetPhase, { forward = true, an
     G._perfCtx = perfBuildContext(prev, next, myId);
     await perfPopulateBase(G._perfCtx);
   }
-  const ctx = G._perfCtx;
+  let ctx = G._perfCtx;
   const cur = G._perfSpectaclePhase || 'closed';
   const curIdx = perfPhaseIdx(cur);
   const tgtIdx = perfPhaseIdx(targetPhase);
@@ -28791,6 +28792,7 @@ async function perfSeekPhase(prev, next, myId, targetPhase, { forward = true, an
     if (aborted) return;
     if (tgtIdx > yellOppIdx) {
       ctx = await awaitMidSpectacleYellRetryPrompts(ctx, myId);
+      G._perfCtx = ctx;
       if (aborted) return;
     }
     if (tgtIdx <= yellOppIdx) return;
