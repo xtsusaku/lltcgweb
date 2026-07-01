@@ -2576,6 +2576,26 @@ function refreshPvpPhaseTimers(array &$state): void {
         }
         return;
     }
+    if ($ph === 'setup') {
+        unset($state['phase_timer']['prompt_key'], $state['phase_timer']['main_key'],
+            $state['phase_timer']['live_keys'], $state['phase_timer']['coin_key']);
+        $mullKey = 'setup|mulligan';
+        $prevMullKey = $state['phase_timer']['mull_key'] ?? '';
+        if ($mullKey !== $prevMullKey) {
+            clearAllPhaseDeadlines($state);
+            $state['phase_timer']['mull_key'] = $mullKey;
+        }
+        foreach (['p1', 'p2'] as $pid) {
+            if (!empty($state['players'][$pid]['ready_mulligan']) || !playerUsesPhaseTimer($state, $pid)) {
+                clearPhaseDeadline($state, $pid);
+                continue;
+            }
+            if ($mullKey !== $prevMullKey || empty($state['phase_timer']['deadlines'][$pid])) {
+                setPhaseDeadline($state, $pid);
+            }
+        }
+        return;
+    }
     if ($ph === 'coin_flip') {
         unset($state['phase_timer']['prompt_key'], $state['phase_timer']['main_key'], $state['phase_timer']['live_keys']);
         $flip = $state['coin_flip'] ?? null;
@@ -2763,6 +2783,23 @@ function applyPhaseTimeouts(array &$state): bool {
             $state['seq']++;
             refreshPvpPhaseTimers($state);
             $changed = $did = true;
+        } elseif ($ph === 'setup') {
+            foreach (['p1', 'p2'] as $pid) {
+                if (!playerUsesPhaseTimer($state, $pid)) {
+                    continue;
+                }
+                if (!empty($state['players'][$pid]['ready_mulligan'])) {
+                    continue;
+                }
+                $dl = $state['phase_timer']['deadlines'][$pid] ?? null;
+                if (!$dl || $now < $dl) {
+                    continue;
+                }
+                $name = $state['players'][$pid]['name'] ?? $pid;
+                $state = addLog($state, "$name — Mulligan time expired (keeping hand).", 'info');
+                $state = actionMulligan($state, $pid, ['card_ids' => []]);
+                $changed = $did = true;
+            }
         }
 
         if (!$did) {
