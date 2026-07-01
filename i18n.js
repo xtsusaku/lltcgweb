@@ -183,6 +183,7 @@
         "productKind": {
           "bp": "Booster Pack",
           "pb": "Premium Booster",
+          "pb_duo": "Premium Booster (DUO)",
           "sd": "Starter Deck",
           "collection": "Collection",
           "pr": "PR"
@@ -920,6 +921,7 @@
         "productKind": {
           "bp": "ブースターパック",
           "pb": "プレミアムブースター",
+          "pb_duo": "プレミアムブースター（DUO）",
           "sd": "スタートデッキ",
           "collection": "コレクション",
           "pr": "PR"

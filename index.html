@@ -9285,7 +9285,7 @@ let _experimentPoolGen = 0;
 const DECK_FILTER_GROUPS = ["μ's", 'Nijigasaki', 'Sunshine', 'Superstar', 'Hasunosora', 'Saint Snow', 'A-RISE', 'Sunny Passion'];
 /** Units stored on cards as subunit but exposed as deck group filters (not subunit chips). */
 const DECK_FILTER_SUBUNIT_GROUPS = new Set(['Saint Snow', 'A-RISE', 'Sunny Passion']);
-const DECK_FILTER_RARITIES = ['N', 'R', 'R+', 'L', 'L+', 'P', 'P+', 'PR', 'PR+', 'PE', 'PE+', 'SEC', 'LLE', 'RM', 'AR'];
+const DECK_FILTER_RARITIES = ['N', 'R', 'R+', 'L', 'L+', 'P', 'P+', 'P＋', 'PP', 'PR', 'PR+', 'PE', 'PE+', 'SEC', 'LLE', 'RM', 'AR', 'DUO', 'SRL', 'SECS', 'SECL', 'SECE'];
 const DECK_POOL_SORT_KEY = 'tcg_deck_pool_sort';
 const DECK_POOL_SORT_DIR_KEY = 'tcg_deck_pool_sort_dir';
 const DECK_POOL_SORT_DEFAULT = 'id';
@@ -9511,6 +9511,7 @@ const DECK_FILTER_PRODUCT_KINDS = [
   { id: '', labelKey: 'allProducts' },
   { id: 'bp', labelKey: 'bp' },
   { id: 'pb', labelKey: 'pb' },
+  { id: 'pb_duo', labelKey: 'pb_duo' },
   { id: 'sd', labelKey: 'sd' },
   { id: 'collection', labelKey: 'collection' },
   { id: 'pr', labelKey: 'pr' },
@@ -9543,7 +9544,7 @@ const DECK_FILTER_GROUP_SLUG = {
   'A-RISE': 'arise',
   'Sunny Passion': 'sunnypassion',
 };
-const PARALLEL_RARITIES = new Set(['P', 'P+', 'PE', 'PE+', 'L+', 'R+', 'SEC+', 'PR+', 'RM', 'AR', 'SRE', 'RE', 'LLE', 'SECE', 'SECL']);
+const PARALLEL_RARITIES = new Set(['P', 'P+', 'P＋', 'PP', 'PE', 'PE+', 'L+', 'R+', 'SEC+', 'PR+', 'RM', 'AR', 'SRE', 'SRL', 'RE', 'LLE', 'SECE', 'SECL', 'SECS', 'DUO']);
 
 function emptyHeartFilterGrid() {
   const g = {};
@@ -9717,6 +9718,7 @@ function cardProductKind(boosterPack) {
   if (p === 'PRカード') return 'pr';
   if (p.startsWith('スタートデッキ')) return 'sd';
   if (p.startsWith('コレクション')) return 'collection';
+  if (p.startsWith('プレミアムブースター') && p.includes('DUO')) return 'pb_duo';
   if (p.startsWith('プレミアムブースター')) return 'pb';
   if (p.startsWith('ブースターパック')) return 'bp';
   return 'other';
@@ -9920,6 +9922,7 @@ function deckPackShortLabel(pack) {
   if (pack.includes('夏')) return 'Summer';
   if (pack.includes('虹ヶ咲')) return 'Niji PB';
   if (pack.includes('サンシャイン')) return 'Sunshine PB';
+  if (pack.includes('DUO')) return 'Superstar DUO PB';
   if (pack.includes('スーパースター')) return 'Superstar PB';
   if (pack.includes('蓮ノ空')) return 'Hasuno PB';
   if (pack.includes('プレミアム') && pack.includes('ラブライブ！') && !pack.includes('虹') && !pack.includes('サン') && !pack.includes('スーパー') && !pack.includes('蓮')) return "μ's PB";
@@ -10037,7 +10040,9 @@ function refreshDeckFilterPackSelect() {
   deckFilterPackOptionsForKind(kind).forEach(pack => {
     const opt = document.createElement('option');
     opt.value = pack;
-    opt.textContent = pack;
+    const short = deckPackShortLabel(pack);
+    opt.textContent = short !== pack ? short : pack;
+    if (short !== pack) opt.title = pack;
     packSel.appendChild(opt);
   });
   if (current && [...packSel.options].some(o => o.value === current)) {
