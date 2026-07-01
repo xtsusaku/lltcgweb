@@ -3,6 +3,8 @@
   'use strict';
 
   var SFX_KEY = 'tcg_sfx_enabled';
+  var SFX_VOLUME_KEY = 'tcg_sfx_volume';
+  var DEFAULT_VOLUME = 0.85;
   var BASE = './assets/sfx/';
   var manifest = null;
   var pool = Object.create(null);
@@ -15,6 +17,26 @@
 
   function setEnabled(on) {
     try { localStorage.setItem(SFX_KEY, on ? '1' : '0'); } catch (e2) { /* ignore */ }
+  }
+
+  function getVolume() {
+    try {
+      var raw = localStorage.getItem(SFX_VOLUME_KEY);
+      if (raw == null || raw === '') return DEFAULT_VOLUME;
+      var v = Number(raw);
+      if (!Number.isFinite(v)) return DEFAULT_VOLUME;
+      return Math.max(0, Math.min(1, v));
+    } catch (e) {
+      return DEFAULT_VOLUME;
+    }
+  }
+
+  function setVolume(v) {
+    var n = Number(v);
+    if (!Number.isFinite(n)) n = DEFAULT_VOLUME;
+    n = Math.max(0, Math.min(1, n));
+    try { localStorage.setItem(SFX_VOLUME_KEY, String(n)); } catch (e2) { /* ignore */ }
+    return n;
   }
 
   function loadManifest() {
@@ -55,8 +77,9 @@
     var now = Date.now();
     if (lastPlay[id] && now - lastPlay[id] < MIN_GAP_MS) return;
     lastPlay[id] = now;
-    var vol = opts && opts.volume != null ? Number(opts.volume) : 1;
-    if (!Number.isFinite(vol)) vol = 1;
+    var scale = opts && opts.volume != null ? Number(opts.volume) : 1;
+    if (!Number.isFinite(scale)) scale = 1;
+    var vol = getVolume() * scale;
     vol = Math.max(0, Math.min(1, vol));
     try {
       warm(id);
@@ -75,8 +98,12 @@
 
   window.LLTCG_SFX = {
     SFX_KEY: SFX_KEY,
+    SFX_VOLUME_KEY: SFX_VOLUME_KEY,
+    DEFAULT_VOLUME: DEFAULT_VOLUME,
     enabled: enabled,
     setEnabled: setEnabled,
+    getVolume: getVolume,
+    setVolume: setVolume,
     loadManifest: loadManifest,
     play: play,
     warm: warm,

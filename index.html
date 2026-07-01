@@ -5103,6 +5103,11 @@ body.tcg-debug-on .llc-menu-item.tcg-debug-only{display:flex}
 .options-section .account-lead{text-align:left;margin-bottom:12px}
 .options-toggle{display:flex;align-items:flex-start;gap:10px;color:rgba(255,255,255,.88);font-size:14px;line-height:1.45;cursor:pointer;user-select:none}
 .options-toggle input{margin-top:3px;accent-color:var(--pink);flex-shrink:0}
+.options-sfx-volume{margin:10px 0 0 26px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;color:rgba(255,255,255,.82);font-size:13px}
+.options-sfx-volume label{flex:0 0 auto}
+.options-sfx-volume input[type=range]{flex:1;min-width:140px;max-width:280px;accent-color:var(--pink)}
+.options-sfx-volume-val{min-width:3.2em;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.65)}
+.options-sfx-volume.is-muted{opacity:.45;pointer-events:none}
 .options-danger{border-color:rgba(252,165,165,.55);color:#FECACA}
 .options-danger:hover{border-color:#FCA5A5;background:rgba(127,29,29,.35)}
 .account-panel .field label{color:rgba(255,255,255,.78)}
@@ -5681,6 +5686,11 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
           <input type="checkbox" id="chk-sfx" checked>
           <span data-i18n="options.soundEffects">Sound effects</span>
         </label>
+        <div class="options-sfx-volume" id="options-sfx-volume-wrap">
+          <label for="rng-sfx-volume" data-i18n="options.sfxVolume">SFX volume</label>
+          <input type="range" id="rng-sfx-volume" min="0" max="100" step="5" value="85" aria-valuemin="0" aria-valuemax="100">
+          <span class="options-sfx-volume-val" id="sfx-volume-label">85%</span>
+        </div>
       </div>
       <div class="options-section">
         <h3 data-i18n="options.stuck.title">Stuck in a match?</h3>
@@ -7247,18 +7257,53 @@ function sfxPlay(id, opts) {
   try { window.LLTCG_SFX?.play(id, opts); } catch (e) {}
 }
 
+function syncSfxVolumeUi() {
+  const wrap = el('options-sfx-volume-wrap');
+  const rng = el('rng-sfx-volume');
+  const lbl = el('sfx-volume-label');
+  const chk = el('chk-sfx');
+  if (!rng || !lbl) return;
+  const vol = window.LLTCG_SFX?.getVolume?.() ?? 0.85;
+  const pct = Math.round(vol * 100);
+  rng.value = String(pct);
+  lbl.textContent = pct + '%';
+  rng.disabled = chk ? !chk.checked : false;
+  if (wrap) wrap.classList.toggle('is-muted', chk ? !chk.checked : false);
+}
+
 function initSfxSetting() {
   const chk = el('chk-sfx');
+  const rng = el('rng-sfx-volume');
   if (!chk) return;
   try {
     if (localStorage.getItem('tcg_sfx_enabled') === null) localStorage.setItem('tcg_sfx_enabled', '1');
+    if (localStorage.getItem('tcg_sfx_volume') === null && window.LLTCG_SFX?.setVolume) {
+      window.LLTCG_SFX.setVolume(window.LLTCG_SFX.DEFAULT_VOLUME ?? 0.85);
+    }
   } catch (e) {}
   chk.checked = window.LLTCG_SFX?.enabled() !== false;
+  syncSfxVolumeUi();
   if (chk.dataset.bound) return;
   chk.dataset.bound = '1';
   chk.addEventListener('change', () => {
     window.LLTCG_SFX?.setEnabled(chk.checked);
+    syncSfxVolumeUi();
   });
+  if (rng && !rng.dataset.bound) {
+    rng.dataset.bound = '1';
+    let previewTimer = null;
+    const onVolumeInput = () => {
+      const pct = Math.max(0, Math.min(100, parseInt(rng.value, 10) || 0));
+      window.LLTCG_SFX?.setVolume(pct / 100);
+      syncSfxVolumeUi();
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(() => {
+        if (window.LLTCG_SFX?.enabled?.()) sfxPlay('menu_tap', { volume: 1 });
+      }, 120);
+    };
+    rng.addEventListener('input', onVolumeInput);
+    rng.addEventListener('change', onVolumeInput);
+  }
 }
 
 function bindMenuSfx() {
