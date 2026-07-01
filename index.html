@@ -3696,6 +3696,14 @@ body:has(#screen-game.active) #casual-search-float{top:68px}
   background:url("bg/ptn.png") top center/200px 200px repeat,#bae4ff;color:#4a5c80;transform:none}
 .llc-menu-screen .options-danger{border-color:rgba(255,180,180,.65);color:#ffe4e6;background:rgba(120,24,48,.28)}
 .llc-menu-screen .options-danger:hover:not(:disabled){background:rgba(180,40,70,.45);color:#fff}
+.locale-wrap{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.82)}
+.locale-wrap label{font-weight:700;white-space:nowrap}
+.sel-locale{appearance:none;-webkit-appearance:none;background:rgba(8,16,32,.72);color:#fff;border:1px solid rgba(186,228,255,.35);border-radius:999px;padding:6px 28px 6px 12px;font:inherit;font-weight:700;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23fff' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.sel-locale:focus{outline:2px solid var(--pink);outline-offset:2px}
+.logo-foot .locale-wrap{margin-top:8px;justify-content:center}
+.hub-top-actions .locale-wrap{margin-right:4px}
+body.locale-ja{font-family:'Zen Kaku Gothic New','Nunito',sans-serif}
+body.locale-ja .llc-menu-item-title{font-family:'Zen Kaku Gothic New','Nunito',sans-serif}
 .llc-menu-screen .lerr{color:#ffd6e8;font-weight:700}
 .llc-menu-screen .hub-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .llc-menu-screen .hub-top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -5188,8 +5196,8 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 
 <div id="tcg-mobile-rotate-hint" aria-live="polite" aria-hidden="true" hidden>
   <div class="tcg-landscape-mode-overlay__icon" aria-hidden="true">↻</div>
-  <h2 class="tcg-landscape-mode-overlay__title">This game is played in landscape</h2>
-  <p class="tcg-landscape-mode-overlay__sub">Rotate your device to continue.</p>
+  <h2 class="tcg-landscape-mode-overlay__title" data-i18n="mobile.rotateTitle">This game is played in landscape</h2>
+  <p class="tcg-landscape-mode-overlay__sub" data-i18n="mobile.rotateSub">Rotate your device to continue.</p>
 </div>
 <button type="button" id="tcg-phone-fs-btn" hidden aria-label="Enter fullscreen">⛶ Full screen</button>
 
@@ -5200,25 +5208,32 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       <img class="logo-img" src="tcglogo.png" alt="Love Live! Official Card Game">
       <div class="logo-foot">
         <span class="logo-version">v0.1.0</span>
-        <p class="logo-tagline">The Unofficial Web Player</p>
+        <p class="logo-tagline" data-i18n="tagline">The Unofficial Web Player</p>
+        <div class="locale-wrap">
+          <label for="sel-locale-auth" data-i18n="lang.label">Language</label>
+          <select class="sel-locale" id="sel-locale-auth" aria-label="Language">
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="panel auth-box account-panel">
-      <p id="auth-status">Checking Discord sign-in…</p>
+      <p id="auth-status" data-i18n="auth.checking">Checking Discord sign-in…</p>
       <div class="auth-actions">
-        <button class="btn-grad" id="btn-discord-login" type="button" hidden>Sign in with Discord</button>
+        <button class="btn-grad" id="btn-discord-login" type="button" hidden data-i18n="auth.signInDiscord">Sign in with Discord</button>
       </div>
       <div class="llc-menu-list auth-guest-menu" id="auth-guest-menu" hidden>
         <button class="llc-menu-item llc-menu-hover" id="btn-auth-unranked" type="button">
           <span class="llc-menu-item-body">
-            <span class="llc-menu-item-title">Unranked Play</span>
-            <span class="llc-menu-item-sub">Rooms, friends, or practice vs CPU</span>
+            <span class="llc-menu-item-title" data-i18n="auth.unranked.title">Unranked Play</span>
+            <span class="llc-menu-item-sub" data-i18n="auth.unranked.sub">Rooms, friends, or practice vs CPU</span>
           </span>
         </button>
         <button class="llc-menu-item llc-menu-hover" id="btn-auth-deck-experiment" type="button">
           <span class="llc-menu-item-body">
-            <span class="llc-menu-item-title">Deck Experiment</span>
-            <span class="llc-menu-item-sub">Build with every card — guests only, unranked</span>
+            <span class="llc-menu-item-title" data-i18n="auth.deckExperiment.title">Deck Experiment</span>
+            <span class="llc-menu-item-sub" data-i18n="auth.deckExperiment.sub">Build with every card — guests only, unranked</span>
           </span>
         </button>
         <button class="llc-menu-item llc-menu-hover tcg-debug-only" id="btn-auth-debug-card-test" type="button" hidden>
@@ -5235,8 +5250,8 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
         </button>
         <button class="llc-menu-item llc-menu-hover" id="btn-auth-tutorial" type="button">
           <span class="llc-menu-item-body">
-            <span class="llc-menu-item-title">How to Play</span>
-            <span class="llc-menu-item-sub">Interactive rules walkthrough</span>
+            <span class="llc-menu-item-title" data-i18n="auth.tutorial.title">How to Play</span>
+            <span class="llc-menu-item-sub" data-i18n="auth.tutorial.sub">Interactive rules walkthrough</span>
           </span>
         </button>
       </div>
@@ -5561,15 +5576,22 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       <img class="logo-img" src="tcglogo.png" alt="">
       <div class="logo-foot">
         <span class="logo-version">v0.1.0</span>
-        <p class="logo-tagline">The Unofficial Web Player</p>
+        <p class="logo-tagline" data-i18n="tagline">The Unofficial Web Player</p>
       </div>
     </div>
     <div class="panel account-panel">
       <div class="hub-top">
-        <div class="hub-user" id="hub-user">Signed in</div>
+        <div class="hub-user" id="hub-user" data-i18n="hub.signedIn">Signed in</div>
         <div class="hub-top-actions">
-          <button class="btn-ghost" id="btn-hub-options" type="button">Options</button>
-          <button class="btn-ghost" id="btn-hub-logout" type="button">Sign out</button>
+          <div class="locale-wrap">
+            <label for="sel-locale-hub" data-i18n="lang.label">Language</label>
+            <select class="sel-locale" id="sel-locale-hub" aria-label="Language">
+              <option value="en">English</option>
+              <option value="ja">日本語</option>
+            </select>
+          </div>
+          <button class="btn-ghost" id="btn-hub-options" type="button" data-i18n="hub.options">Options</button>
+          <button class="btn-ghost" id="btn-hub-logout" type="button" data-i18n="hub.signOut">Sign out</button>
         </div>
       </div>
       <div class="hub-stat-row">
@@ -5583,38 +5605,38 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       <div class="llc-menu-list">
         <button class="llc-menu-item llc-menu-hover" id="btn-hub-booster" type="button">
           <span class="llc-menu-item-body">
-            <span class="llc-menu-item-title">Open Boosters</span>
-            <span class="llc-menu-item-sub">Open card booster packs</span>
+            <span class="llc-menu-item-title" data-i18n="hub.booster.title">Open Boosters</span>
+            <span class="llc-menu-item-sub" data-i18n="hub.booster.sub">Open card booster packs</span>
           </span>
         </button>
         <button class="llc-menu-item llc-menu-hover" id="btn-hub-deck" type="button">
           <span class="llc-menu-item-body">
-            <span class="llc-menu-item-title">Deck Builder</span>
-            <span class="llc-menu-item-sub">Edit presets and ranked loadout</span>
+            <span class="llc-menu-item-title" data-i18n="hub.deck.title">Deck Builder</span>
+            <span class="llc-menu-item-sub" data-i18n="hub.deck.sub">Edit presets and ranked loadout</span>
           </span>
         </button>
         <button class="llc-menu-item llc-menu-hover" id="btn-hub-ranked" type="button">
           <span class="llc-menu-item-body">
-            <span class="llc-menu-item-title">Ranked PvP</span>
-            <span class="llc-menu-item-sub">Climb ELO in matchmade games</span>
+            <span class="llc-menu-item-title" data-i18n="hub.ranked.title">Ranked PvP</span>
+            <span class="llc-menu-item-sub" data-i18n="hub.ranked.sub">Climb ELO in matchmade games</span>
           </span>
         </button>
         <button class="llc-menu-item llc-menu-hover" id="btn-hub-leaderboard" type="button">
           <span class="llc-menu-item-body">
-            <span class="llc-menu-item-title">Leaderboard</span>
-            <span class="llc-menu-item-sub">View the online rankings</span>
+            <span class="llc-menu-item-title" data-i18n="hub.leaderboard.title">Leaderboard</span>
+            <span class="llc-menu-item-sub" data-i18n="hub.leaderboard.sub">View the online rankings</span>
           </span>
         </button>
         <button class="llc-menu-item llc-menu-hover" id="btn-hub-unranked" type="button">
           <span class="llc-menu-item-body">
-            <span class="llc-menu-item-title">Unranked Play</span>
-            <span class="llc-menu-item-sub">Rooms, friends, or practice vs CPU</span>
+            <span class="llc-menu-item-title" data-i18n="hub.unranked.title">Unranked Play</span>
+            <span class="llc-menu-item-sub" data-i18n="hub.unranked.sub">Rooms, friends, or practice vs CPU</span>
           </span>
         </button>
         <button class="llc-menu-item llc-menu-hover" id="btn-hub-tutorial" type="button">
           <span class="llc-menu-item-body">
-            <span class="llc-menu-item-title">How to Play</span>
-            <span class="llc-menu-item-sub">Interactive rules walkthrough</span>
+            <span class="llc-menu-item-title" data-i18n="hub.tutorial.title">How to Play</span>
+            <span class="llc-menu-item-sub" data-i18n="hub.tutorial.sub">Interactive rules walkthrough</span>
           </span>
         </button>
         <button class="llc-menu-item llc-menu-hover tcg-debug-only" id="btn-hub-bug-reports" type="button">
@@ -5640,24 +5662,31 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     </div>
     <div class="panel account-panel">
       <div class="account-screen-head">
-        <button class="btn-ghost" id="btn-options-back" type="button">← Hub</button>
-        <h2>Options</h2>
+        <button class="btn-ghost" id="btn-options-back" type="button" data-i18n="options.back">← Hub</button>
+        <h2 data-i18n="options.title">Options</h2>
       </div>
       <div class="options-section">
+        <div class="locale-wrap" style="margin-bottom:12px">
+          <label for="sel-locale-options" data-i18n="lang.label">Language</label>
+          <select class="sel-locale" id="sel-locale-options" aria-label="Language">
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </div>
         <label class="options-toggle">
           <input type="checkbox" id="chk-foil-fx" checked>
-          <span>Enhanced textures on high rarity cards</span>
+          <span data-i18n="options.foil">Enhanced textures on high rarity cards</span>
         </label>
       </div>
       <div class="options-section">
-        <h3>Stuck in a match?</h3>
-        <p class="account-lead">If ranked reconnects you to a broken or finished game, leave the active match record here. This counts as a resign if the game is still in progress.</p>
-        <button class="btn-out" id="btn-leave-active-game" type="button" hidden>Leave active match</button>
+        <h3 data-i18n="options.stuck.title">Stuck in a match?</h3>
+        <p class="account-lead" data-i18n="options.stuck.lead">If ranked reconnects you to a broken or finished game, leave the active match record here. This counts as a resign if the game is still in progress.</p>
+        <button class="btn-out" id="btn-leave-active-game" type="button" hidden data-i18n="options.leaveActive">Leave active match</button>
       </div>
       <div class="options-section">
-        <h3>Reset account</h3>
-        <p class="account-lead">Delete all collection cards, deck presets, ranked stats, and booster progress. You will choose a new starter deck and begin again. This cannot be undone.</p>
-        <button class="btn-out options-danger" id="btn-reset-account" type="button">Reset account</button>
+        <h3 data-i18n="options.reset.title">Reset account</h3>
+        <p class="account-lead" data-i18n="options.reset.lead">Delete all collection cards, deck presets, ranked stats, and booster progress. You will choose a new starter deck and begin again. This cannot be undone.</p>
+        <button class="btn-out options-danger" id="btn-reset-account" type="button" data-i18n="options.reset.btn">Reset account</button>
       </div>
       <p class="lerr" id="options-err"></p>
     </div>
@@ -5895,17 +5924,17 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     </div>
     <div class="panel account-panel">
       <div class="account-screen-head">
-        <button class="btn-ghost" id="btn-lobby-hub" type="button">← Hub</button>
-        <h2>Unranked Play</h2>
+        <button class="btn-ghost" id="btn-lobby-hub" type="button" data-i18n="lobby.backHub">← Hub</button>
+        <h2 data-i18n="lobby.title">Unranked Play</h2>
       </div>
       <div class="lobby-menu">
         <div class="panel lobby-setup">
           <div class="field">
-            <label>Your Name</label>
-            <input type="text" id="inp-name" placeholder="Idol name…" maxlength="20" value="Player 1">
+            <label data-i18n="lobby.yourName">Your Name</label>
+            <input type="text" id="inp-name" placeholder="Idol name…" maxlength="20" value="Player 1" data-i18n-placeholder="lobby.namePlaceholder">
           </div>
           <div class="field">
-            <label>Deck</label>
+            <label data-i18n="lobby.deck">Deck</label>
             <div class="llc-select-wrap">
               <select id="sel-deck"></select>
             </div>
@@ -5920,7 +5949,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
           <div class="field phase-timer-lobby">
             <label class="phase-timer-toggle">
               <input type="checkbox" id="inp-phase-timer">
-              <span>Phase timer (Main &amp; LIVE)</span>
+              <span data-i18n="lobby.phaseTimer">Phase timer (Main &amp; LIVE)</span>
             </label>
             <div class="phase-timer-duration" id="phase-timer-duration-wrap" hidden>
               <label for="inp-phase-timer-sec">Seconds per phase (10–120)</label>
@@ -5933,19 +5962,19 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
         <div class="lobby-cols">
           <div class="lobby-col">
             <div class="panel">
-              <h2>VS Player</h2>
-              <button class="btn-grad" id="btn-create">Create Room</button>
-              <div class="divider">or join a friend</div>
+              <h2 data-i18n="lobby.vsPlayer">VS Player</h2>
+              <button class="btn-grad" id="btn-create" data-i18n="lobby.createRoom">Create Room</button>
+              <div class="divider" data-i18n="lobby.orJoinFriend">or join a friend</div>
               <div class="field">
-                <label>Room Code</label>
+                <label data-i18n="lobby.roomCode">Room Code</label>
                 <input type="text" id="inp-code" placeholder="ABC123" maxlength="6"
                   style="text-transform:uppercase;letter-spacing:5px;font-family:'Fredoka One',cursive;font-size:22px;text-align:center">
               </div>
-              <button class="btn-out" id="btn-join">Join Room</button>
-              <button class="btn-out" id="btn-lobby-spectate" type="button">Spectate Match</button>
-              <div class="divider">or match randomly</div>
-              <button class="btn-grad" id="btn-casual-search" type="button">Find Random Match</button>
-              <p class="hub-stat lobby-casual-hint">Casual PvP — no ELO or ranked record</p>
+              <button class="btn-out" id="btn-join" data-i18n="lobby.joinRoom">Join Room</button>
+              <button class="btn-out" id="btn-lobby-spectate" type="button" data-i18n="lobby.spectate">Spectate Match</button>
+              <div class="divider" data-i18n="lobby.orMatchRandomly">or match randomly</div>
+              <button class="btn-grad" id="btn-casual-search" type="button" data-i18n="lobby.findRandomMatch">Find Random Match</button>
+              <p class="hub-stat lobby-casual-hint" data-i18n="lobby.casualHint">Casual PvP — no ELO or ranked record</p>
               <p id="casual-queue-stats" class="hub-stat ranked-queue-stats">— waiting · — in casual games</p>
               <button class="btn-ghost" id="btn-casual-cancel" type="button" hidden>Cancel search</button>
             </div>
@@ -5953,18 +5982,18 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 
           <div class="lobby-col">
             <div class="panel">
-              <h2>VS CPU</h2>
+              <h2 data-i18n="lobby.vsCpu">VS CPU</h2>
               <div class="field field-cpu-diff" id="cpu-diff-field">
-                <label>CPU Difficulty</label>
+                <label data-i18n="lobby.cpuDifficulty">CPU Difficulty</label>
                 <div class="llc-select-wrap">
                   <select id="sel-cpu-diff">
-                    <option value="easy">Easy — random starter deck</option>
-                    <option value="normal">Normal — smarter skills &amp; Lives</option>
-                    <option value="hard">Hard — strong deck &amp; skill priority</option>
+                    <option value="easy" data-i18n="lobby.cpuEasy">Easy — random starter deck</option>
+                    <option value="normal" data-i18n="lobby.cpuNormal">Normal — smarter skills &amp; Lives</option>
+                    <option value="hard" data-i18n="lobby.cpuHard">Hard — strong deck &amp; skill priority</option>
                   </select>
                 </div>
               </div>
-              <button class="btn-solo" id="btn-solo" type="button">Practice vs CPU</button>
+              <button class="btn-solo" id="btn-solo" type="button" data-i18n="lobby.practiceCpu">Practice vs CPU</button>
             </div>
           </div>
         </div>
@@ -6105,7 +6134,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 
       <!-- Your playmat -->
       <div class="playmat-frame my-mat" id="game-stage">
-        <span class="mat-owner-label">You</span>
+        <span class="mat-owner-label" data-i18n="game.you">You</span>
         <img class="playmat-img" src="playmat.png" width="1024" height="563" alt="" draggable="false">
         <div class="playmat-overlay">
           <div class="mat-zone success-col slot-fill z-my-success" id="my-pips"></div>
@@ -6159,7 +6188,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       </div>
 
       <div class="hand-strip my-hand-strip">
-        <span class="hand-strip-label">Your hand</span>
+        <span class="hand-strip-label" data-i18n="game.yourHand">Your hand</span>
         <div class="hand-fan" id="hand-row"></div>
       </div>
     </div>
@@ -6167,10 +6196,10 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     <!-- Right panel: game log -->
     <aside class="side-panel side-right">
       <div class="side-log sidebar">
-        <div class="sbs" style="padding:8px 10px 4px"><h4>Game Log</h4></div>
+        <div class="sbs" style="padding:8px 10px 4px"><h4 data-i18n="game.gameLog">Game Log</h4></div>
         <div class="logscroll" id="game-log"></div>
         <div class="tcg-radio-bar">
-          <button type="button" class="btn-ghost tcg-radio-toggle" id="btn-tcg-radio-toggle" aria-expanded="false" aria-controls="tcg-radio-stack">📻 Enable Radio</button>
+          <button type="button" class="btn-ghost tcg-radio-toggle" id="btn-tcg-radio-toggle" aria-expanded="false" aria-controls="tcg-radio-stack" data-i18n="game.enableRadio">📻 Enable Radio</button>
         </div>
         <div class="tcg-radio-stack" id="tcg-radio-stack" hidden>
           <div class="tcg-radio-resize" id="tcg-radio-resize" role="separator" aria-orientation="horizontal" aria-label="Resize album art" tabindex="0">
@@ -6189,7 +6218,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
           </div>
         </div>
         <div class="phase-action-bar" id="phase-action-bar" hidden aria-hidden="true">
-          <button type="button" class="btn-phase-primary" id="btn-phase-primary">End Main Phase</button>
+          <button type="button" class="btn-phase-primary" id="btn-phase-primary" data-i18n="game.endMainPhase">End Main Phase</button>
         </div>
         <div class="sbfoot">
           <div class="tcg-debug-only tcg-debug-row" id="debug-log-tools">
@@ -6197,7 +6226,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
             <button type="button" class="btn-ghost" id="btn-debug-save-log">💾 Save debug log</button>
             <button type="button" class="btn-ghost" id="btn-debug-copy-log">📋 Copy log</button>
           </div>
-          <button class="btn-danger" id="btn-resign">🏳 Resign</button>
+          <button class="btn-danger" id="btn-resign" data-i18n="game.resign">🏳 Resign</button>
         </div>
       </div>
     </aside>
@@ -6319,8 +6348,8 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 <!-- Coin flip (first player) -->
 <div class="overlay" id="overlay-coin">
   <div class="mbox coin-mbox">
-    <h2>First Player</h2>
-    <p id="coin-msg">Flipping coin…</p>
+    <h2 data-i18n="coin.title">First Player</h2>
+    <p id="coin-msg" data-i18n="coin.flipping">Flipping coin…</p>
     <div class="coin-stage">
       <div class="coin" id="coin-el">
         <div class="coin-face coin-heads" id="coin-heads"></div>
@@ -6329,8 +6358,8 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     </div>
     <p class="coin-result" id="coin-result"></p>
     <div class="coin-choice-btns" id="coin-choice-btns" hidden>
-      <button type="button" class="btn-grad" id="btn-coin-first-self">I'll go first</button>
-      <button type="button" class="btn-grad" id="btn-coin-first-opp">Opponent goes first</button>
+      <button type="button" class="btn-grad" id="btn-coin-first-self" data-i18n="coin.goFirst">I'll go first</button>
+      <button type="button" class="btn-grad" id="btn-coin-first-opp" data-i18n="coin.opponentFirst">Opponent goes first</button>
     </div>
   </div>
 </div>
@@ -6338,10 +6367,10 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 <!-- Mulligan -->
 <div class="overlay" id="overlay-mull">
   <div class="mbox">
-    <h2>Opening Hand 🌸</h2>
-    <p>Tap cards to mark for replacement. Hold a card to view its details. Tap again to unmark.</p>
+    <h2 data-i18n="mulligan.title">Opening Hand 🌸</h2>
+    <p data-i18n="mulligan.hint">Tap cards to mark for replacement. Hold a card to view its details. Tap again to unmark.</p>
     <div class="mullgrid" id="mull-grid"></div>
-    <button class="btn-grad" id="btn-mull" style="width:auto;padding:11px 30px">Keep Hand</button>
+    <button class="btn-grad" id="btn-mull" style="width:auto;padding:11px 30px" data-i18n="mulligan.keepHand">Keep Hand</button>
   </div>
 </div>
 
@@ -6349,11 +6378,11 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 <div class="overlay" id="overlay-live">
   <div class="mbox">
     <button class="mcls" type="button" aria-hidden="true" tabindex="-1">✕</button>
-    <h2>LIVE Phase — Set Cards</h2>
-    <p>LIVE Phase: place 0–3 cards (Live or Member) in Live storage — yours stay face-up; opponent cards stay hidden until Performance. Draw 1 for each card placed, then end LIVE Phase. Performance reveals opponent storage at once.</p>
+    <h2 data-i18n="live.overlayTitle">LIVE Phase — Set Cards</h2>
+    <p data-i18n="live.overlayHint">LIVE Phase: place 0–3 cards (Live or Member) in Live storage — yours stay face-up; opponent cards stay hidden until Performance. Draw 1 for each card placed, then end LIVE Phase. Performance reveals opponent storage at once.</p>
     <div class="lselrow" id="lsel-row"></div>
     <div class="lselcount">Selected: <span id="lsel-n">0</span>/3 &nbsp;·&nbsp; In storage: <span id="lsel-stored">0</span>/3</div>
-    <button class="btn-grad" id="btn-live-ok" style="width:auto;padding:11px 30px">Place in Storage</button>
+    <button class="btn-grad" id="btn-live-ok" style="width:auto;padding:11px 30px" data-i18n="live.placeInStorage">Place in Storage</button>
   </div>
 </div>
 
@@ -6569,7 +6598,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 
 <div id="overlay-tutorial" aria-live="polite">
   <div class="tut-bar">
-    <button type="button" class="tut-exit" id="btn-tut-exit">Exit to Title</button>
+    <button type="button" class="tut-exit" id="btn-tut-exit" data-i18n="tut.exit">Exit to Title</button>
     <div class="tut-body">
       <img class="tut-portrait" id="tut-portrait" src="assets/kanon.png" alt="Shibuya Kanon">
       <div class="tut-content">
@@ -6579,9 +6608,9 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       </div>
     </div>
     <div class="tut-nav">
-      <button type="button" class="tut-btn-back" id="btn-tut-back">← Back</button>
+      <button type="button" class="tut-btn-back" id="btn-tut-back" data-i18n="tut.back">← Back</button>
       <span class="tut-step" id="tut-step">1 / 1</span>
-      <button type="button" class="tut-btn-next" id="btn-tut-next">Next →</button>
+      <button type="button" class="tut-btn-next" id="btn-tut-next" data-i18n="tut.next">Next →</button>
     </div>
   </div>
 </div>
@@ -6634,12 +6663,12 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 <button type="button" id="btn-anti-softlock" hidden title="Skip this skill without applying it (files a debug bug report)">Anti-softlock</button>
 
 <div id="overlay-win">
-  <div class="wtitle" id="wtitle" style="color:var(--pink)">You Win!</div>
+  <div class="wtitle" id="wtitle" style="color:var(--pink)" data-i18n="win.youWin">You Win!</div>
   <div class="wsub"   id="wsub"></div>
   <div class="wstats" id="wstats"></div>
   <div class="win-actions">
-    <button class="btn-grad" id="btn-again" style="width:auto;padding:13px 36px;font-size:17px">Play Again</button>
-    <button class="btn-out" id="btn-win-hub" type="button">Return to Menu</button>
+    <button class="btn-grad" id="btn-again" style="width:auto;padding:13px 36px;font-size:17px" data-i18n="win.playAgain">Play Again</button>
+    <button class="btn-out" id="btn-win-hub" type="button" data-i18n="win.returnMenu">Return to Menu</button>
     <button class="btn-out" id="btn-win-leaderboard" type="button" hidden>View Leaderboard</button>
   </div>
   <div class="win-debug-row tcg-debug-only tcg-debug-row" id="win-debug-log-tools">
@@ -6648,11 +6677,14 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
   </div>
 </div>
 
+<script src="i18n.js?v=1"></script>
+<script src="log_i18n.js?v=1"></script>
 <!-- Early auth guard: separate script so a main-bundle parse error cannot leave auth stuck forever. -->
 <script>
 (function () {
   'use strict';
-  var AUTH_CHECK_MSG = 'Checking Discord sign-in…';
+  var I18N = window.LLTCG_I18N;
+  var AUTH_CHECK_MSG = I18N && I18N.t ? I18N.t('auth.checking') : 'Checking Discord sign-in…';
   var AUTH_GUARD_MS = 12000;
   var DISCORD_CLIENT_ID = '1439716818058088612';
   var WRAPPED_OAUTH_REDIRECT = 'https://loveliveradio.ca/wrapped';
@@ -6676,7 +6708,8 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
   var guardTimer = setTimeout(function () {
     var authEl = document.getElementById('auth-status');
     if (!authEl || authEl.textContent !== AUTH_CHECK_MSG) return;
-    showInlineGuestAuth('Sign-in check timed out — play unranked, or retry Discord sign-in.');
+    var msg = I18N && I18N.t ? I18N.t('auth.guestTimeout') : 'Sign-in check timed out — play unranked, or retry Discord sign-in.';
+    showInlineGuestAuth(msg);
   }, AUTH_GUARD_MS);
   window.__tcgClearAuthBootGuard = function () {
     clearTimeout(guardTimer);
@@ -6688,6 +6721,9 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 <!-- ══ SCRIPT ══ -->
 <script>
 'use strict';
+
+const { getLocale, setLocale, t, cardLocaleName, cardLocaleText, cardLocaleType, deckLocaleName, loadTutorialJa, tutorialDialogue, applyI18n, initLocale } = window.LLTCG_I18N;
+const { localizeLogMessage, clearLogNameCache } = window.LLTCG_LOG_I18N;
 
 // --- Love Live TCG client (index.html) -----------------------------------------
 // Single-page app: lobby/account UI, in-game playmat, long-poll sync with api.php.
@@ -7119,6 +7155,18 @@ function syncFoilFxSetting() {
   if (chk) chk.checked = foilFxUserEnabled();
 }
 
+function onLocaleChanged() {
+  applyI18n();
+  clearLogNameCache();
+  if (G.gameState) {
+    resyncGameLogFromState(G.gameState);
+    renderGame(G.gameState);
+  }
+  if (G.isTutorial && G.tutorialData?.steps) renderTutorialStep(G.tutorialStep, { textOnly: false });
+  renderLobbyDeckOptions();
+  updateDeckPrev();
+}
+
 function initFoilFxSetting() {
   try {
     if (localStorage.getItem(FOIL_FX_KEY) === null) localStorage.setItem(FOIL_FX_KEY, '1');
@@ -7159,8 +7207,8 @@ function showPackResults(cards, boxName, { godPack = false, faceSrcByIndex = nul
   const godEl = el('pack-results-god');
   const mode = boxMode ? 'box' : 'pack';
   title.textContent = boxName
-    ? boxName + (boxMode ? ' — Box Opened' : ' — Pack Opened')
-    : (boxMode ? 'Box Opened' : 'Pack Opened');
+    ? boxName + (boxMode ? ' — ' + t('pack.boxOpened') : ' — ' + t('pack.opened'))
+    : (boxMode ? t('pack.boxOpened') : t('pack.opened'));
   if (godEl) {
     godEl.hidden = !godPack;
     godEl.textContent = boxMode ? 'GOD PACK!' : 'GOD PACK!';
@@ -7179,7 +7227,7 @@ function showPackResults(cards, boxName, { godPack = false, faceSrcByIndex = nul
     if (!boxMode) {
       const name = document.createElement('div');
       name.className = 'pack-results-name';
-      name.textContent = enriched.name_en || enriched.card_no || '';
+      name.textContent = cardLocaleName(enriched) || enriched.card_no || '';
       item.appendChild(name);
     }
 
@@ -7187,7 +7235,7 @@ function showPackResults(cards, boxName, { godPack = false, faceSrcByIndex = nul
     card.className = 'pack-results-card hcard'
       + (isHoloRarity(enriched.rarity) && !converted ? ' is-holo' : '')
       + (isLiveCard(enriched) ? ' card-live-hand' : '');
-    card.title = enriched.name_en || enriched.name || enriched.card_no || '';
+    card.title = cardLocaleName(enriched) || enriched.card_no || '';
     appendCardFace(card, enriched, { sideways: isLiveCard(enriched), preferSrc });
     if (converted) appendGemConvertOverlay(card, c?.star_gems || STAR_GEMS_PER_DUPE);
     bindCatalogCardPress(card, enriched, null);
@@ -7316,7 +7364,7 @@ function buildPackOpenCardEl(c, stackIndex, total, preferSrc = '') {
   }
   const nameEl = document.createElement('div');
   nameEl.className = 'pack-open-card-name';
-  nameEl.textContent = enriched.name_en || enriched.name || enriched.card_no || '';
+  nameEl.textContent = cardLocaleName(enriched) || enriched.card_no || '';
   card.appendChild(nameEl);
   const meta = document.createElement('div');
   meta.className = 'pack-open-card-meta';
@@ -7764,7 +7812,7 @@ async function initAccountFlow() {
     if (authDone) return;
     authDone = true;
     clearActiveGameSession();
-    showGuestAuth('Sign-in check timed out — play unranked, or retry Discord sign-in.');
+    showGuestAuth(t('auth.guestTimeout'));
   }, AUTH_BOOT_WATCHDOG_MS);
   try {
     const params = new URLSearchParams(location.search);
@@ -7948,7 +7996,8 @@ async function resetAccount() {
 function enterHub(me) {
   A.profile = me || A.profile;
   syncStarGemsFromProfile(A.profile);
-  el('hub-user').innerHTML = 'Signed in as <b>' + (A.profile?.user?.username || A.user?.username || 'Player') + '</b>';
+  el('hub-user').innerHTML = (getLocale() === 'ja' ? 'サインイン中：<b>' : 'Signed in as <b>')
+    + (A.profile?.user?.username || A.user?.username || 'Player') + '</b>';
   const d = A.profile?.daily || {};
   el('hub-daily').textContent = 'Daily boosters: ' + (d.remaining ?? 0) + ' / ' + (d.limit ?? 5) + ' remaining today (JST)'
     + (d.first_day_bonus ? ' (welcome bonus!)' : '');
@@ -8276,7 +8325,7 @@ function renderBoosterRatesModal(rates) {
     idEl.textContent = row.card_no || '';
     const nameEl = document.createElement('div');
     nameEl.className = 'booster-rates-name';
-    nameEl.textContent = row.name_en || row.card_no || '?';
+    nameEl.textContent = cardLocaleName(row) || row.card_no || '?';
     const subEl = document.createElement('div');
     subEl.className = 'booster-rates-sub';
     subEl.textContent = row.rarity || '';
@@ -8625,7 +8674,7 @@ function appendDeckCardTile(parent, card, qty, onTap, { inDeck = false } = {}) {
   tile.className = 'deck-card-tile'
     + (inDeck ? ' in-deck' : '')
     + (isLiveCard(c) ? ' deck-live-tile' : '');
-  tile.title = (c.name_en || c.name || c.card_no) + (qty > 1 ? ' ×' + qty : '');
+  tile.title = (cardLocaleName(c) || c.card_no) + (qty > 1 ? ' ×' + qty : '');
   appendDeckTileFace(tile, c, { lazy: !inDeck });
   if (c.rarity) {
     const r = document.createElement('span');
@@ -11004,7 +11053,7 @@ function updateDebugCardPreview() {
   meta.className = 'debug-card-meta';
   const nameEl = document.createElement('div');
   nameEl.className = 'debug-card-name';
-  nameEl.textContent = card.name_en || card.name || cardNo;
+  nameEl.textContent = cardLocaleName(card) || cardNo;
   const idEl = document.createElement('div');
   idEl.className = 'debug-card-id';
   idEl.textContent = cardNo;
@@ -11257,7 +11306,7 @@ async function loadExperimentStarterDeck(starterKey) {
   A.experimentPassword = '';
   closeM('modal-experiment-starter-pick');
   renderDeckBuilder({ deferPool: true });
-  const label = deck.name_en || deck.name || starterKey;
+  const label = deckLocaleName(deck, starterKey) || starterKey;
   el('deck-err').textContent = 'Loaded ' + label + ' as base.';
 }
 
@@ -11273,7 +11322,7 @@ async function openExperimentStarterPicker() {
     b.type = 'button';
     b.className = 'btn-out';
     b.style.cssText = 'width:auto;min-width:min(200px,88vw);padding:10px 16px';
-    b.textContent = deck.name_en || deck.name || id;
+    b.textContent = deckLocaleName(deck, id) || id;
     b.onclick = () => loadExperimentStarterDeck(id);
     grid.appendChild(b);
   });
@@ -11394,7 +11443,7 @@ function applyRankBanner(container, banner) {
   const img = document.createElement('img');
   img.className = 'rank-banner-img';
   img.src = banner.image;
-  img.alt = banner.name_en || banner.card_no || '';
+  img.alt = cardLocaleName(banner) || banner.card_no || '';
   const paint = () => {
     if (!img.naturalWidth) return;
     applyRankBannerStyles(img, bannerNormalizeCropForImage(img, cropIn));
@@ -11669,8 +11718,8 @@ function getBannerOwnedCards() {
     seen.add(row.card_no);
     out.push({ card_no: row.card_no, card: c0 });
   });
-  out.sort((a, b) => (a.card.name_en || a.card.name || a.card_no).localeCompare(
-    b.card.name_en || b.card.name || b.card_no, undefined, { sensitivity: 'base' }
+  out.sort((a, b) => (cardLocaleName(a.card) || a.card_no).localeCompare(
+    cardLocaleName(b.card) || b.card_no, undefined, { sensitivity: 'base' }
   ));
   return out;
 }
@@ -11705,14 +11754,14 @@ function renderBannerCardPick() {
       + (isLiveCard(card) ? ' card-live-hand' : '')
       + (bannerCropState.cardNo === card_no ? ' selected' : '');
     btn.dataset.cardNo = card_no;
-    btn.title = card.name_en || card.name || card_no;
+    btn.title = cardLocaleName(card) || card_no;
     const art = document.createElement('div');
     art.className = 'banner-card-art';
     appendCardFace(art, card, { sideways: isLiveCard(card) });
     btn.appendChild(art);
     const name = document.createElement('span');
     name.className = 'banner-card-name';
-    name.textContent = card.name_en || card.name || card_no;
+    name.textContent = cardLocaleName(card) || card_no;
     btn.appendChild(name);
     grid.appendChild(btn);
   });
@@ -12935,6 +12984,7 @@ const SUBUNIT_EN = {
 };
 
 function localizeSubunitText(text) {
+  if (getLocale() === 'ja') return text;
   if (!text) return text;
   let out = String(text).replace(/Mirakuru Park!/g, 'Mira-Cra Park!');
   const keys = Object.keys(SUBUNIT_EN).sort((a, b) => b.length - a.length);
@@ -13863,6 +13913,7 @@ let G = {
   bindMobilePhaseDock();
   await Promise.all([loadCards(), accountReady]);
   initFoilFxSetting();
+  initLocale(onLocaleChanged);
   try {
     const savedDiff = localStorage.getItem('tcg_cpu_difficulty');
     if (savedDiff === 'easy' || savedDiff === 'normal' || savedDiff === 'hard') {
@@ -14968,6 +15019,7 @@ async function loadCards() {
     const d = await r.json();
     G.starterDecks = d.starter_decks||{};
     (d.cards||[]).forEach(c => G.allCards[c.card_no]=c);
+    clearLogNameCache();
   } catch(e){ console.warn(e); }
 }
 
@@ -15055,7 +15107,7 @@ function renderLobbyDeckOptions() {
     const o = document.createElement('option');
     o.value = id;
     const deck = G.starterDecks[id];
-    o.textContent = deck?.name_en || deck?.name || id;
+    o.textContent = deckLocaleName(deck, id) || id;
     basicGroup.appendChild(o);
   });
   sel.appendChild(basicGroup);
@@ -17341,6 +17393,24 @@ function isLogDividerMessage(m) {
 
 function phaseLabelFromBannerTitle(title) {
   if (!title) return null;
+  if (getLocale() === 'ja') {
+    if (/Main Phase/i.test(title)) return t('phase.main');
+    const jaDirect = {
+      'Coin Flip': 'コイントス',
+      'Preparation': '準備',
+      'Active Phase': 'アクティブフェイズ',
+      'LIVE Phase': 'ライブフェイズ',
+      'Live Start': 'ライブ開始',
+      'Live Success': 'ライブ成功',
+      'Performance Phase': 'パフォーマンスフェイズ',
+      'Live Win/Loss Check': 'ライブ勝敗判定',
+      'Game Start': 'ゲーム開始',
+    };
+    if (jaDirect[title]) return jaDirect[title];
+    if (title.startsWith('Your ')) return phaseLabelFromBannerTitle(title.slice(5));
+    if (/^Turn \d+$/.test(title)) return `ターン ${title.match(/\d+/)[0]} 開始`;
+    return null;
+  }
   if (/Main Phase/i.test(title)) return 'Main Phase';
   const direct = {
     'Coin Flip': 'Coin Flip',
@@ -17362,14 +17432,16 @@ function phaseLabelFromBannerTitle(title) {
 function appendPhaseLogDivider(title) {
   const label = phaseLabelFromBannerTitle(title);
   if (!label) return;
-  const msg = label.startsWith('Turn ') ? `=== ${label} ===` : `=== ${label} ===`;
+  const msg = `=== ${label} ===`;
   const logEl = el('game-log');
   if (logEl?.lastElementChild?.dataset?.logMsg === msg) return;
   appendSingleLogEntry({ msg, kind: 'phase' }, { clientOnly: true });
 }
 
 function logLineMessage(entry) {
-  return localizeSubunitText(entry?.msg || '');
+  const raw = entry?.msg || '';
+  if (getLocale() === 'ja') return localizeLogMessage(raw, G.allCards);
+  return localizeSubunitText(raw);
 }
 
 function createLogLineElement(entry, { animate = false, animDelay = 0, clientOnly = false } = {}) {
@@ -17513,8 +17585,12 @@ function opponentSkillWaitLogKey(s, pr) {
 
 function opponentSkillWaitLogMessage(s, myId, pr) {
   const oppId = myId === 'p1' ? 'p2' : 'p1';
-  const oppName = s.players?.[oppId]?.name || 'Opponent';
-  const src = (pr?.source_name || '').trim();
+  const oppName = s.players?.[oppId]?.name || (getLocale() === 'ja' ? '相手' : 'Opponent');
+  const srcRaw = (pr?.source_name || '').trim();
+  const src = srcRaw ? (getLocale() === 'ja' ? localizeLogMessage(srcRaw, G.allCards) : srcRaw) : '';
+  if (getLocale() === 'ja') {
+    return src ? `${oppName}がスキルを発動中（${src}）…` : `${oppName}がスキルを発動中…`;
+  }
   return src ? `${oppName} is activating a skill (${src})…` : `${oppName} is activating a skill…`;
 }
 
@@ -17543,7 +17619,7 @@ function absorbOpponentSkillWaitClientLog(logEl, entry) {
   if (!m.includes(' — [')) return false;
   for (let i = logEl.children.length - 1; i >= Math.max(0, logEl.children.length - 4); i--) {
     const node = logEl.children[i];
-    if (node?.dataset?.clientLog === '1' && /activating a skill/.test(node.dataset?.logMsg || '')) {
+    if (node?.dataset?.clientLog === '1' && /activating a skill|スキルを発動中/.test(node.dataset?.logMsg || '')) {
       node.remove();
       clearOpponentSkillWaitLogKey();
       return true;
@@ -23581,7 +23657,8 @@ async function playCardMoveAnimations(prevState, nextState, prevRects, myId, han
 }
 
 function formatLogMessage(msg) {
-  msg = localizeSubunitText(msg);
+  if (getLocale() === 'ja') msg = localizeLogMessage(msg, G.allCards);
+  else msg = localizeSubunitText(msg);
   const m = msg.match(/^(.+?) — \[(.+?)\](.*)$/);
   if (!m) return null;
   return { prefix: m[1] + ' — ', card: m[2], rest: m[3] };
@@ -30458,8 +30535,8 @@ function fillCardDetailPanel(prefix, card, s, myId) {
     }
   }
 
-  nameEl.textContent = card.name_en || card.name || '?';
-  if (subEl) subEl.textContent = [card.card_type, card.rarity, card.card_no].filter(Boolean).join(' · ');
+  nameEl.textContent = cardLocaleName(card) || '?';
+  if (subEl) subEl.textContent = [cardLocaleType(card), card.rarity, card.card_no].filter(Boolean).join(' · ');
 
   sg.innerHTML = '';
   const addS = (lbl, v, iconName) => {
@@ -30471,31 +30548,31 @@ function fillCardDetailPanel(prefix, card, s, myId) {
     sg.innerHTML += `<div class="sbox"><div class="sk">${lbl}</div></div>`;
     sg.lastElementChild.prepend(sv);
   };
-  if (card.cost !== undefined) addS('Cost', effectiveCost(card, me?.hand || []), 'icon_energy.png');
-  if (card.blade != null) addS('Blade', card.blade, 'icon_blade.png');
-  if (card.score !== undefined) addS('Score', card.score, 'sp_score.png');
+  if (card.cost !== undefined) addS(t('card.cost'), effectiveCost(card, me?.hand || []), 'icon_energy.png');
+  if (card.blade != null) addS(t('card.blade'), card.blade, 'icon_blade.png');
+  if (card.score !== undefined) addS(t('card.score'), card.score, 'sp_score.png');
   if (isLiveCard(card)) {
     const req = card.required_hearts?.length ? card.required_hearts : card.hearts;
     if (req?.length) {
-      sg.innerHTML += `<div class="sbox"><div class="sv heart-stat"></div><div class="sk">Required hearts</div></div>`;
+      sg.innerHTML += `<div class="sbox"><div class="sv heart-stat"></div><div class="sk">${t('card.requiredHearts')}</div></div>`;
       appendHeartStatCounts(sg.querySelector('.heart-stat'), req);
     }
   } else {
     if (card.hearts?.length) {
-      sg.innerHTML += `<div class="sbox"><div class="sv heart-stat"></div><div class="sk">Hearts</div></div>`;
+      sg.innerHTML += `<div class="sbox"><div class="sv heart-stat"></div><div class="sk">${t('card.hearts')}</div></div>`;
       appendHeartStatCounts(sg.querySelector('.heart-stat'), card.hearts);
     }
   }
   if (cardYellDrawIconCount(card) > 0 || cardYellScoreIconCount(card) > 0) {
-    sg.innerHTML += `<div class="sbox"><div class="sv yell-icon-stat"></div><div class="sk">Yell icons</div></div>`;
+    sg.innerHTML += `<div class="sbox"><div class="sv yell-icon-stat"></div><div class="sk">${t('card.yellIcons')}</div></div>`;
     const yi = sg.querySelector('.yell-icon-stat');
     yi.style.display = 'flex';
     yi.style.gap = '4px';
     yi.style.alignItems = 'center';
     appendYellSpecialIcons(yi, card, { lg: false });
   }
-  const skillText = (card.text || '').trim()
-    || ((card.abilities?.length && !card.text)
+  const skillText = cardLocaleText(card).trim()
+    || ((card.abilities?.length && !cardLocaleText(card).trim())
       ? card.abilities.map(ab => abilityLabel(ab)).filter(Boolean).join('\n')
       : '');
   if (tx) {
@@ -34247,7 +34324,7 @@ function updatePhaseActionButton(s, myId) {
   const isMe = s?.active_player === myId;
   const pr = skillPromptUiState(s)?.pending_prompt;
   let show = false;
-  let label = 'End Main Phase';
+  let label = t('game.endMainPhase');
   let waiting = false;
 
   btn.classList.remove('waiting');
@@ -34256,20 +34333,20 @@ function updatePhaseActionButton(s, myId) {
     show = true;
     if (pr) {
       waiting = true;
-      label = pr.responder === myId ? 'Resolve skill first' : 'Waiting for skill…';
+      label = pr.responder === myId ? t('game.resolveSkillFirst') : t('game.waitingSkill');
     } else {
-      label = 'End Main Phase';
+      label = t('game.endMainPhase');
     }
   } else if (ph === 'live_set') {
     if (isLiveSetSelecting(s, myId)) {
       show = true;
       const n = G.liveSel.length;
-      label = n > 0 ? 'Set Live Cards' : 'End LIVE Phase';
+      label = n > 0 ? t('game.setLiveCards') : t('game.endLivePhase');
     } else if (s.live_ready?.[myId]) {
       const oppId = myId === 'p1' ? 'p2' : 'p1';
       if (!s.live_ready?.[oppId]) {
         show = true;
-        label = 'Waiting for Opponent';
+        label = t('game.waitingOpponent');
         waiting = true;
       }
     }
@@ -34356,14 +34433,18 @@ function viewZone(who, zoneKey, title){
   const s=G.gameState; if(!s) return;
   const myId=G.playerId, pid=who==='my'?myId:(myId==='p1'?'p2':'p1');
   if (who === 'opp' && (zoneKey === 'main_deck' || zoneKey === 'energy_deck')) {
-    toast('Opponent\'s deck is hidden.', 2200);
+    toast(t('game.deckHidden'), 2200);
     return;
   }
   if (who === 'my' && zoneKey === 'main_deck' && isActiveGameplay(s)) {
     return;
   }
+  const zoneTitle = title
+    || (zoneKey === 'main_deck' ? t('game.mainDeck')
+      : zoneKey === 'waiting_room' ? (who === 'opp' ? t('game.oppWaitingRoom') : t('game.waitingRoom'))
+      : zoneKey);
   const zone=s.players?.[pid]?.[zoneKey]||[];
-  el('zone-ttl').textContent=`${title} (${zone.length})`;
+  el('zone-ttl').textContent=`${zoneTitle} (${zone.length})`;
   const g=el('zone-grid'); g.innerHTML='';
   if(!zone.length){ g.innerHTML='<p style="color:rgba(255,255,255,.3);padding:12px;font-size:12px">Empty</p>'; openM('overlay-zone'); return; }
   const showOrder = zoneKey === 'waiting_room' ? [...zone].reverse() : zone;
@@ -35497,11 +35578,11 @@ function renderTutorialStep(idx, opts = {}) {
   const step = steps[idx];
   if (!step) return;
   G.tutorialStep = idx;
-  el('tut-text').innerHTML = formatTutorialDialogue(step.dialogue || '');
+  el('tut-text').innerHTML = formatTutorialDialogue(tutorialDialogue(step));
   el('tut-step').textContent = `${idx + 1} / ${steps.length}`;
   el('btn-tut-back').disabled = idx <= 0 || !!G.tutorialAnimating;
   el('btn-tut-next').disabled = !!G.tutorialAnimating;
-  el('btn-tut-next').textContent = idx >= steps.length - 1 ? 'Finish' : 'Next →';
+  el('btn-tut-next').textContent = idx >= steps.length - 1 ? t('tut.finish') : t('tut.next');
   if (opts.textOnly) return;
   const hl = tutorialSpotlightHighlights(step);
   renderTutorialSpotlight(hl);
@@ -35740,6 +35821,7 @@ async function tutorialNav(dir) {
 async function startTutorial() {
   try {
     resetMatchTransientState();
+    await loadTutorialJa();
     const r = await fetch('./tutorial.json?v=3', { cache: 'no-store' });
     if (!r.ok) throw new Error('Could not load tutorial (HTTP ' + r.status + ')');
     const data = await r.json();
@@ -36129,6 +36211,7 @@ function showScr(n){
   if (n !== 'lobby') stopCasualLobbyStatsPoll();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   el(`screen-${n}`)?.classList.add('active');
+  applyI18n(el(`screen-${n}`));
   if (n === 'lobby') {
     if (prevActive !== 'screen-lobby') void refreshCasualQueueStatsQuiet();
     startCasualLobbyStatsPoll();
@@ -36313,7 +36396,7 @@ function mkHdot(color, lg=false){ return mkHeartIcon(color, lg); }
 function mkNoImg(card){
   const d=document.createElement('div'); d.className='noimg';
   const n=document.createElement('div'); n.className='niname';
-  n.textContent=card.name_en||card.name||'?'; d.appendChild(n);
+  n.textContent=cardLocaleName(card)||'?'; d.appendChild(n);
   if(card.score){
     const sc=document.createElement('div'); sc.className='niscore';
     sc.appendChild(mkGameIcon('sp_score.png','ticon','Score'));
