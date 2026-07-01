@@ -16780,11 +16780,16 @@ function buildFaceDownLivePlayback(state, myId = G.playerId) {
 
 /** Prefer prev live_set when the server batched reveal + WR discard into one update. */
 function buildLiveRevealPlayback(prev, final, myId = G.playerId) {
-  if (prev && (liveRoundHasLiveCards(prev) || liveStorageHadFaceDownOppBluff(prev, myId) || liveStorageHasCards(prev))) {
-    return augmentPerfSpectaclePrev(buildFaceDownLivePlayback(prev, myId), final);
+  let board = prev;
+  const baseline = G._liveSetStorageBaseline;
+  if (baseline && liveStorageHasCards(baseline)) {
+    board = augmentPerfSpectaclePrev(board || baseline, baseline);
+  }
+  if (board && (liveRoundHasLiveCards(board) || liveStorageHadFaceDownOppBluff(board, myId) || liveStorageHasCards(board))) {
+    return augmentPerfSpectaclePrev(buildFaceDownLivePlayback(board, myId), final);
   }
   if (liveRoundHasLiveCards(final) || liveStorageHadFaceDownOppBluff(final, myId) || liveStorageHasCards(final)) {
-    return buildFaceDownLivePlayback(final, myId);
+    return augmentPerfSpectaclePrev(buildFaceDownLivePlayback(final, myId), final);
   }
   return null;
 }
@@ -24004,18 +24009,27 @@ function augmentPerfSpectaclePrev(prev, next) {
       if (existing) {
         const redacted = existing.card_no === '?' && !isLiveTypeCard(existing);
         if (c.revealed || (redacted && c.card_no && c.card_no !== '?')) {
-          byId.set(c.instance_id, {
+          const merged = {
             ...existing,
             ...c,
-            revealed: pid === myId || c.revealed || existing.revealed,
-          });
+            revealed: pid === myId ? (existing.revealed || c.revealed) : existing.revealed,
+          };
+          // Batched poll: keep opponent face-down until reveal animation runs.
+          if (pid !== myId && !existing.revealed && c.revealed) {
+            merged.revealed = false;
+          }
+          byId.set(c.instance_id, merged);
         }
         return;
       }
-      if (pid !== myId && !c.revealed) {
-        byId.set(c.instance_id, { instance_id: c.instance_id, revealed: false, card_no: '?' });
+      if (pid !== myId) {
+        byId.set(c.instance_id, {
+          ...c,
+          revealed: false,
+          card_no: c.card_no && c.card_no !== '?' ? c.card_no : '?',
+        });
       } else {
-        byId.set(c.instance_id, { ...c });
+        byId.set(c.instance_id, { ...c, revealed: false });
       }
     });
     base.players[pid] = base.players[pid] || { ...next.players[pid] };
@@ -24823,7 +24837,7 @@ function shouldForceLiveSpectacle(prev, next) {
   return false;
 }
 
-/** No Live-type cards in storage — member bluffs only and/or empty storage. */
+/** Snapshot face-down placements for reveal/WR playback when polls batch updates. */
 function stashLiveSetStorageBaseline(s, myId, selectedIds) {
   if (!s?.phase || !isLiveSetPhase(s.phase) || !selectedIds?.length) return;
   const baseline = deepCloneState(s);
@@ -24835,7 +24849,7 @@ function stashLiveSetStorageBaseline(s, myId, selectedIds) {
     if (live.some(c => c.instance_id === iid)) continue;
     const idx = hand.findIndex(c => c.instance_id === iid);
     if (idx >= 0) {
-      live.push({ ...hand[idx], revealed: false });
+      live.push({ ...hand[idx], revealed: false, live_slot: live.length });
     }
   }
   if (!live.length) return;
@@ -24844,11 +24858,36 @@ function stashLiveSetStorageBaseline(s, myId, selectedIds) {
   G._liveSetStorageBaseline = baseline;
 }
 
+/** Optimistic face-down placement for LIVE confirm — updates gameState + baseline for playback. */
+function applyOptimisticLiveSetPlacements(s, myId, selectedIds) {
+  if (!s?.players?.[myId] || !selectedIds?.length) return;
+  const p = s.players[myId];
+  const live = [...(p.live_zone || [])];
+  let hand = [...(p.hand || [])];
+  for (const iid of selectedIds) {
+    if (live.some(c => c.instance_id === iid)) continue;
+    const idx = hand.findIndex(c => c.instance_id === iid);
+    if (idx < 0) continue;
+    const card = { ...hand[idx], revealed: false, live_slot: live.length };
+    live.push(card);
+    hand.splice(idx, 1);
+  }
+  if (live.length !== (p.live_zone || []).length) {
+    p.live_zone = live;
+    p.hand = hand;
+  }
+}
+
 function shouldRevealLiveStorageForRound(prev, next, emptyRound = null) {
   if (!prev || !next) return false;
   const empty = emptyRound ?? isEmptyLiveSkipTransition(prev, next);
   if (empty) {
-    if (isSoloPlayerEmptyLiveRound(prev, next)) return false;
+    // solo-human: own member bluffs were face-up during live_set — skip flip.
+    // solo-cpu: opponent bluffs must flip before empty splash / WR.
+    if (isSoloPlayerEmptyLiveRound(prev, next)) {
+      const scenario = emptyLiveRoundScenario(prev, next);
+      if (scenario === 'solo-human') return false;
+    }
     const board = buildEmptyLiveWrPlayback(prev, next) || prev;
     return !!(board && liveStorageHasCards(board));
   }
@@ -26020,10 +26059,10 @@ async function presentLiveRound(prev, next, myId, opts = {}) {
     needsLiveReveal = shouldRevealLiveStorageForRound(prev, next, true);
     wantsSpectacle = false;
     const scenario = emptyLiveRoundScenario(prev, next);
-    if (scenario === 'solo-human' || scenario === 'solo-cpu') {
+    if (scenario === 'solo-human') {
       TCG_DEBUG.log('live', 'solo empty round: skip reveal, WR flight only', { scenario, ...TCG_DEBUG.trans(prev, next) });
-    } else if (scenario === 'both-members') {
-      TCG_DEBUG.log('live', 'both-player empty round: reveal then WR flight', TCG_DEBUG.trans(prev, next));
+    } else if (scenario === 'solo-cpu' || scenario === 'both-members') {
+      TCG_DEBUG.log('live', 'empty round: reveal opponent/member bluffs before WR', { scenario, ...TCG_DEBUG.trans(prev, next) });
     }
   }
   const allowFinishedSpectacle = next?.status === 'finished' && wantsSpectacle;
@@ -34199,13 +34238,14 @@ async function confirmLiveSetFromHand() {
   syncHandSelectionClasses(s, myId);
   G._liveSetLockPid = myId;
   const cur = G.gameState;
-  stashLiveSetStorageBaseline(cur, myId, ids);
+  applyOptimisticLiveSetPlacements(cur, myId, ids);
   if (cur?.phase === 'live_set') {
     cur.live_ready = { ...(cur.live_ready || {}), [myId]: true };
     updateLiveSetButton(cur, myId);
     updateLiveScoreHud(cur, myId);
     const oppId = myId === 'p1' ? 'p2' : 'p1';
     renderPhaseBar(cur, cur.players[myId], cur.players[oppId], myId, oppId);
+    renderGame(cur, { skipLog: true });
   }
   if (ids.length) {
     await sendAct('set_live_cards', { card_ids: ids });
