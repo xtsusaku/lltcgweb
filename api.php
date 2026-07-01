@@ -365,6 +365,7 @@ function getStatePolling(): void {
             saveGame($roomId, $state);
         }
         if (applyCoinFlipStalemate($state)) {
+            refreshPvpPhaseTimers($state);
             saveGame($roomId, $state);
         }
         if (applyDisconnectForfeits($state, $roomId)) {
@@ -393,6 +394,7 @@ function getStatePolling(): void {
             saveGame($roomId, $state);
         }
         if (applyCoinFlipStalemate($state)) {
+            refreshPvpPhaseTimers($state);
             saveGame($roomId, $state);
         }
         if (applyDisconnectForfeits($state, $roomId)) {
@@ -417,6 +419,7 @@ function getStatePolling(): void {
         saveGame($roomId, $state);
     }
     if ($state && applyCoinFlipStalemate($state)) {
+        refreshPvpPhaseTimers($state);
         saveGame($roomId, $state);
     }
     if ($state && applyDisconnectForfeits($state, $roomId)) {
@@ -453,6 +456,7 @@ function handleAction(array $body): array {
             saveGame($roomId, $state);
         }
         if (applyCoinFlipStalemate($state)) {
+            refreshPvpPhaseTimers($state);
             saveGame($roomId, $state);
         }
         $state = loadGame($roomId);
@@ -2567,7 +2571,31 @@ function refreshPvpPhaseTimers(array &$state): void {
         }
         return;
     }
-    if ($hasTimerPrompt) {
+    if ($ph === 'coin_flip') {
+        unset($state['phase_timer']['prompt_key'], $state['phase_timer']['main_key'], $state['phase_timer']['live_keys']);
+        $flip = $state['coin_flip'] ?? null;
+        if (!$flip || !coinFlipBothReady($state)) {
+            clearAllPhaseDeadlines($state);
+            unset($state['phase_timer']['coin_key']);
+            return;
+        }
+        $winner = $flip['winner'] ?? '';
+        foreach (['p1', 'p2'] as $pid) {
+            if ($pid !== $winner) {
+                clearPhaseDeadline($state, $pid);
+            }
+        }
+        $choiceKey = 'coin_flip|' . $winner;
+        $prevKey = $state['phase_timer']['coin_key'] ?? '';
+        if ($choiceKey !== $prevKey || empty($state['phase_timer']['deadlines'][$winner])) {
+            $state['phase_timer']['coin_key'] = $choiceKey;
+            if (in_array($winner, ['p1', 'p2'], true) && playerUsesPhaseTimer($state, $winner)) {
+                setPhaseDeadline($state, $winner);
+            }
+        }
+        return;
+    }
+    if ($hasOpenPrompt) {
         refreshPromptPhaseTimer($state, $promptResponder);
         return;
     }
@@ -2622,6 +2650,9 @@ function applyCoinFlipStalemate(array &$state): bool {
         if (empty($flip['both_ready_since'])) {
             $flip['both_ready_since'] = $now;
             return true;
+        }
+        if (phaseTimerEnabled($state)) {
+            return $changed;
         }
         $choiceElapsed = $now - intval($flip['both_ready_since']);
         if ($choiceElapsed >= 35) {
@@ -2704,6 +2735,29 @@ function applyPhaseTimeouts(array &$state): bool {
                 $state = actionEndLiveSet($state, $pid);
                 $changed = $did = true;
             }
+        } elseif ($ph === 'coin_flip') {
+            $flip = $state['coin_flip'] ?? null;
+            if (!$flip || !coinFlipBothReady($state)) {
+                break;
+            }
+            $winner = $flip['winner'] ?? '';
+            if (!in_array($winner, ['p1', 'p2'], true) || !playerUsesPhaseTimer($state, $winner)) {
+                break;
+            }
+            $dl = $state['phase_timer']['deadlines'][$winner] ?? null;
+            if (!$dl || $now < $dl) {
+                break;
+            }
+            $winnerName = $state['players'][$winner]['name'] ?? $winner;
+            $state['first_player'] = $winner;
+            $state['active_player'] = $winner;
+            $state['phase'] = 'setup';
+            unset($state['coin_flip']);
+            $state = addLog($state, '🪙 Coin flip: ' . $winnerName . ' won — first player chosen automatically (time expired).');
+            $state = addLog($state, 'Preparation — Mulligan: you may replace any number of opening hand cards once.');
+            $state['seq']++;
+            refreshPvpPhaseTimers($state);
+            $changed = $did = true;
         }
 
         if (!$did) {

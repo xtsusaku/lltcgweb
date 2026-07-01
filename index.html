@@ -34529,6 +34529,7 @@ function syncCoinFlipChoiceUi(s, myId) {
       : t('coin.waitingOpp');
     el('coin-result').textContent = t('coin.wonFlip', { name: winName });
     openM('overlay-coin');
+    updatePhaseTimerUI(s);
     return;
   }
 
@@ -34536,6 +34537,7 @@ function syncCoinFlipChoiceUi(s, myId) {
     el('coin-msg').textContent = t('coin.wonFlipShort', { name: winName });
     el('coin-result').textContent = t('coin.winnerChoosing');
     openM('overlay-coin');
+    updatePhaseTimerUI(s);
     return;
   }
 
@@ -34546,6 +34548,7 @@ function syncCoinFlipChoiceUi(s, myId) {
     el('btn-coin-first-opp').textContent = t('coin.oppGoesFirst', { name: oppName });
   }
   openM('overlay-coin');
+  updatePhaseTimerUI(s);
 }
 
 function ensureCoinFlipAcked(s, myId) {
@@ -34826,7 +34829,11 @@ function phaseTimerSignature(s, myId) {
     ? `${pr.type}|${pr.responder}|${pr.step ?? ''}|${pr.source_id ?? ''}|${pr.prompt ?? ''}`
     : '';
   const dl = s.phase_timer?.deadlines || {};
-  return `${s.phase}|${s.active_player}|${prSig}|${JSON.stringify(s.live_ready || {})}|${dl.p1 ?? ''}|${dl.p2 ?? ''}`;
+  const flip = s.coin_flip;
+  const coinSig = (s.phase === 'coin_flip' && flip)
+    ? `|coin:${flip.winner}:${!!flip.ready?.p1}:${!!flip.ready?.p2}`
+    : '';
+  return `${s.phase}|${s.active_player}|${prSig}|${JSON.stringify(s.live_ready || {})}|${dl.p1 ?? ''}|${dl.p2 ?? ''}${coinSig}`;
 }
 
 function phaseTimerShouldShow(s, myId) {
@@ -34837,6 +34844,11 @@ function phaseTimerShouldShow(s, myId) {
   const pr = s.pending_prompt;
   if (pr && pr.responder === myId && promptUsesPhaseTimerClient(pr)) return true;
   const ph = s.phase;
+  if (ph === 'coin_flip') {
+    const flip = s.coin_flip;
+    if (!flip || !coinFlipBothReady(s)) return false;
+    return flip.winner === myId;
+  }
   if (ph === 'main_first' || ph === 'main_second') return s.active_player === myId;
   if (ph === 'live_set') return !s.live_ready?.[myId];
   return false;
