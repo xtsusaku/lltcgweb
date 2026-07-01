@@ -923,9 +923,6 @@ html:not(.tcg-mobile-viewport) #screen-game .live-score-hud{
 }
 .spectate-bar[hidden]{display:none!important}
 .spectate-bar-label{font-size:11px;font-weight:700;color:rgba(186,228,255,.88);white-space:nowrap}
-body.tcg-spectator-mode #screen-game .hcard,
-body.tcg-spectator-mode #screen-game .mslot,
-body.tcg-spectator-mode #screen-game .lcard,
 body.tcg-spectator-mode #screen-game .mat-zone.deck-pile,
 body.tcg-spectator-mode #screen-game .mat-baton-toggle,
 body.tcg-spectator-mode #screen-game #btn-resign,
@@ -933,7 +930,11 @@ body.tcg-spectator-mode #screen-game .phase-action-bar{display:none!important}
 body.tcg-spectator-mode #screen-game #btn-phase-primary,
 body.tcg-spectator-mode #screen-game .phase-action-bar,
 body.tcg-spectator-mode #screen-game .tcg-radio-bar,
-body.tcg-spectator-mode #screen-game .tcg-debug-row{pointer-events:none!important}
+body.tcg-spectator-mode #screen-game .tcg-debug-row,
+body.tcg-spectator-mode #screen-game .mslot,
+body.tcg-spectator-mode #screen-game .lcard,
+body.tcg-spectator-mode #screen-game .hand-strip .hcard,
+body.tcg-spectator-mode #screen-game .hand-strip .opp-hand-card{pointer-events:none!important}
 body.tcg-spectator-mode #spectate-bar,
 body.tcg-spectator-mode #spectate-bar button{pointer-events:auto}
 .phase-timer-wrap{flex:0 0 auto;line-height:0}
@@ -6222,7 +6223,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       </div>
 
       <div class="hand-strip my-hand-strip">
-        <span class="hand-strip-label" data-i18n="game.yourHand">Your hand</span>
+        <span class="hand-strip-label" id="my-hand-label" data-i18n="game.yourHand">Your hand</span>
         <div class="hand-fan" id="hand-row"></div>
       </div>
     </div>
@@ -24360,7 +24361,13 @@ function renderGame(s, opts = {}) {
   const tutNames = G.isTutorial && G.tutorialLabels;
   el('my-name').textContent  = tutNames ? G.tutorialLabels.p1 : (me.name||'You');
   el('opp-name').textContent = tutNames ? G.tutorialLabels.p2 : (opp.name||'Opponent');
-  if (el('opp-hand-label')) el('opp-hand-label').textContent = (tutNames ? G.tutorialLabels.p2 : (opp.name||'Opponent')) + ' · hand';
+  const handSuffix = ' · hand';
+  if (el('opp-hand-label')) el('opp-hand-label').textContent = (tutNames ? G.tutorialLabels.p2 : (opp.name||'Opponent')) + handSuffix;
+  if (el('my-hand-label')) {
+    el('my-hand-label').textContent = G.isSpectator
+      ? (me.name || 'Player') + handSuffix
+      : t('game.yourHand');
+  }
   if (el('opp-mat-label')) el('opp-mat-label').textContent = tutNames ? G.tutorialLabels.p2 : (opp.name||'Opponent');
 
   // Counters
@@ -24460,7 +24467,7 @@ function renderGame(s, opts = {}) {
     const zone = el('opp-hand-zone');
     if (zone) zone.innerHTML = '';
   } else if (!opts.skipOppHand) {
-    if (G.isTutorial && opp.hand?.length) renderOpponentHandVisible(opp.hand, s, oppId);
+    if ((G.isSpectator || G.isTutorial) && opp.hand?.length) renderOpponentHandVisible(opp.hand, s, oppId);
     else if (opponentHandUsesTrackedSlots(s, myId) && opp.hand?.length) {
       renderOpponentHandTracked(opp.hand, s, oppId);
     } else renderOpponentHand(opponentHandDisplayCount(s, oppId));
@@ -31880,6 +31887,7 @@ function liveGameState(fallback) {
 
 function bindHandCardEvents(d, card, s, myId) {
   if (G.isTutorial) return;
+  if (G.isSpectator) return;
   d.addEventListener('pointerenter', () => {
     if (!G.drag && !(tcgMobileViewportActive() && G.selCard)) showHoverCardPreview(card, liveGameState(s), myId);
   });

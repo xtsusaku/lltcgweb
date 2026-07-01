@@ -345,7 +345,7 @@ function filterStateForSpectator(array $state, string $roomId, string $spectator
         }
         $p = $filtered['players'][$pid];
         $filtered['players'][$pid]['hand_count'] = count($p['hand'] ?? []);
-        $filtered['players'][$pid]['hand'] = [];
+        // Spectators see both players' hands (broadcast view); decks stay hidden below.
         $filtered['players'][$pid]['main_deck_count'] = count($p['main_deck'] ?? []);
         $filtered['players'][$pid]['main_deck'] = [];
         $filtered['players'][$pid]['energy_deck_count'] = count($p['energy_deck'] ?? []);
