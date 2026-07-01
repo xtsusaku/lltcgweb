@@ -11,6 +11,16 @@
   var lastPlay = Object.create(null);
   var DEFAULT_GAP_MS = 45;
   var CARD_GAP_MS = 22;
+  var CARD_MOVE_GAP_MS = 100;
+  var CARD_MOVE_DEBOUNCE_KEY = '__card_move__';
+  var CARD_MOVE_IDS = {
+    card_draw: true,
+    card_slide: true,
+    card_place: true,
+    card_fly: true,
+    card_to_wr: true,
+    card_play: true,
+  };
 
   function enabled() {
     try { return localStorage.getItem(SFX_KEY) !== '0'; } catch (e) { return true; }
@@ -42,7 +52,7 @@
 
   function loadManifest() {
     if (manifest) return Promise.resolve(manifest);
-    return fetch('./sfx_manifest.web.json?v=6', { cache: 'no-store' })
+    return fetch('./sfx_manifest.web.json?v=7', { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('sfx manifest HTTP ' + r.status);
         return r.json();
@@ -91,8 +101,15 @@
     if (pick && pick.file) warmFile(pick.file);
   }
 
+  function debounceKeyFor(id, pick) {
+    if (CARD_MOVE_IDS[id]) return CARD_MOVE_DEBOUNCE_KEY;
+    return pick.file;
+  }
+
   function gapFor(id) {
-    return id && String(id).indexOf('card_') === 0 ? CARD_GAP_MS : DEFAULT_GAP_MS;
+    if (CARD_MOVE_IDS[id]) return CARD_MOVE_GAP_MS;
+    if (id && String(id).indexOf('card_') === 0) return CARD_GAP_MS;
+    return DEFAULT_GAP_MS;
   }
 
   function play(id, opts) {
@@ -100,7 +117,7 @@
     var pick = pickVariant(id);
     if (!pick || !pick.file) return;
     var now = Date.now();
-    var gapKey = pick.file;
+    var gapKey = debounceKeyFor(id, pick);
     var minGap = gapFor(id);
     if (lastPlay[gapKey] && now - lastPlay[gapKey] < minGap) return;
     lastPlay[gapKey] = now;
@@ -123,7 +140,7 @@
     return loadManifest().then(function (m) {
       [
         'menu_tap', 'menu_confirm', 'card_draw', 'card_slide', 'card_flip',
-        'card_place', 'match_found', 'card_play',
+        'card_place', 'match_found', 'card_play', 'card_fly', 'card_to_wr',
       ].forEach(warm);
       return m;
     });

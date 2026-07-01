@@ -6396,7 +6396,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     <h2 data-i18n="live.overlayTitle">LIVE Phase — Set Cards</h2>
     <p data-i18n="live.overlayHint">LIVE Phase: place 0–3 cards (Live or Member) in Live storage — yours stay face-up; opponent cards stay hidden until Performance. Draw 1 for each card placed, then end LIVE Phase. Performance reveals opponent storage at once.</p>
     <div class="lselrow" id="lsel-row"></div>
-    <div class="lselcount">Selected: <span id="lsel-n">0</span>/3 &nbsp;·&nbsp; In storage: <span id="lsel-stored">0</span>/3</div>
+    <div class="lselcount"><span data-i18n="live.selected">Selected</span>: <span id="lsel-n">0</span>/3 &nbsp;·&nbsp; <span data-i18n="live.inStorage">In storage</span>: <span id="lsel-stored">0</span>/3</div>
     <button class="btn-grad" id="btn-live-ok" style="width:auto;padding:11px 30px" data-i18n="live.placeInStorage">Place in Storage</button>
   </div>
 </div>
@@ -6404,15 +6404,15 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 <!-- Prompt (choices / yes-no) -->
 <div class="overlay skill-hand-preserve" id="overlay-prompt">
   <div class="mbox prompt-branch-box">
-    <h2 id="prompt-ttl">Respond</h2>
+    <h2 id="prompt-ttl" data-i18n="prompt.respond">Respond</h2>
     <div id="prompt-effect" class="prompt-effect-text" hidden></div>
     <p id="prompt-msg" class="prompt-branch-msg"></p>
     <p id="prompt-sub" class="prompt-branch-sub" hidden></p>
     <div id="prompt-text-wrap" class="prompt-text-wrap" hidden>
       <input type="text" id="prompt-text-input" class="prompt-text-input" autocomplete="off" maxlength="120"
-        placeholder="Type your answer…">
+        data-i18n-placeholder="prompt.typeAnswer" placeholder="Type your answer…">
       <ul id="prompt-outcome-hints" class="prompt-outcome-hints"></ul>
-      <button type="button" class="btn-grad prompt-text-submit" id="prompt-text-submit">Answer</button>
+      <button type="button" class="btn-grad prompt-text-submit" id="prompt-text-submit" data-i18n="prompt.answer">Answer</button>
     </div>
     <div id="prompt-btns" class="prompt-choice-list"></div>
   </div>
@@ -6424,10 +6424,10 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     <h2 id="pick-ttl">Choose cards</h2>
     <p id="pick-msg" style="font-size:13px;color:rgba(255,255,255,.65);margin-bottom:8px"></p>
     <div class="pickgrid" id="pick-grid"></div>
-    <p id="pick-count" style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:12px">Selected: 0/0</p>
+    <p id="pick-count" style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:12px" data-i18n="prompt.selectedCount">Selected: 0/0</p>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button class="btn-grad" id="btn-pick-ok" style="width:auto;padding:10px 24px">Confirm</button>
-      <button class="btn-ghost" id="btn-pick-cancel" style="width:auto;padding:10px 20px">Cancel</button>
+      <button class="btn-grad" id="btn-pick-ok" style="width:auto;padding:10px 24px" data-i18n="prompt.confirm">Confirm</button>
+      <button class="btn-ghost" id="btn-pick-cancel" style="width:auto;padding:10px 20px" data-i18n="prompt.cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -6440,8 +6440,8 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     <div class="hand-pick-fan" id="hpick-fan"></div>
     <p class="hand-pick-count" id="hpick-count"></p>
     <div class="hand-pick-actions" id="hpick-actions">
-      <button class="btn-grad" id="btn-hpick-ok" style="width:auto;padding:11px 28px">Confirm</button>
-      <button class="btn-ghost" id="btn-hpick-cancel" style="width:auto;padding:10px 22px">Cancel</button>
+      <button class="btn-grad" id="btn-hpick-ok" style="width:auto;padding:11px 28px" data-i18n="prompt.confirm">Confirm</button>
+      <button class="btn-ghost" id="btn-hpick-cancel" style="width:auto;padding:10px 22px" data-i18n="prompt.cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -6452,7 +6452,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     <h2 id="heart-ttl">Choose a heart</h2>
     <p id="heart-msg" style="font-size:13px;color:rgba(255,255,255,.65);margin-bottom:14px"></p>
     <div class="heartpick" id="heart-btns"></div>
-    <button class="btn-ghost" id="btn-heart-cancel" style="margin-top:14px;width:auto;padding:8px 18px">Cancel</button>
+    <button class="btn-ghost" id="btn-heart-cancel" style="margin-top:14px;width:auto;padding:8px 18px" data-i18n="prompt.cancel">Cancel</button>
   </div>
 </div>
 
@@ -6473,7 +6473,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       </div>
     </div>
     <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap">
-      <button class="btn-grad" id="btn-surveil-ok" style="width:auto;padding:10px 24px">Confirm arrangement</button>
+      <button class="btn-grad" id="btn-surveil-ok" style="width:auto;padding:10px 24px" data-i18n="prompt.confirmArrangement">Confirm arrangement</button>
     </div>
   </div>
 </div>
@@ -6692,9 +6692,9 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
   </div>
 </div>
 
-<script src="i18n.js?v=2"></script>
+<script src="i18n.js?v=3"></script>
 <script src="log_i18n.js?v=2"></script>
-<script src="sfx.js?v=6"></script>
+<script src="sfx.js?v=7"></script>
 <!-- Early auth guard: separate script so a main-bundle parse error cannot leave auth stuck forever. -->
 <script>
 (function () {
@@ -7214,6 +7214,7 @@ function updateRankedScreenDynamic(me) {
 
 function refreshDynamicI18n() {
   applyI18n();
+  syncGameplayChromeI18n();
   clearLogNameCache();
   if (A.profile) {
     const userName = A.profile?.user?.username || A.user?.username || 'Player';
@@ -7240,6 +7241,67 @@ function refreshDynamicI18n() {
     renderGame(G.gameState);
   }
   if (G.isTutorial && G.tutorialData?.steps) renderTutorialStep(G.tutorialStep, { textOnly: false });
+}
+
+function formatSelectedCount(n, max) {
+  return t('prompt.selectedCount', { n, max });
+}
+
+function slotLabel(slot, withSide = true) {
+  if (!slot) return '';
+  if (withSide) {
+    if (slot === 'left') return t('game.slotLeft');
+    if (slot === 'right') return t('game.slotRight');
+    return t('game.slotCenter');
+  }
+  return t(`slot.${slot}`);
+}
+
+function updateMulliganButtonText(n) {
+  const btn = el('btn-mull');
+  if (!btn) return;
+  btn.textContent = n === 0
+    ? t('mulligan.keepHand')
+    : t(n > 1 ? 'mulligan.replaceCards' : 'mulligan.replaceCard', { n });
+}
+
+function syncPickOverlayButtons() {
+  const pickOk = el('btn-pick-ok');
+  const pickCancel = el('btn-pick-cancel');
+  if (pickOk) pickOk.textContent = t('prompt.confirm');
+  if (pickCancel) pickCancel.textContent = t('prompt.cancel');
+}
+
+function syncHandPickOverlayButtons() {
+  const hpickOk = el('btn-hpick-ok');
+  const hpickCancel = el('btn-hpick-cancel');
+  if (hpickOk) hpickOk.textContent = t('prompt.confirm');
+  if (hpickCancel) hpickCancel.textContent = t('prompt.cancel');
+}
+
+function syncGameplayChromeI18n() {
+  if (el('overlay-mull')?.classList.contains('open')) {
+    updateMulliganButtonText(G.mullMarked?.size || 0);
+  }
+  if (G.gameState && G.playerId) {
+    updatePhaseActionButton(G.gameState, G.playerId);
+  }
+  syncPickOverlayButtons();
+  syncHandPickOverlayButtons();
+  const surveilOk = el('btn-surveil-ok');
+  if (surveilOk) surveilOk.textContent = t('prompt.confirmArrangement');
+  const heartCancel = el('btn-heart-cancel');
+  if (heartCancel) heartCancel.textContent = t('prompt.cancel');
+  const promptSubmit = el('prompt-text-submit');
+  if (promptSubmit) promptSubmit.textContent = t('prompt.answer');
+  const promptInput = el('prompt-text-input');
+  if (promptInput) promptInput.placeholder = t('prompt.typeAnswer');
+  if (G.handPickCtx && el('overlay-hand-pick')?.classList.contains('open') && !G.handPickCtx.singleTap) {
+    el('hpick-count').textContent = formatSelectedCount(G.pickMarked.size, G.handPickCtx.count);
+  }
+  if (G.pickCtx?.count && el('overlay-pick')?.classList.contains('open')) {
+    el('pick-count').textContent = formatSelectedCount(G.pickMarked.size, G.pickCtx.count);
+  }
 }
 
 function initFoilFxSetting() {
@@ -15065,7 +15127,6 @@ function playShiftAnimation(nodes, beforeByEl, skipFn) {
     shifting.push(node);
   });
   if (!shifting.length) return;
-  sfxPlayCard('card_slide');
   void document.documentElement.offsetWidth;
   requestAnimationFrame(() => {
     shifting.forEach(node => {
@@ -15139,7 +15200,6 @@ function playSurveilShiftAnimation(beforeByKey) {
     shifting.push({ node, inWr });
   });
   if (!shifting.length) return;
-  sfxPlayCard('card_slide', { volume: 0.85 });
   void document.documentElement.offsetWidth;
   requestAnimationFrame(() => {
     shifting.forEach(({ node, inWr }) => {
@@ -16812,7 +16872,6 @@ function ensureHandDrawRevealCard(iid, state, myId) {
 
 function beginHandDrawReveal(iid, state, myId) {
   if (!iid || !state) return;
-  sfxPlayCard('card_draw');
   const cardEl = ensureHandDrawRevealCard(iid, state, myId);
   if (cardEl) scheduleHandDrawReveal(cardEl, iid);
   else {
@@ -18192,7 +18251,8 @@ async function executeCardMoveAnimation(m, opts) {
       })();
     };
     if (fr && tr) {
-      sfxPlayCard(sfxCardMoveSound(m));
+      const skipMoveSfx = playerHandReveal && isHiddenSourceToHand(m);
+      if (!skipMoveSfx) sfxPlayCard(sfxCardMoveSound(m));
       await flyCard(m.card, fr, tr, delayMs, {
         fromZone: m.from?.zone,
         toZone: m.to?.zone,
@@ -31582,14 +31642,12 @@ function playToSlot(card, slot, s, myId, existing) {
         return;
       }
       sendAct('play_member',{card_id:card.instance_id,slot,baton_id:exist2.instance_id});
-      sfxPlayCard('card_play');
       return;
     }
     if (mode === 'overplay') {
       const ae=(me.energy_zone||[]).filter(energyChipActive).length;
       if(ae<ec){ toast(`Need ${energyCostHtml(ec)} to overplay`, 2500, true); return; }
       sendAct('play_member',{card_id:card.instance_id,slot});
-      sfxPlayCard('card_play');
       return;
     }
     toast('Cannot play to this slot');
@@ -31598,7 +31656,6 @@ function playToSlot(card, slot, s, myId, existing) {
     const ae=(me.energy_zone||[]).filter(energyChipActive).length;
     if(ae<ec){ toast(`Need ${energyCostHtml(ec)}`, 2500, true); return; }
     sendAct('play_member',{card_id:card.instance_id,slot});
-    sfxPlayCard('card_play');
   }
 }
 
@@ -31977,17 +32034,17 @@ function renderStageBoardPanel(s, myId) {
     b.appendChild(desc);
     if (used) {
       b.disabled = true;
-      b.title = 'Already used this turn';
+      b.title = t('skill.alreadyUsed');
     } else if (needEnergy) {
       b.disabled = true;
       const payCost = ability.cost ?? (ability.type === 'pay_energy_opp_pick_hand_reveal' ? 2 : 0);
-      b.title = `Need ${payCost} active Energy`;
+      b.title = t('skill.needEnergy', { n: payCost });
     } else if (wrBlock) {
       b.disabled = true;
       b.title = wrBlock;
     } else if (G.isTutorial) {
       b.disabled = true;
-      b.title = 'Tutorial demo — use Next to continue';
+      b.title = t('skill.tutorialDemo');
     }
     if (stageSlot) {
       b.addEventListener('mouseenter', () => highlightStageForAbility(stageSlot));
@@ -32284,7 +32341,7 @@ function openLookedDeckPick(pr){
           if(c.classList?.contains('pickcard'))
             c.classList.toggle('sel',G.pickMarked.has(c.dataset.id));
         });
-        el('pick-count').textContent=`${G.pickMarked.size} / ${need}`;
+        el('pick-count').textContent=formatSelectedCount(G.pickMarked.size, need);
       });
       if(!ok) elCard.classList.add('ineligible');
       g.appendChild(elCard);
@@ -32301,7 +32358,8 @@ function openLookedDeckPick(pr){
       };
       g.appendChild(skipBtn);
     }
-    el('pick-count').textContent=`0 / ${need}`;
+    el('pick-count').textContent=formatSelectedCount(0, need);
+    syncPickOverlayButtons();
   }
   openM('overlay-pick');
 }
@@ -32556,10 +32614,11 @@ function openWrMembersDeckTopPick(pr){
         G.pickMarked.add(card.instance_id);
       }
       [...g.children].forEach(c=>c.classList.toggle('sel',G.pickMarked.has(c.dataset.id)));
-      el('pick-count').textContent=`${G.pickMarked.size} / ${need}`;
+      el('pick-count').textContent=formatSelectedCount(G.pickMarked.size, need);
     }));
   });
-  el('pick-count').textContent=`0 / ${need}`;
+  el('pick-count').textContent=formatSelectedCount(0, need);
+  syncPickOverlayButtons();
   openM('overlay-pick');
 }
 
@@ -32608,10 +32667,11 @@ function openMemberWaitPick(pr, myId){
         G.pickMarked.add(card.instance_id);
       }
       [...g.children].forEach(c=>c.classList.toggle('sel',G.pickMarked.has(c.dataset.id)));
-      el('pick-count').textContent=`${G.pickMarked.size} / ${max}`;
+      el('pick-count').textContent=formatSelectedCount(G.pickMarked.size, max);
     }));
   });
-  el('pick-count').textContent=`0 / ${max}`;
+  el('pick-count').textContent=formatSelectedCount(0, max);
+  syncPickOverlayButtons();
   const btn=el('pick-confirm');
   if(btn){
     btn.onclick=()=>{
@@ -32707,15 +32767,16 @@ function openHandPick({hand,count,title,msg,onConfirm,onCancel,min,allowCancel=t
         G.pickMarked.add(card.instance_id);
       }
       [...fan.children].forEach(c=>c.classList.toggle('sel',G.pickMarked.has(c.dataset.id)));
-      el('hpick-count').textContent=`Selected: ${G.pickMarked.size}/${ctx.count}`;
+      el('hpick-count').textContent=formatSelectedCount(G.pickMarked.size, ctx.count);
     }));
   });
   el('hpick-count').textContent=singleTap
     ? (confirmLabel || t('prompt.tapCardConfirm'))
-    : `Selected: 0/${need}`;
+    : formatSelectedCount(0, need);
   const showActions = !singleTap;
   el('hpick-actions').style.display = showActions ? 'flex' : 'none';
   el('btn-hpick-cancel').style.display = allowCancel === false ? 'none' : '';
+  syncHandPickOverlayButtons();
   closeM('overlay-pick');
   openM('overlay-hand-pick');
   syncAntiSoftlockButton(G.gameState, G.playerId);
@@ -32760,10 +32821,10 @@ function cancelMemberPick(){
 
 function openHeartPick(title, choices, onPick){
   G.heartCtx={onPick};
-  el('heart-ttl').textContent=title||'Choose a heart';
-  el('heart-msg').textContent='Pick a heart color for this effect.';
+  el('heart-ttl').textContent=title||t('prompt.chooseHeart');
+  el('heart-msg').textContent=t('heart.pickColor');
   const box=el('heart-btns'); box.innerHTML='';
-  const labels={yellow:'Yellow',pink:'Pink',purple:'Purple',red:'Red',green:'Green',blue:'Blue'};
+  const labels={yellow:t('heart.yellow'),pink:t('heart.pink'),purple:t('heart.purple'),red:t('heart.red'),green:t('heart.green'),blue:t('heart.blue')};
   sortHeartsByDisplayOrder(choices.map(c => ({ color: c, count: 1 }))).forEach(h => {
     const c = h.color;
     const b=document.createElement('button');
@@ -32773,6 +32834,7 @@ function openHeartPick(title, choices, onPick){
     b.onclick=()=>{ closeM('overlay-heart'); const fn=G.heartCtx?.onPick; G.heartCtx=null; fn?.(c); };
     box.appendChild(b);
   });
+  el('btn-heart-cancel').textContent=t('prompt.cancel');
   openM('overlay-heart');
 }
 
@@ -32957,7 +33019,7 @@ function renderTextAnswerPrompt(pr){
   box.innerHTML='';
   box.className='';
   el('prompt-sub').hidden=false;
-  el('prompt-sub').textContent='Type your answer — spelling and wording can vary.';
+  el('prompt-sub').textContent=t('prompt.typeAnswerHint');
   hintsEl.innerHTML='';
   (pr.outcome_hints||[]).forEach(line=>{
     const li=document.createElement('li');
@@ -32966,6 +33028,7 @@ function renderTextAnswerPrompt(pr){
   });
   input.value='';
   const submit=el('prompt-text-submit');
+  submit.textContent=t('prompt.answer');
   submit.onclick=()=> submitTextAnswerPrompt(pr);
   input.onkeydown=(e)=>{
     if(e.key==='Enter'){ e.preventDefault(); submitTextAnswerPrompt(pr); }
@@ -33066,7 +33129,7 @@ function handlePromptChoice(pr, choice, s, myId){
     const slots=pr.target_slots||[];
     openStageSlotPick({
       ...pr,
-      candidates: slots.map(slot=>({slot, name_en: slot==='left'?'Left Side':slot==='right'?'Right Side':'Center'})),
+      candidates: slots.map(slot=>({slot, name_en: slotLabel(slot)})),
       prompt: 'Choose a Mira-Cra Park! Member area to Position Change with.'
     });
     return;
@@ -33634,7 +33697,7 @@ function renderPrompt(s, myId){
       (pr.slots||[]).forEach(slot=>{
         const b=document.createElement('button');
         b.className='btn-grad';
-        b.textContent=slot==='left'?'Left Side':slot==='right'?'Right Side':'Center';
+        b.textContent=slotLabel(slot);
         b.onclick=()=>{ closeM('overlay-prompt'); sendAct('resolve_prompt',{choice:slot}); };
         box.appendChild(b);
       });
@@ -33729,7 +33792,7 @@ function renderPrompt(s, myId){
     (pr.slots||[]).forEach(slot=>{
       const b=document.createElement('button');
       b.className='btn-grad';
-      b.textContent=slot==='left'?'Left Side':slot==='right'?'Right Side':'Center';
+      b.textContent=slotLabel(slot);
       b.onclick=()=>{ closeM('overlay-prompt'); sendAct('resolve_prompt',{choice:slot}); };
       box.appendChild(b);
     });
@@ -33951,7 +34014,7 @@ function renderPrompt(s, myId){
     ovl.classList.remove('open');
     openStageSlotPick({
       ...pr,
-      candidates: (pr.target_slots||[]).map(slot=>({slot, name_en: slot==='left'?'Left Side':slot==='right'?'Right Side':'Center'}))
+      candidates: (pr.target_slots||[]).map(slot=>({slot, name_en: slotLabel(slot)}))
     });
     return;
   }
@@ -34090,12 +34153,12 @@ function renderPrompt(s, myId){
   hidePromptEffectText();
   const branch=isBranchChoicePrompt(pr);
   const subEl=el('prompt-sub');
-  el('prompt-ttl').textContent=pr.source_name||'Ability';
+  el('prompt-ttl').textContent=pr.source_name||t('prompt.respond');
   el('prompt-msg').textContent=localizeSubunitText(pr.prompt||'Choose a response:');
   el('prompt-msg').className='prompt-branch-msg';
   if(branch){
     subEl.hidden=false;
-    subEl.textContent='Tap an option below.';
+    subEl.textContent=t('prompt.tapOption');
   } else {
     subEl.hidden=true;
     subEl.textContent='';
@@ -34348,11 +34411,11 @@ function openMull(hand, opts = {}){
       if(G.mullMarked.has(card.instance_id)){ G.mullMarked.delete(card.instance_id); d.classList.remove('mk'); }
       else { G.mullMarked.add(card.instance_id); d.classList.add('mk'); }
       const n=G.mullMarked.size;
-      el('btn-mull').textContent=n===0?'Keep Hand':`Replace ${n} card${n>1?'s':''}`;
+      updateMulliganButtonText(n);
     });
     g.appendChild(d);
   });
-  el('btn-mull').textContent='Keep Hand';
+  updateMulliganButtonText(0);
   ovl.classList.toggle('tut-mull-readonly', readonly);
   openM('overlay-mull');
 }
@@ -34667,7 +34730,6 @@ async function confirmLiveSetFromHand() {
     renderGame(cur, { skipLog: true });
   }
   if (ids.length) {
-    sfxPlayCard('card_place');
     await sendAct('set_live_cards', { card_ids: ids });
     if (G.gameState?.phase === 'live_set' && liveStorageHasCards(G.gameState)) {
       G._liveSetStorageBaseline = deepCloneState(G.gameState);

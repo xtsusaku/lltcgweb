@@ -226,6 +226,9 @@
       "oppActivatingSkill": "{name} is activating a skill…",
       "activeEnergy": "active",
       "pickSlot": "Pick a slot",
+      "slotLeft": "Left Side",
+      "slotCenter": "Center",
+      "slotRight": "Right Side",
       "baton": "Baton",
       "opponentSkillWait": "{name} is activating a skill…",
       "perfYou": "You",
@@ -321,7 +324,9 @@
     "mulligan": {
       "title": "Opening Hand 🌸",
       "hint": "Tap cards to mark for replacement. Hold a card to view its details. Tap again to unmark.",
-      "keepHand": "Keep Hand"
+      "keepHand": "Keep Hand",
+      "replaceCard": "Replace {n} card",
+      "replaceCards": "Replace {n} cards"
     },
     "coin": {
       "title": "First Player",
@@ -370,7 +375,24 @@
       "useEffect": "Use this effect?",
       "answer": "Answer",
       "typeAnswer": "Type your answer…",
+      "typeAnswerHint": "Type your answer — spelling and wording can vary.",
+      "confirmArrangement": "Confirm arrangement",
+      "selectedCount": "Selected: {n}/{max}",
       "activateSub": "Choose whether to activate this effect."
+    },
+    "skill": {
+      "alreadyUsed": "Already used this turn",
+      "needEnergy": "Need {n} active Energy",
+      "tutorialDemo": "Tutorial demo — use Next to continue"
+    },
+    "heart": {
+      "pickColor": "Pick a heart color for this effect.",
+      "yellow": "Yellow",
+      "pink": "Pink",
+      "purple": "Purple",
+      "red": "Red",
+      "green": "Green",
+      "blue": "Blue"
     },
     "card": {
       "cost": "Cost",
@@ -770,6 +792,9 @@
       "oppActivatingSkill": "{name}がスキルを発動中…",
       "activeEnergy": "使用可能",
       "pickSlot": "スロットを選択",
+      "slotLeft": "左サイド",
+      "slotCenter": "センター",
+      "slotRight": "右サイド",
       "baton": "バトン",
       "opponentSkillWait": "{name}がスキルを発動中…",
       "perfYou": "あなた",
@@ -865,7 +890,9 @@
     "mulligan": {
       "title": "初期手札 🌸",
       "hint": "タップで交換マーク。長押しで詳細。もう一度タップで解除。",
-      "keepHand": "この手札で開始"
+      "keepHand": "この手札で開始",
+      "replaceCard": "{n}枚交換",
+      "replaceCards": "{n}枚交換"
     },
     "coin": {
       "title": "先攻決定",
@@ -914,7 +941,24 @@
       "useEffect": "この効果を使いますか？",
       "answer": "回答",
       "typeAnswer": "回答を入力…",
+      "typeAnswerHint": "回答を入力してください。表記や言い回しは多少異なっても構いません。",
+      "confirmArrangement": "配置を確定",
+      "selectedCount": "選択中：{n}/{max}",
       "activateSub": "この効果を発動するか選んでください。"
+    },
+    "skill": {
+      "alreadyUsed": "このターンは使用済み",
+      "needEnergy": "アクティブなエネルギーが{n}必要",
+      "tutorialDemo": "チュートリアルデモ — 次へで続行"
+    },
+    "heart": {
+      "pickColor": "この効果のハート色を選んでください。",
+      "yellow": "黄",
+      "pink": "ピンク",
+      "purple": "紫",
+      "red": "赤",
+      "green": "緑",
+      "blue": "青"
     },
     "card": {
       "cost": "コスト",
