@@ -11483,6 +11483,7 @@ function resetMatchTransientState() {
   clearPerfSpectacleDoneStorage();
   G._replayHandoffPrimed = false;
   G._deferPerfSpectaclePrev = null;
+  G._perfLiveReveal = null;
   G._postSpectacleSplashPause = false;
   G._liveSpectacleGateRunning = false;
   G.selCard = null;
@@ -17236,6 +17237,30 @@ function liveZoneCardAtSlot(zone, slot) {
   return null;
 }
 
+const LIVE_ZONE_MAX = 3;
+
+/** Dedupe live storage by instance_id, prefer live_slot order, cap at max slots. */
+function clampLiveZoneCards(zone, max = LIVE_ZONE_MAX) {
+  const seen = new Set();
+  const ordered = [];
+  const candidates = [...(zone || [])].filter(c => c?.instance_id);
+  candidates.sort((a, b) => liveZoneSlot(a, 0) - liveZoneSlot(b, 0));
+  for (const c of candidates) {
+    if (seen.has(c.instance_id)) continue;
+    seen.add(c.instance_id);
+    ordered.push(c);
+    if (ordered.length >= max) break;
+  }
+  return ordered;
+}
+
+/** Live-type / redacted live storage cards only, capped like clampLiveZoneCards. */
+function clampLiveZoneLive(zone, max = LIVE_ZONE_MAX) {
+  const live = (zone || []).filter(c =>
+    c?.instance_id && (isLiveTypeCard(c) || isRedactedLiveZoneCard(c)));
+  return clampLiveZoneCards(live, max);
+}
+
 function liveZoneFirstEmptySlotClient(zone) {
   const used = new Set();
   (zone || []).forEach((c, i) => {
@@ -17646,7 +17671,7 @@ function liveZoneForRender(s, pid) {
   const current = s?.players?.[pid]?.live_zone || [];
   if (G._liveWrDiscardInProgress) return current;
   if (G._deferredLiveState && G._livePostRevealBoard?.players?.[pid]) {
-    const held = G._livePostRevealBoard.players[pid].live_zone || [];
+    const held = clampLiveZoneCards(G._livePostRevealBoard.players[pid].live_zone || []);
     if (held.length > current.length) return held;
   }
   return current;
@@ -24797,7 +24822,7 @@ function augmentPerfSpectaclePrev(prev, next) {
       }
     });
     base.players[pid] = base.players[pid] || { ...next.players[pid] };
-    base.players[pid].live_zone = [...byId.values()];
+    base.players[pid].live_zone = clampLiveZoneCards([...byId.values()]);
   }
   return base;
 }
@@ -26130,12 +26155,16 @@ function collectPerfRoundLiveCards(next, pid, prev = null, showTurn = null) {
     (deferred.players[pid].live_zone || []).forEach(add);
   }
   (next.players[pid].live_zone || []).forEach(add);
-  (next.players[pid].success_lives || []).forEach(add);
-  (next.players[pid].waiting_room || []).forEach(add);
+  // WR / success only when this round's Live iids are known — avoids prior-round stale lives.
   if (okIds?.size) {
-    return [...byId.values()].filter(c => okIds.has(c.instance_id) || yellIds.has(c.instance_id));
+    (next.players[pid].success_lives || []).forEach(add);
+    (next.players[pid].waiting_room || []).forEach(add);
   }
-  return [...byId.values()];
+  let cards = [...byId.values()];
+  if (okIds?.size) {
+    cards = cards.filter(c => okIds.has(c.instance_id) || yellIds.has(c.instance_id));
+  }
+  return clampLiveZoneCards(cards);
 }
 
 function synthesizePerfPrevFromNext(prev, next, showTurn = null) {
@@ -29218,19 +29247,20 @@ function perfSpectacleLiveCards(prev, next, pid) {
   const perfPrev = buildPerfSpectaclePrev(prev, next);
   const lockCards = perfMergedLiveZone(perfPrev, next, pid)
     .filter(c => isPerfSpectacleLiveSlotCard(c, next, pid));
-  if (!lockCards.length) return perfLiveZoneCards(next, pid);
+  if (!lockCards.length) return clampLiveZoneLive(perfLiveZoneCards(next, pid));
   const nextById = new Map(perfLiveZoneCards(next, pid).map(c => [c.instance_id, c]));
-  return lockCards.map(c => {
-    let revealed = nextById.get(c.instance_id);
-    if (!revealed || !revealed.card_no || revealed.card_no === '?') {
-      revealed = perfFindRevealedLiveMeta(next, pid, c.instance_id)
+  const revealed = lockCards.map(c => {
+    let meta = nextById.get(c.instance_id);
+    if (!meta || !meta.card_no || meta.card_no === '?') {
+      meta = perfFindRevealedLiveMeta(next, pid, c.instance_id)
         || perfFindRevealedLiveMeta(prev, pid, c.instance_id);
     }
-    if (!revealed || !revealed.card_no || revealed.card_no === '?') {
+    if (!meta || !meta.card_no || meta.card_no === '?') {
       return { ...c, revealed: true };
     }
-    return { ...c, ...revealed, revealed: true };
+    return { ...c, ...meta, revealed: true };
   });
+  return clampLiveZoneLive(revealed);
 }
 
 async function perfPopulateBase(ctx) {
