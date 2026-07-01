@@ -6711,7 +6711,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 </div>
 
 <script src="i18n.js?v=3"></script>
-<script src="log_i18n.js?v=2"></script>
+<script src="log_i18n.js?v=3"></script>
 <script src="sfx.js?v=14"></script>
 <!-- Early auth guard: separate script so a main-bundle parse error cannot leave auth stuck forever. -->
 <script>
@@ -15619,6 +15619,16 @@ function applyRematchToLobbyUI(rematch) {
   }
 }
 
+function cpuOpponentName() {
+  const diff = G.cpuDifficulty || 'easy';
+  if (getLocale() === 'ja') {
+    const ja = { easy: 'イージー', normal: 'ノーマル', hard: 'ハード' };
+    return `COM（${ja[diff] || ja.easy}）`;
+  }
+  const en = { easy: 'Easy', normal: 'Normal', hard: 'Hard' };
+  return `CPU (${en[diff] || en.easy})`;
+}
+
 async function startSoloRematch(rematch) {
   const name = (rematch.name || '').trim() || 'Player 1';
   const deckSel = rematch.deckChoice || 'nijigasaki';
@@ -15626,13 +15636,12 @@ async function startSoloRematch(rematch) {
   const diff = rematch.cpuDifficulty || 'easy';
   G.cpuDifficulty = (diff === 'normal' || diff === 'hard') ? diff : 'easy';
   try { localStorage.setItem('tcg_cpu_difficulty', G.cpuDifficulty); } catch (e) {}
-  const diffLabel = { easy: 'Easy', normal: 'Normal', hard: 'Hard' }[G.cpuDifficulty];
   const r1 = await apiPost('create_room', { name, ...deckPayloadFromChoice(deckSel), ...timerOpts });
   G.roomId = r1.room_id; G.token = r1.player_token; G.playerId = 'p1'; G.isCPU = true;
   captureSyncMeta(r1);
   const r2 = await apiPost('join_room', {
     room_id: G.roomId,
-    name: `CPU (${diffLabel})`,
+    name: cpuOpponentName(),
     ...cpuJoinPayload(deckSel),
   });
   G.cpuToken = r2.player_token;
@@ -15739,7 +15748,6 @@ async function doSolo() {
   const diff = el('sel-cpu-diff')?.value || G.cpuDifficulty || 'easy';
   G.cpuDifficulty = (diff === 'normal' || diff === 'hard') ? diff : 'easy';
   try { localStorage.setItem('tcg_cpu_difficulty', G.cpuDifficulty); } catch (e) {}
-  const diffLabel = { easy: 'Easy', normal: 'Normal', hard: 'Hard' }[G.cpuDifficulty];
   setErr('');
   try {
     const r1 = await apiPost('create_room',{name,...lobbyDeckPayload(),...timerOpts});
@@ -15747,7 +15755,7 @@ async function doSolo() {
     captureSyncMeta(r1);
     const r2 = await apiPost('join_room', {
       room_id: G.roomId,
-      name: `CPU (${diffLabel})`,
+      name: cpuOpponentName(),
       ...cpuJoinPayload(deckSel),
     });
     G.cpuToken = r2.player_token;

@@ -984,7 +984,7 @@
       "neitherCouldDraw": "どちらもドローできませんでした（デッキが空）。",
       "neitherLiveWinner": "どちらも成功せず — このターンのライブ勝者なし。",
       "coinFlipAuto": "コイントス — 時間切れのため自動続行。",
-      "cpuDeck": "CPUデッキ：{label}",
+      "cpuDeck": "COMデッキ：{label}",
       "dividerLive": "=== ライブフェイズ ===",
       "dividerPerformance": "=== パフォーマンスフェイズ ===",
       "dividerLiveShow": "=== ライブショー ===",

@@ -60,7 +60,7 @@
     var key = EXACT_LOG_KEYS[msg];
     if (key) return tLog(key);
     var cpu = msg.match(/^CPU deck: (.+)$/);
-    if (cpu) return tLog('log.cpuDeck', { label: cpu[1] });
+    if (cpu) return translateOpponentLabels(tLog('log.cpuDeck', { label: cpu[1] }));
     var turnBegin = msg.match(/^=== Turn (\d+) begins ===$/);
     if (turnBegin) return tLog('log.dividerTurnBegin', { turn: turnBegin[1] });
     var turnDash = msg.match(/^--- Turn (\d+) ---$/);
@@ -119,8 +119,26 @@
     return null;
   }
 
-  /** Regex rules applied after card-name swap (order matters). */
-  var PHRASE_RULES = [
+  var DIFFICULTY_JA = {
+    Easy: 'イージー', Normal: 'ノーマル', Hard: 'ハード',
+    easy: 'イージー', normal: 'ノーマル', hard: 'ハード',
+  };
+
+  /** CPU opponent label + difficulty (player names in log lines). */
+  function translateOpponentLabels(msg) {
+    return String(msg)
+      .replace(/\bCPU\s*\((Easy|Normal|Hard)\)/g, function (_m, d) {
+        return 'COM（' + (DIFFICULTY_JA[d] || d) + '）';
+      })
+      .replace(/\bCPU\b/g, 'COM')
+      .replace(/\b(Easy|Normal|Hard)\b/g, function (m) { return DIFFICULTY_JA[m] || m; });
+  }
+
+  /**
+   * Phase / system phrases that contain the card name "Energy" — must run before
+   * replaceCardNames (catalog has name_en "Energy" → エネルギー).
+   */
+  var STRUCTURAL_PHRASE_RULES = [
     [/^=== LIVE Phase ===$/, '=== ライブフェイズ ==='],
     [/^=== Performance Phase ===$/, '=== パフォーマンスフェイズ ==='],
     [/^=== Live Show ===$/, '=== ライブショー ==='],
@@ -139,7 +157,7 @@
     [/^Neither player could draw \(deck empty\)\.$/, 'どちらもドローできませんでした（デッキが空）。'],
     [/^Neither player succeeds — no Live winner this turn\.$/, 'どちらも成功せず — このターンのライブ勝者なし。'],
     [/^Coin flip — continued automatically \(player did not respond in time\)\.$/, 'コイントス — 時間切れのため自動続行。'],
-    [/^CPU deck: (.+)$/, 'CPUデッキ：$1'],
+    [/^CPU deck: (.+)$/, 'COMデッキ：$1'],
     [/ — End Main Phase\.$/, ' — メインフェイズ終了。'],
     [/ completed mulligan\.$/, ' マリガン完了。'],
     [/ resigned\. (.+) wins!$/, ' リタイア。$1 の勝利！'],
@@ -147,15 +165,10 @@
     [/ used Baton Touch! Cost reduced to (\d+)\.$/, ' バトンタッチ！コストが$1に減少。'],
     [/ used Baton Touch! Cost reduced to (\d+)\. \((\d+) Energy under replaced Member carried over\.\)$/, ' バトンタッチ！コストが$1に減少。（置き換えメンバー下のエネルギー$2枚を引き継ぎ）'],
     [/ used second Baton Touch! Cost reduced to (\d+)\.$/, ' 2枚目のバトンタッチ！コストが$1に減少。'],
-    [/ overplayed onto (.+)\.$/, ' $1の上に上書きプレイ。'],
-    [/ played (.+) to (left|center|right) area\.$/, function (_m, card, slot) {
-      return ' ' + card + 'を' + (SLOT_JA[slot] || slot) + 'エリアにプレイ。';
-    }],
     [/ placed (\d+) card\(s\) face-down in storage \((\d+)\/3\)\.$/, ' $1枚を置き場に裏向きでセット（$2/3）。'],
     [/ placed card\(s\) in Live storage\.$/, ' ライブ置き場にカードをセット。'],
     [/ — locked in LIVE selection \((\d+) card\(s\) in storage\)\.$/, ' — ライブ選択を確定（置き場$1枚）。'],
     [/ — locked in LIVE selection\.$/, ' — ライブ選択を確定。'],
-    [/ is performing Live with (.+)\.$/, ' がライブを披露：$1。'],
     [/ — Draw Phase: could not draw \(deck and Waiting Room empty\)\.$/, ' — ドローフェイズ：ドロー不可（デッキと控え室が空）。'],
     [/ — Draw Phase\.$/, ' — ドローフェイズ。'],
     [/ — Active Phase: Energy and Members refreshed\.$/, ' — アクティブフェイズ：エネルギーとメンバーをアクティブに。'],
@@ -208,6 +221,19 @@
     [/ wins this Live! "/, ' このライブ勝利！「'],
     [/" added to successes\.$/, '」を成功ライブに追加。'],
     [/Live Scores: /, 'ライブスコア: '],
+    [/ — Active Phase: エネルギー and Members refreshed\.$/, ' — アクティブフェイズ：エネルギーとメンバーをアクティブに。'],
+    [/ — エネルギー Phase: placed 1 エネルギー in storage \((\d+)\/(\d+)\)\.$/, ' — エネルギーフェイズ：エネルギー1枚を置き場に（$1/$2）。'],
+    [/^(.+)'s turn — メインフェイズ \(Active · エネルギー · Draw complete\)\.$/, '$1のターン — メインフェイズ（アクティブ・エネルギー・ドロー完了）。'],
+    [/^(.+) turn — メインフェイズ \(Active · エネルギー · Draw complete\)\.$/, '$1のターン — メインフェイズ（アクティブ・エネルギー・ドロー完了）。'],
+  ];
+
+  /** Regex rules applied after card-name swap (order matters). */
+  var PHRASE_RULES = [
+    [/ overplayed onto (.+)\.$/, ' $1の上に上書きプレイ。'],
+    [/ played (.+) to (left|center|right) area\.$/, function (_m, card, slot) {
+      return ' ' + card + 'を' + (SLOT_JA[slot] || slot) + 'エリアにプレイ。';
+    }],
+    [/ is performing Live with (.+)\.$/, ' がライブを披露：$1。'],
     [/Waiting Room/g, '控え室'],
     [/Live storage/g, 'ライブ置き場'],
     [/Success Live card storage/g, '成功ライブ置き場'],
@@ -390,13 +416,17 @@
     if (exact != null) return exact;
 
     var structured = translateStructuredLine(msg);
-    if (structured != null) return structured;
+    if (structured != null) return translateOpponentLabels(structured);
 
     catalog = catalog || (global.G && global.G.allCards);
-    var out = replaceCardNames(String(msg), catalog);
+    var out = String(msg);
+    out = applyRules(out, STRUCTURAL_PHRASE_RULES);
+    out = translateOpponentLabels(out);
+    out = replaceCardNames(out, catalog);
     out = replaceSkillBrackets(out);
     out = applyRules(out, PHRASE_RULES);
     out = applyRules(out, EFFECT_RULES);
+    out = translateOpponentLabels(out);
     return out;
   }
 
