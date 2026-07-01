@@ -54,7 +54,7 @@
 
   function loadManifest() {
     if (manifest) return Promise.resolve(manifest);
-    return fetch('./sfx_manifest.web.json?v=9', { cache: 'no-store' })
+    return fetch('./sfx_manifest.web.json?v=10', { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('sfx manifest HTTP ' + r.status);
         return r.json();
@@ -148,7 +148,8 @@
         'energy_chip', 'phase_live', 'phase_performance', 'turn_tick', 'skill_tick',
         'yell_reveal', 'hearts_gain', 'live_success', 'live_fail',
         'splash_phase', 'splash_live', 'splash_performance', 'splash_live_start',
-        'splash_success', 'splash_turn',
+        'splash_success', 'splash_turn', 'splash_judge', 'splash_action',
+        'splash_live_attempt',
       ].forEach(warm);
       return m;
     });
