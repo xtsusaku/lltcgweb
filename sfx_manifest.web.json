@@ -155,20 +155,19 @@
     "card_hover": {
       "variants": [
         {
-          "file": "card_slide.wav",
-          "source": "se_010_0020.wav",
+          "file": "menu_back.wav",
+          "source": "se_010_0001.wav",
           "source_category": "Menu",
-          "duration_ms": 233.4,
+          "duration_ms": 165.8,
           "tags": [
-            "short",
+            "click",
             "quiet",
-            "bright",
-            "rustle",
-            "menu"
+            "menu",
+            "hover"
           ],
-          "score": 0.0068,
-          "volume": 0.18,
-          "centroid_hz": 5505.4
+          "score": 0.8499,
+          "volume": 0.14,
+          "centroid_hz": 1548.3
         }
       ]
     },
