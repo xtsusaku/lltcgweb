@@ -6421,7 +6421,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 <div class="overlay hand-pick-overlay" id="overlay-hand-pick">
   <div class="hand-pick-shell">
     <h2 id="hpick-ttl">Choose from hand</h2>
-    <p class="hpick-msg" id="hpick-msg">Choose a card to send to the Waiting Room.</p>
+    <p class="hpick-msg" id="hpick-msg" data-i18n="prompt.discardOne">Choose a card to send to the Waiting Room.</p>
     <div class="hand-pick-fan" id="hpick-fan"></div>
     <p class="hand-pick-count" id="hpick-count"></p>
     <div class="hand-pick-actions" id="hpick-actions">
@@ -29601,7 +29601,7 @@ function updateOpponentSkillWaitBanner(s, myId) {
   const src = pr?.source_name || '';
   root.hidden = false;
   root.classList.add('show');
-  if (titleEl) setSplashTitle(titleEl, t('game.oppActivatingSkill', { name: oppName }));
+  if (titleEl) setSplashTitle(titleEl, t('game.opponentSkillWait', { name: oppName }));
   if (sub) sub.textContent = src ? `${oppName} — ${src}` : '';
   appendOpponentSkillWaitLog(s, myId, pr);
 }
@@ -34094,7 +34094,7 @@ function startCoinFlipAnimation(s, myId, flipKey) {
   const p2 = s.players?.p2?.name || 'Player 2';
   el('coin-heads').textContent = coinFaceLabel(winner === 'p1' ? p1 : p2);
   el('coin-tails').textContent = coinFaceLabel(winner === 'p1' ? p2 : p1);
-  el('coin-msg').textContent = 'Flipping coin…';
+  el('coin-msg').textContent = t('coin.flipping');
   el('coin-result').textContent = '';
   hideCoinChoiceButtons();
   const coin = el('coin-el');
@@ -35471,7 +35471,7 @@ function maybeShowTutorialCoinFlip(s) {
   const p2 = s.players?.p2?.name || 'Player 2';
   el('coin-heads').textContent = coinFaceLabel(winner === 'p1' ? p1 : p2);
   el('coin-tails').textContent = coinFaceLabel(winner === 'p1' ? p2 : p1);
-  el('coin-msg').textContent = 'Flipping coin…';
+  el('coin-msg').textContent = t('coin.flipping');
   el('coin-result').textContent = '';
   const coin = el('coin-el');
   coin.className = 'coin flipping';
