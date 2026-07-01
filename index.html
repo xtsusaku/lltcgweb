@@ -9893,9 +9893,6 @@ function syncDeckFilterAdvancedUi() {
   const adv = el('deck-filter-advanced');
   const btn = el('btn-deck-filter-advanced');
   if (!panel || !adv) return;
-  if (deckAdvancedFiltersActive(deckPoolFilterState())) {
-    A.deckFilterAdvancedOpen = true;
-  }
   const open = !!A.deckFilterAdvancedOpen;
   panel.classList.toggle('show-advanced', open);
   adv.hidden = !open;
