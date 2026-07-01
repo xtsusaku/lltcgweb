@@ -5028,6 +5028,7 @@ function isQueuedOptionalLiveStart(array $ab): bool {
         'optional_return_member_energy',
         'optional_discard_blade_draw_if_live',
         'optional_discard_blade_per_card',
+        'optional_discard_blade_named_extra',
         'optional_wr_member_deck_top_blade',
         'live_start_pay_or_discard',
         'optional_discard_subunit_draw_buff_cost',
@@ -5191,6 +5192,12 @@ function liveStartOptionalPromptText(array $ab): string {
     if ($type === 'optional_return_member_energy') {
         return 'Return Energy stacked under a Stage Member to your Energy deck for bonus hearts?';
     }
+    if ($type === 'optional_discard_blade_named_extra') {
+        $named = $ab['named'] ?? 'that Member';
+        return 'Put 1 card from your hand into the Waiting Room: gain +'
+            . intval($ab['amount'] ?? 1) . ' Blade until Live ends'
+            . ($named !== '' ? " (+{$ab['extra_amount']} more if $named)" : '') . '?';
+    }
     return $ab['prompt'] ?? 'Use optional Live Start effect?';
 }
 
@@ -5200,6 +5207,9 @@ function buildOptionalLiveStartPrompt(array $state, array $item): array {
     $ownerP = $state['players'][$owner] ?? [];
     $discardCount = intval($ab['max_discard'] ?? 0) ?: intval($ab['discard'] ?? 0);
     $maxDiscard = intval($ab['max_discard'] ?? 0);
+    if (($ab['type'] ?? '') === 'optional_discard_blade_named_extra') {
+        $discardCount = 1;
+    }
     if (($ab['type'] ?? '') === 'optional_discard_named' && empty($ab['exact_total'])) {
         $matchCount = countOptionalNamedDiscardMatches($ownerP, $ab, $item['source_id'] ?? '');
         $maxDiscard = $matchCount;
@@ -11432,10 +11442,22 @@ function actionResolvePrompt(array $state, string $pid, array $data): array {
                 $state['seq']++;
                 return $state;
             }
-            if (($ab['type'] ?? '') === 'optional_discard_prompt') {
+            if (($ab['type'] ?? '') === 'optional_discard_prompt'
+                || ($ab['type'] ?? '') === 'optional_discard_blade_named_extra') {
                 unset($state['pending_prompt']);
+                $promptAbility = ($ab['type'] ?? '') === 'optional_discard_blade_named_extra'
+                    ? [
+                        'discard' => 1,
+                        'then'    => [
+                            'type'         => 'blade_bonus_named_extra',
+                            'amount'       => intval($ab['amount'] ?? 1),
+                            'extra_amount' => intval($ab['extra_amount'] ?? 1),
+                            'named'        => $ab['named'] ?? '',
+                        ],
+                    ]
+                    : $ab;
                 $state = resolveOptionalDiscardPromptChoice($state, $owner, [
-                    'ability'     => $ab,
+                    'ability'     => $promptAbility,
                     'source_name' => $prompt['source_name'] ?? 'Live',
                     'source_id'   => $sourceId,
                     'live_start'  => true,

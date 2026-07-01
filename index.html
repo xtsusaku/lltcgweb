@@ -33254,7 +33254,8 @@ function handlePromptChoice(pr, choice, s, myId){
     closeM('overlay-prompt');
     const minPick=pr.ability?.max_discard?0:discardNeed;
     let pickHand=me.hand||[];
-    if(pr.type==='optional_live_start'||(pr.type==='optional_discard_prompt'&&pr.live_start)){
+    if(pr.type==='optional_live_start'
+      ||(pr.type==='optional_discard_prompt'&&(pr.live_start||s.phase==='live_start_effects'))){
       pickHand=optionalLiveStartDiscardHand(pr,s,myId);
     }
     if(pr.type==='opp_may_discard_or_modifier'){
@@ -34224,7 +34225,8 @@ function renderPrompt(s, myId){
     return;
   }
   hideTextAnswerPrompt();
-  if(pr?.type==='optional_discard_prompt'&&pr.live_start&&pr.responder===myId){
+  if(pr?.type==='optional_discard_prompt'
+    &&(pr.live_start||s.phase==='live_start_effects')&&pr.responder===myId){
     ovl.classList.remove('open');
     if(openOptionalLiveStartDiscardPick(pr,s,myId)) return;
   }

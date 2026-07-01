@@ -138,24 +138,40 @@ function hsResolveHasunosoraEffect(array $state, string $pid, array $source, arr
 
         case 'optional_discard_blade_named_extra':
             if (!empty($state['pending_prompt'])) break;
+            $liveStart = ($ctx['phase'] ?? '') === 'live_start'
+                || ($state['phase'] ?? '') === 'live_start_effects';
+            $promptAbility = [
+                'discard' => 1,
+                'then'    => [
+                    'type'         => 'blade_bonus_named_extra',
+                    'amount'       => intval($ab['amount'] ?? 1),
+                    'extra_amount' => intval($ab['extra_amount'] ?? 1),
+                    'named'        => $ab['named'] ?? '',
+                ],
+            ];
+            if (!empty($ctx['confirm']) || !empty($ctx['discard_ids'])) {
+                return resolveOptionalDiscardPromptChoice($state, $pid, [
+                    'ability'     => $promptAbility,
+                    'source_name' => $name,
+                    'source_id'   => $source['instance_id'] ?? '',
+                    'live_start'  => $liveStart,
+                ], 'yes', ['discard_ids' => $ctx['discard_ids'] ?? []], true);
+            }
+            $named = $ab['named'] ?? '';
+            $promptText = 'Put 1 card from your hand into the Waiting Room: gain +'
+                . intval($ab['amount'] ?? 1) . ' Blade until Live ends'
+                . ($named !== '' ? ' (+' . intval($ab['extra_amount'] ?? 1) . " more if $named)" : '') . '?';
             $state['pending_prompt'] = [
                 'type'          => 'optional_discard_prompt',
                 'owner'         => $pid,
                 'responder'     => $pid,
                 'source_id'     => $source['instance_id'] ?? '',
                 'source_name'   => $name,
-                'prompt'        => 'Put 1 card from hand into the Waiting Room: gain +1 Blade until Live ends?',
+                'prompt'        => $promptText,
                 'choices'       => ['yes', 'no'],
                 'choice_labels' => ['Yes', 'No — Skip'],
-                'ability'       => [
-                    'discard' => 1,
-                    'then'    => [
-                        'type'          => 'blade_bonus_named_extra',
-                        'amount'        => intval($ab['amount'] ?? 1),
-                        'extra_amount'  => intval($ab['extra_amount'] ?? 1),
-                        'named'         => $ab['named'] ?? '',
-                    ],
-                ],
+                'ability'       => $promptAbility,
+                'live_start'    => $liveStart,
             ];
             $state = addLog($state, $state['players'][$pid]['name'] .
                 " — [$name] optional Live Start (choose).");
