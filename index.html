@@ -5798,7 +5798,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       <p id="booster-daily-info" class="hub-stat"></p>
       <p id="booster-star-gems-info" class="hub-stat" hidden></p>
       <div class="box-grid" id="box-grid"></div>
-      <button class="btn-grad" id="btn-open-pack" type="button" disabled data-i18n="booster.openPack">Open Pack (5 cards)</button>
+      <button class="btn-grad" id="btn-open-pack" type="button" disabled>Open Pack</button>
       <div class="pack-reveal" id="pack-reveal"></div>
       <p class="lerr" id="booster-err"></p>
     </div>
@@ -6370,7 +6370,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     <p class="account-lead" id="paid-booster-lead">Spend Star Gems to keep opening packs today.</p>
     <div class="paid-booster-actions">
       <button class="btn-grad" id="btn-paid-open-pack" type="button">Open 1 pack</button>
-      <button class="btn-grad" id="btn-paid-open-box" type="button">Open 1 box (30 packs)</button>
+      <button class="btn-grad" id="btn-paid-open-box" type="button">Open 1 box</button>
       <button class="btn-out" id="btn-paid-booster-cancel" type="button">Cancel</button>
     </div>
   </div>
@@ -6394,7 +6394,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
   <div class="mbox">
     <button class="mcls" id="btn-booster-rates-close" type="button">✕</button>
     <h2 class="booster-rates-head" id="booster-rates-title">Pack rates</h2>
-    <p class="booster-rates-lead" id="booster-rates-lead">Per 5-card pack · tap a card for details</p>
+    <p class="booster-rates-lead" id="booster-rates-lead">Per pack · tap a card for details</p>
     <div id="booster-rates-body">
       <p class="booster-rates-loading">Loading rates…</p>
     </div>
@@ -6845,6 +6845,8 @@ const STAR_GEM_ICON = 'assets/Star_Gem.png';
 const STAR_GEMS_PER_DUPE = 10;
 const STAR_GEMS_PACK_COST = 100;
 const STAR_GEMS_BOX_COST = 3000;
+const DEFAULT_PACK_SIZE = 5;
+const DEFAULT_PACKS_PER_BOX = 30;
 
 const A = {
   token: null,
@@ -6891,6 +6893,24 @@ const A = {
 
 function boxById(boxId) {
   return A.boxes.find(b => b.id === boxId) || null;
+}
+
+function boxPackSize(boxId) {
+  const box = boxById(boxId);
+  const n = Number(box?.pack_size);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_PACK_SIZE;
+}
+
+function boxPacksPerBox(boxId) {
+  const box = boxById(boxId);
+  const n = Number(box?.packs_per_box);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_PACKS_PER_BOX;
+}
+
+function openPackButtonLabel(boxId, withGems = false) {
+  const base = t('booster.openPack', { n: boxPackSize(boxId) });
+  if (!withGems) return base;
+  return base + ' · ' + STAR_GEMS_PACK_COST + ' Star Gems';
 }
 
 function starGemIconHtml(sizePx = 18) {
@@ -6993,7 +7013,7 @@ function showPaidBoosterConfirm() {
       packBtn.disabled = !canAffordPackWithGems();
     }
     if (boxBtn) {
-      boxBtn.innerHTML = 'Open 1 box (30 packs) · ' + starGemCostHtml(STAR_GEMS_BOX_COST);
+      boxBtn.innerHTML = t('booster.openPaidBox', { n: boxPacksPerBox(A.boxPick) }) + ' · ' + starGemCostHtml(STAR_GEMS_BOX_COST);
       boxBtn.disabled = !canAffordBoxWithGems() || (boxById(A.boxPick)?.kind === 'pr');
     }
     openM('modal-paid-booster');
@@ -7025,7 +7045,8 @@ function packResultsSubText(cards, opts = {}) {
     return 'Five LLE energy cards — the ultimate collector pull!';
   }
   if (opts.boxMode) {
-    let text = list.length + ' cards from 30 packs';
+    const packs = opts.packsPerBox ?? DEFAULT_PACKS_PER_BOX;
+    let text = list.length + ' cards from ' + packs + ' packs';
     if (converted) text += ' · ' + converted + ' converted to Star Gems';
     if (gemsEarned > 0) text += ' (+' + formatStarGems(gemsEarned) + ')';
     return text;
@@ -7301,6 +7322,7 @@ function refreshDynamicI18n() {
   if (el('screen-booster')?.classList.contains('active')) {
     const info = A.profile?.daily || {};
     el('booster-daily-info').textContent = t('booster.packsLeft', { n: info.remaining ?? 0 });
+    syncBoosterOpenButton(info.remaining ?? 0, !!A.boxPick);
   }
   if (el('screen-leaderboard')?.classList.contains('active') && A.lastLeaderboardData) {
     renderLeaderboardRows(A.lastLeaderboardData);
@@ -7628,7 +7650,7 @@ function packResultRarityClass(rarity) {
   return 'rarity-base-n';
 }
 
-function showPackResults(cards, boxName, { godPack = false, faceSrcByIndex = null, boxMode = false, starGemsEarned = 0 } = {}) {
+function showPackResults(cards, boxName, { godPack = false, faceSrcByIndex = null, boxMode = false, starGemsEarned = 0, packsPerBox = DEFAULT_PACKS_PER_BOX } = {}) {
   A.lastPackCards = cards || [];
   const title = el('pack-results-title');
   const sub = el('pack-results-sub');
@@ -7641,7 +7663,7 @@ function showPackResults(cards, boxName, { godPack = false, faceSrcByIndex = nul
     godEl.hidden = !godPack;
     godEl.textContent = t('booster.godPack');
   }
-  sub.textContent = packResultsSubText(cards, { godPack, boxMode, starGemsEarned });
+  sub.textContent = packResultsSubText(cards, { godPack, boxMode, starGemsEarned, packsPerBox });
   const grid = el('pack-results-grid');
   grid.replaceChildren();
   grid.classList.toggle('pack-results-grid--box', !!boxMode);
@@ -8645,7 +8667,9 @@ function syncBoosterOpenButton(remaining, hasBox) {
   const canDaily = (remaining ?? 0) > 0;
   const canGems = canAffordPackWithGems();
   btn.disabled = !hasBox || (!canDaily && !canGems);
-  btn.textContent = canDaily ? 'Open Pack (5 cards)' : ('Open Pack (5 cards) · ' + STAR_GEMS_PACK_COST + ' Star Gems');
+  btn.textContent = hasBox
+    ? openPackButtonLabel(A.boxPick, !canDaily && canGems)
+    : t('booster.openPack', { n: DEFAULT_PACK_SIZE });
 }
 
 async function runBoosterOpen(payment) {
@@ -8678,6 +8702,7 @@ async function runBoosterOpen(payment) {
       faceSrcByIndex: allFaceSrc,
       boxMode: true,
       starGemsEarned: open.star_gems_earned || 0,
+      packsPerBox: boxPacksPerBox(A.boxPick),
     });
   } else {
     const cards = open.cards || [];
@@ -8788,8 +8813,11 @@ function renderBoosterRatesModal(rates) {
   body.replaceChildren();
   const boxName = rates?.box?.name_en || rates?.box?.id || 'Pack';
   el('booster-rates-title').textContent = boxName;
-  el('booster-rates-lead').textContent =
-    (rates?.pool_size ?? 0) + ' cards in pool · chance to appear in a ' + (rates?.pack_size || 5) + '-card pack';
+  const packSize = rates?.pack_size || DEFAULT_PACK_SIZE;
+  el('booster-rates-lead').textContent = t('booster.ratesLead', {
+    pool: rates?.pool_size ?? 0,
+    n: packSize,
+  });
 
   const rarityWrap = document.createElement('div');
   rarityWrap.className = 'booster-rates-rarity';
