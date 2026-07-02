@@ -14427,6 +14427,7 @@ let G = {
   pickMarked:new Set(), pickCtx:null, heartCtx:null,
   surveil:{slots:[],wr:[],byId:{},selId:null,drag:null},
   watchdogTimer:null, watchdogStuckCount:0, lastWatchdogSig:null,
+  _pvpWatchdogTimer:null, _pvpWatchSig:null, _pvpWatchStuckCount:0, _lastAppliedAt:0,
   _cpuPromptTimer:null, _cpuPromptScheduled:null, _cpuResolveBusy:null,
   _cpuPromptRetryTimer:null, _cpuPromptRetryKey:null, _cpuPromptRetryCount:0,
   _cpuPromptHangTimer:null, _cpuPromptHangKey:null, _cpuPromptHangSince:0,
@@ -15115,8 +15116,11 @@ let G = {
     if (s?.phase === 'coin_flip' && s.coin_flip && !G._coinFlipAnimComplete) {
       finishCoinFlipAnimation(s, myId);
     }
-    if (G.polling && G.roomId && G.token && !G.isTutorial && !G.animating && !G._perfSpectacleActive) {
-      void pullLatestState();
+    if (G.polling && G.roomId && G.token && !G.isTutorial) {
+      const oppWait = el('opp-skill-wait')?.classList.contains('show');
+      if (oppWait || (!G.animating && !G._perfSpectacleActive)) {
+        void pullLatestState(!!oppWait);
+      }
     }
   });
   on('modal-card','click', e => { if(e.target===el('modal-card')) closeM('modal-card'); });
@@ -16211,6 +16215,7 @@ function stopPoll() {
   G.polling = false;
   clearTimeout(G.pollTimer);
   clearTimeout(G.watchdogTimer);
+  clearPvPWatchdog();
   stopSyncStream();
 }
 
@@ -19386,6 +19391,7 @@ function onState(s) {
     return;
   }
   if (s.status === 'finished') {
+    clearPvPWatchdog();
     TCG_DEBUG.log('state', 'apply finished (immediate)', TCG_DEBUG.snap(s));
     void applyStateUpdate(s);
     return;
@@ -19450,6 +19456,7 @@ async function applyFinishedState(s, prev) {
 /** Apply one server state snapshot: spectacle gate, log anims, or direct render. */
 async function applyStateUpdate(s) {
   if (G.isTutorial) return;
+  G._lastAppliedAt = Date.now();
   syncPromptSubmitState(s);
   if (!s?.pending_prompt) clearDeferredPromptState();
   clearStaleOpponentSkillWaitIfResolved(s, G.playerId);
@@ -19754,6 +19761,8 @@ async function applyStateUpdate(s) {
   else if (G.isCPU && (G.gameState || s)?.pending_prompt?.responder === 'p2') {
     scheduleCpuResolvePrompt(G.gameState || s, (G.gameState || s).players?.p2);
     armCpuPromptHangWatch(G.gameState || s);
+  } else if (!G.isCPU && !G.isSpectator) {
+    armPvPWatchdog(G.gameState || s);
   }
 }
 
@@ -19878,6 +19887,110 @@ function cpuPromptKey(s) {
 }
 
 const CPU_PROMPT_HANG_MS = 12000;
+const PVP_OPP_PROMPT_NUDGE_MS = 5000;
+const PVP_STUCK_PRESENTATION_MS = 12000;
+
+function clearPvPWatchdog() {
+  clearTimeout(G._pvpWatchdogTimer);
+  G._pvpWatchdogTimer = null;
+  G._pvpWatchSig = null;
+  G._pvpWatchStuckCount = 0;
+}
+
+/** Unblock polls/animations without discarding queued server snapshots. */
+function releaseStuckPresentation() {
+  if (!G.animating && !G._livePollHold && !G._perfSpectacleActive && !G._liveSpectacleGateRunning) return;
+  TCG_DEBUG.warn('pvp', 'release stuck presentation', {
+    animating: G.animating,
+    pollHold: G._livePollHold,
+    spectacle: G._perfSpectacleActive,
+    gate: G._liveSpectacleGateRunning,
+    queued: G._pendingStateQueue?.length || 0,
+  });
+  G.animating = false;
+  G._livePollHold = false;
+  G._liveRoundPlaybackActive = false;
+  G._liveSpectacleGateRunning = false;
+  G._animHideIids = null;
+  clearDeferredPromptState();
+  if (G.playerId && G.gameState) {
+    updateOpponentSkillWaitBanner(G.gameState, G.playerId);
+    updatePhaseActionButton(G.gameState, G.playerId);
+  }
+  releaseLivePolls();
+  flushPendingState();
+}
+
+function armPvPWatchdog(s) {
+  clearTimeout(G._pvpWatchdogTimer);
+  if (G.isCPU || G.isSpectator || G.isTutorial || !G.polling || !G.playerId) {
+    clearPvPWatchdog();
+    return;
+  }
+  const myId = G.playerId;
+  const oppId = myId === 'p1' ? 'p2' : 'p1';
+  const live = s || G.gameState;
+  if (!live || live.status === 'finished') {
+    clearPvPWatchdog();
+    return;
+  }
+  const pr = skillPromptUiState(live)?.pending_prompt;
+  const waitingOnOpp = pr?.responder === oppId;
+  const presentationBlocked = !!(G.animating || G._livePollHold || G._perfSpectacleActive || G._liveSpectacleGateRunning);
+  if (!waitingOnOpp && !presentationBlocked) {
+    clearPvPWatchdog();
+    return;
+  }
+  const sig = `${live.seq}|${live.phase}|${pr?.type || ''}|${pr?.responder || ''}|${G.animating}|${G._livePollHold}`;
+  if (sig === G._pvpWatchSig) {
+    G._pvpWatchStuckCount = (G._pvpWatchStuckCount || 0) + 1;
+  } else {
+    G._pvpWatchStuckCount = 0;
+    G._pvpWatchSig = sig;
+  }
+  const staleMs = Date.now() - (G._lastAppliedAt || 0);
+  const delay = waitingOnOpp
+    ? Math.max(800, PVP_OPP_PROMPT_NUDGE_MS - Math.min(staleMs, PVP_OPP_PROMPT_NUDGE_MS))
+    : Math.max(1200, PVP_STUCK_PRESENTATION_MS - Math.min(staleMs, PVP_STUCK_PRESENTATION_MS));
+  G._pvpWatchdogTimer = setTimeout(() => { void pvpWatchdogTick(live, myId, oppId, sig); }, delay);
+}
+
+async function pvpWatchdogTick(s, myId, oppId, sig) {
+  G._pvpWatchdogTimer = null;
+  if (!G.polling || G.isCPU || G.isSpectator || G.isTutorial) return;
+  const live = G.gameState || s;
+  if (!live || live.status === 'finished') {
+    clearPvPWatchdog();
+    return;
+  }
+  const pr = skillPromptUiState(live)?.pending_prompt;
+  const waitingOnOpp = pr?.responder === oppId;
+  const presentationBlocked = !!(G.animating || G._livePollHold || G._perfSpectacleActive || G._liveSpectacleGateRunning);
+  if (!waitingOnOpp && !presentationBlocked) {
+    clearPvPWatchdog();
+    return;
+  }
+  const seqBefore = G.lastSeq ?? 0;
+  TCG_DEBUG.warn('pvp', 'watchdog force pull', {
+    sig,
+    staleMs: Date.now() - (G._lastAppliedAt || 0),
+    waitingOnOpp,
+    presentationBlocked,
+    stuckCount: G._pvpWatchStuckCount || 0,
+  });
+  await pullLatestState(true);
+  await sleep(120);
+  const progressed = (G.lastSeq ?? 0) > seqBefore || G.gameState?.status === 'finished';
+  if (!progressed && (G._pvpWatchStuckCount || 0) >= 1 && presentationBlocked) {
+    releaseStuckPresentation();
+    await pullLatestState(true);
+  } else if (!progressed && waitingOnOpp && (G._pvpWatchStuckCount || 0) >= 2) {
+    clearDeferredPromptState();
+    if (G.playerId && G.gameState) updateOpponentSkillWaitBanner(G.gameState, G.playerId);
+    await pullLatestState(true);
+  }
+  armPvPWatchdog(G.gameState || live);
+}
 
 function clearCpuPromptHangWatch() {
   clearTimeout(G._cpuPromptHangTimer);
@@ -25753,11 +25866,13 @@ function liveStartPromptNeedsWait(next, myId) {
 async function waitForPipelinePromptResolution(myId, opts = {}) {
   const maxMs = opts.maxMs ?? 120000;
   const start = performance.now();
+  const oppId = myId === 'p1' ? 'p2' : 'p1';
   const isResolved = opts.isResolved || ((s) => !s?.pending_prompt);
   while (performance.now() - start < maxMs) {
     if (isPresentationSuperseded()) return;
     const cur = G.gameState || opts.targetState;
     if (!cur) return;
+    if (cur.status === 'finished') return;
     if (isResolved(cur)) return;
     const pr = cur.pending_prompt;
     if (pr?.type === 'pick_judge_success_live' && pr?.responder === myId) {
@@ -25773,7 +25888,13 @@ async function waitForPipelinePromptResolution(myId, opts = {}) {
       if (isLiveSuccessDiscardPrompt(cur) || pr.type === 'pick_judge_success_live') {
         ensurePendingPromptSurfaced(cur, myId);
       }
-      if (!isMyBlockingPromptOpen(cur)) await pullLatestState();
+      if (!isMyBlockingPromptOpen(cur)) await pullLatestState(true);
+    } else if (pr?.responder === oppId && !G.isCPU) {
+      const seqBefore = G.lastSeq ?? 0;
+      await pullLatestState(true);
+      await sleep(150);
+      if ((G.lastSeq ?? 0) > seqBefore || G.gameState?.status === 'finished') continue;
+      if (G._pendingStateQueue?.length) flushPendingState();
     }
     await sleep(250);
   }
@@ -27867,12 +27988,16 @@ async function pullLatestState(force) {
     else resumePollingTick(400);
     return;
   }
-  TCG_DEBUG.log('poll', 'pullLatestState', { seq: G.lastSeq });
+  TCG_DEBUG.log('poll', 'pullLatestState', { seq: G.lastSeq, force: !!force });
   try {
     const r = await fetch(`${API}?action=get_state&room_id=${encodeURIComponent(G.roomId)}&token=${encodeURIComponent(G.token)}&seq=${G.lastSeq}&poll=0`);
     const d = await r.json();
-    if (!d.error) onState(d);
-    else if (!handleSpectatorPollError(d.error)) TCG_DEBUG.warn('poll', 'pullLatestState error', d.error);
+    if (!d.error) {
+      if (force && d.status === 'finished') {
+        G._pendingStateQueue = (G._pendingStateQueue || []).filter(st => (st.seq ?? 0) > (d.seq ?? 0));
+      }
+      onState(d);
+    } else if (!handleSpectatorPollError(d.error)) TCG_DEBUG.warn('poll', 'pullLatestState error', d.error);
   } catch (e) { TCG_DEBUG.warn('poll', 'pullLatestState failed', e); }
 }
 
@@ -31052,16 +31177,23 @@ function skillPromptUiState(s) {
   if (!def?.pending_prompt) return best;
   const bestSeq = best?.seq ?? 0;
   const defSeq = def.seq ?? 0;
+  const myId = G.playerId;
+  const oppId = myId === 'p1' ? 'p2' : 'p1';
   const queued = G._pendingStateQueue;
   const queuedCleared = queued?.length
     && !queued[queued.length - 1]?.pending_prompt
     && (queued[queued.length - 1].seq ?? 0) >= defSeq;
-  if ((!best?.pending_prompt && bestSeq >= defSeq) || queuedCleared) {
+  const queuedOppResolved = queued?.length
+    && def.pending_prompt?.responder === oppId
+    && (queued[queued.length - 1].seq ?? 0) >= defSeq
+    && queued[queued.length - 1].pending_prompt?.responder !== oppId;
+  if ((!best?.pending_prompt && bestSeq >= defSeq) || queuedCleared || queuedOppResolved) {
     clearDeferredPromptState({ skipBannerRefresh: true });
     return best;
   }
   if (best?.pending_prompt) return best;
   const presentationActive = G.animating || G._perfSpectacleActive || G._liveRoundPlaybackActive;
+  if (presentationActive && def.pending_prompt?.responder === oppId) return def;
   if (presentationActive && def.pending_prompt) return def;
   clearDeferredPromptState({ skipBannerRefresh: true });
   return best;
@@ -31162,6 +31294,7 @@ function updateOpponentSkillWaitBanner(s, myId) {
     if (sub) sub.textContent = '';
     clearOpponentSkillWaitLogKey();
     G._sfxOppSkillWait = false;
+    clearPvPWatchdog();
     return;
   }
   if (!G._sfxOppSkillWait) {
@@ -31175,6 +31308,7 @@ function updateOpponentSkillWaitBanner(s, myId) {
   if (titleEl) setSplashTitle(titleEl, t('game.opponentSkillWait', { name: oppName }));
   if (sub) sub.textContent = src ? `${oppName} — ${src}` : '';
   appendOpponentSkillWaitLog(auth, myId, pr);
+  if (!G.isCPU && !G.isSpectator) armPvPWatchdog(auth);
 }
 
 // Stage — one mat slot per stage position
@@ -37822,6 +37956,7 @@ function freshGameGlobals() {
     pickMarked:new Set(), pickCtx:null, heartCtx:null,
     surveil:{slots:[],wr:[],byId:{},selId:null,drag:null},
     watchdogTimer:null, watchdogStuckCount:0, lastWatchdogSig:null,
+    _pvpWatchdogTimer:null, _pvpWatchSig:null, _pvpWatchStuckCount:0, _lastAppliedAt:0,
     _cpuPromptTimer:null, _cpuPromptScheduled:null, _cpuResolveBusy:null,
     _cpuPromptRetryTimer:null, _cpuPromptRetryKey:null, _cpuPromptRetryCount:0,
   _cpuPromptHangTimer:null, _cpuPromptHangKey:null, _cpuPromptHangSince:0,
