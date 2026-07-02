@@ -23,6 +23,7 @@ Procedural `require_once` modules loaded from `effects.php` (global functions, n
 | `AbilityResolver.php` | `resolveAbilityEffect` type switch |
 | `PromptResolver.php` | `actionResolvePrompt` — client `resolve_prompt` completion |
 | `ActivateAbility.php` | `actionActivateAbility` — client `activate_ability` and WR on-enter activate |
+| `LiveStartEffects.php` | `beginLiveStartEffectPhase`, `actionLiveStartChoice`, `finishLiveStartEffects`, optional Live Start queue |
 | `PromptLifecycle.php` | Small helpers (`finishPromptEffects`, pick prompts) |
 
 ## Paths and config
