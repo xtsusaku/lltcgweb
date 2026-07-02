@@ -11,11 +11,13 @@ alwaysApply: false
 | Module | File | Responsibility |
 |--------|------|----------------|
 | API client | `client/js/api-client.js` | `apiPost`, account fetch, sync meta |
+| Game sync | `client/js/game-sync.js` | Poll loop, SSE sync, `pullLatestState`, `startPoll`/`stopPoll` |
+| State apply | `client/js/state-apply.js` | `onState`, `applyStateUpdate`, pending state queue |
 | Replay debug | `client/js/replay-debug.js` | `?debug` replay export |
 | Prompt UI state | `client/js/prompt-renderer.js` | Prompt submit / overlay guards |
 | CPU entry | `client/js/cpu-ai.js` | `cpuResolvePrompt` entry (handlers may stay inline until extracted) |
 
-Load order in `index.html`: i18n → sfx → **client/js/** → main inline script → `cpu-ai.js` (after CPU helpers).
+Load order in `index.html`: i18n → sfx → **client/js/** (`api-client` → `game-sync` → `state-apply` → …) → main inline script → `cpu-ai.js` (after CPU helpers).
 
 ## Rules
 
