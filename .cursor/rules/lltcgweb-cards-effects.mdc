@@ -17,6 +17,10 @@ alwaysApply: false
 
 Known types are discovered from `src/Game/AbilityResolver.php` via `LLTCG\Game\EffectRegistry`. New core `type` strings must add a `case` in `resolveAbilityEffect` there (or set module if set-specific).
 
+## Live modifiers
+
+Modifier `then` types (`live_score_bonus`, `blade_bonus`, `grant_bonus_hearts`, etc.) are applied via `applyModifierEffect` in `src/Game/LiveModifiers.php` — not card `abilities[].type` values and not covered by `EffectRegistry`.
+
 ## Regression
 
 Engine / prompt lifecycle changes: add or update `tests/fixtures/replays/*.json` and run `composer test`.
