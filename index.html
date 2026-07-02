@@ -17837,6 +17837,16 @@ async function playLivePhaseTransition(prev, final, myId, opts = {}) {
       }
       return;
     }
+    const preFlipKeys = new Set();
+    for (const pid of ['p1', 'p2']) {
+      if (pid === myId) continue;
+      for (const c of revealFrom.players?.[pid]?.live_zone || []) {
+        if (!c.revealed && isLiveStorageRevealCard(c)) {
+          preFlipKeys.add(`${pid}:${c.instance_id}`);
+        }
+      }
+    }
+    if (preFlipKeys.size) G._liveRevealFlips = preFlipKeys;
     G.gameState = revealFrom;
     renderGame(revealFrom, { skipLog: true });
     await runLiveStorageRevealSequence(revealFrom, final, myId, {
@@ -19277,7 +19287,8 @@ async function playLogSyncedSequence(prev, final, newEntries, myId) {
   if (logWasTruncated(prev, final)) resyncGameLogFromState(final);
   const batchEmpty = batchHasEmptyLiveSkipEntries(newEntries);
   const livePrev = batchEmpty ? (effectiveEmptyLiveRoundPrev(prev, final) || prev) : prev;
-  const emptySkip = batchEmpty || shouldPresentEmptyLiveRound(livePrev, final);
+  const emptySkip = !liveSetPlacementInProgress(final)
+    && (batchEmpty || shouldPresentEmptyLiveRound(livePrev, final));
   if (emptySkip) {
     const outcome = await presentLiveRound(livePrev, final, myId, {
       newEntries,
@@ -19592,7 +19603,8 @@ async function applyStateUpdate(s) {
     rememberPerfSpectacleBaseline(prev, s);
     const livePrev = effectiveEmptyLiveRoundPrev(prev, s);
     const livePlan = liveRoundPresentationPlan(livePrev, s);
-    const emptySkip = livePlan.wantsEmptyRound || shouldPresentEmptyLiveRound(livePrev, s);
+    const emptySkip = !liveSetPlacementInProgress(s)
+      && (livePlan.wantsEmptyRound || shouldPresentEmptyLiveRound(livePrev, s));
     if (livePlan.needsLiveReveal || livePlan.wantsSpectacle || emptySkip) {
       TCG_DEBUG.log('apply', 'presentLiveRound', { ...livePlan, emptySkip, solo: isSoloPlayerEmptyLiveRound(livePrev, s) }, TCG_DEBUG.trans(livePrev, s));
       G.animating = true;
@@ -19780,7 +19792,8 @@ async function applyStateUpdate(s) {
     G._spectacleRecoveryPending = { prev, s, newEntries, myId: G.playerId };
   }
   clearStalePerfDeferState(prev, s);
-  if (!G.animating && !G._liveRoundPlaybackActive && shouldPresentEmptyLiveRound(prev, s)) {
+  if (!G.animating && !G._liveRoundPlaybackActive && !liveSetPlacementInProgress(s)
+      && shouldPresentEmptyLiveRound(prev, s)) {
     G.animating = true;
     try {
       await presentLiveRound(prev, s, G.playerId, { newEntries, forceEmptyRound: true });
@@ -25564,6 +25577,7 @@ function liveStorageHadFaceDownLive(prev, myId = G.playerId) {
 
 function shouldRunLiveRevealSequence(prev, next) {
   if (!prev || !next || G.isTutorial) return false;
+  if (liveSetPlacementInProgress(next)) return false;
   if (isEmptyLiveSkipTransition(prev, next)) return false;
   const flipKeys = collectLiveRevealFlips(prev, next);
   const oppFaceDown = liveStorageHadFaceDownOppBluff(prev);
@@ -25831,6 +25845,13 @@ function liveRoundHasLiveCardsForRound(s) {
   return liveRoundHasLiveCards(s);
 }
 
+/** Live cards on board or in the live_set placement baseline (optimistic / batched polls). */
+function liveRoundBoardHasLiveCards(s) {
+  if (liveRoundHasLiveCardsForRound(s)) return true;
+  const baseline = G._liveSetStorageBaseline;
+  return !!(baseline && liveRoundHasLiveCardsForRound(baseline));
+}
+
 function isLiveSetPhase(ph) {
   return ph === 'live_set' || ph === 'live_set_first' || ph === 'live_set_second';
 }
@@ -25875,10 +25896,10 @@ function liveRoundRequiresSpectacle(prev, next, showTurn = null) {
     const undone = scanUndoneLiveSpectacleTurn(next, prev);
     if (undone == null || undone !== turn || liveSpectacleDoneForTurn(undone)) return false;
     if (!logHasLivePerformanceForTurn(next, turn)) return false;
-    return (liveRoundHasLiveCardsForRound(prev) || liveRoundHasLiveCardsForRound(next))
+    return (liveRoundBoardHasLiveCards(prev) || liveRoundBoardHasLiveCards(next))
       || resolvedPerfSignalsForTransition(prev, next);
   }
-  if (liveRoundHasLiveCardsForRound(prev) || liveRoundHasLiveCardsForRound(next)) return true;
+  if (liveRoundBoardHasLiveCards(prev) || liveRoundBoardHasLiveCards(next)) return true;
   if (newLogHasLivePerformance(prev, next) || logHasLivePerformanceForShowTurn(prev, next, turn)) return true;
   return resolvedPerfSignalsForTransition(prev, next);
 }
@@ -26502,6 +26523,7 @@ async function playHandToLiveStoragePlacements(prev, next, myId, movesOverride =
 
 function shouldRevealLiveStorageForRound(prev, next, emptyRound = null) {
   if (!prev || !next) return false;
+  if (liveSetPlacementInProgress(next)) return false;
   const empty = emptyRound ?? isEmptyLiveSkipTransition(prev, next);
   if (empty) {
     // solo-human: own member bluffs were face-up during live_set — skip flip.
@@ -26514,12 +26536,19 @@ function shouldRevealLiveStorageForRound(prev, next, emptyRound = null) {
     return !!(board && liveStorageHasCards(board));
   }
   if (isEmptyLiveSkipTransition(prev, next)) return false;
-  return shouldRunLiveRevealSequence(prev, next);
+  if (shouldRunLiveRevealSequence(prev, next)) return true;
+  const revealBoard = buildLiveRevealPlayback(prev, next);
+  return !!(revealBoard && liveStorageHadFaceDownOppBluff(revealBoard));
 }
 
 function isMemberOnlyLiveStorageRound(prev, next) {
   if (!prev || !next) return false;
-  if (liveRoundHasLiveCards(prev) || liveRoundHasLiveCards(next)) return false;
+  if (liveRoundBoardHasLiveCards(prev) || liveRoundBoardHasLiveCards(next)) return false;
+  if (liveSetPlacementInProgress(next) || liveSetPlacementInProgress(prev)) {
+    if (liveStorageHasCards(prev) || liveStorageHasCards(next)) return false;
+    const baseline = G._liveSetStorageBaseline;
+    if (baseline && liveStorageHasCards(baseline)) return false;
+  }
   if (liveStorageHasCards(prev)) return true;
   const baseline = G._liveSetStorageBaseline;
   if (baseline && liveStorageHasCards(baseline)) return true;
@@ -26529,14 +26558,15 @@ function isMemberOnlyLiveStorageRound(prev, next) {
 
 function logTransitionHasEmptyLiveSkip(prev, next) {
   if (!next?.log) return false;
+  if (liveSetPlacementInProgress(next)) return false;
   const from = prev?.log?.length || 0;
   const slice = (next.log || []).slice(from);
   if (slice.some(e => e.msg === 'No Lives played this turn.')) return true;
-  // Batched poll (log+0): scan full log directly — must not call emptyLiveRoundShowTurn (mutual recursion).
+  // Batched poll (log+0): only match empty skip for the current LIVE show turn — not prior turns.
   if (!slice.length) {
+    const showTurn = emptyLiveRoundShowTurn(prev, next) ?? inferLiveShowTurn(prev, next);
     const fromLog = emptyLiveRoundTurnFromLog(next);
-    if (fromLog != null) return true;
-    const showTurn = inferLiveShowTurn(prev, next);
+    if (fromLog != null && showTurn != null && fromLog === showTurn) return true;
     if (showTurn != null && fullLogHasEmptyLiveSkipForTurn(next, showTurn)) return true;
   }
   return false;
@@ -26574,6 +26604,7 @@ function markEmptyLiveRoundPresented(prev, next, turn = null) {
 
 function isEmptyLiveSkipTransition(prev, next) {
   if (!prev || !next) return false;
+  if (liveSetPlacementInProgress(next)) return false;
   const showTurn = emptyLiveRoundShowTurn(prev, next);
   const from = prev.log?.length || 0;
   const slice = (next.log || []).slice(from);
@@ -26603,7 +26634,7 @@ function isEmptyLiveSkipTransition(prev, next) {
     return true;
   }
   // Recovery: state already committed (live_zone empty) but log still records empty round.
-  if (showTurn != null && !liveRoundHasLiveCards(prev) && !liveRoundHasLiveCards(next)
+  if (showTurn != null && !liveRoundBoardHasLiveCards(prev) && !liveRoundBoardHasLiveCards(next)
       && logHasLivePerformanceForTurn(next, showTurn) === false && fullLogHasEmptyLiveSkip(next)) {
     return true;
   }
@@ -26612,6 +26643,7 @@ function isEmptyLiveSkipTransition(prev, next) {
 
 function shouldPresentEmptyLiveRound(prev, next) {
   if (!prev || !next || G.isTutorial) return false;
+  if (liveSetPlacementInProgress(next)) return false;
   const ph = next?.phase;
   if (ph === 'coin_flip' || ph === 'setup' || ph === 'waiting') return false;
   const turn = emptyLiveRoundShowTurn(prev, next) ?? inferLiveShowTurn(prev, next);
@@ -27868,15 +27900,22 @@ async function playLiveSuccessDeferredEffects(prev, final, myId, newEntries) {
 /** Orchestrate live storage reveal, WR discards, and Performance spectacle for one round. */
 async function presentLiveRound(prev, next, myId, opts = {}) {
   prev = effectiveEmptyLiveRoundPrev(prev, next);
-  const plan = liveRoundPresentationPlan(prev, next, opts);
-  const forceEmpty = !!opts.forceEmptyRound;
-  const emptySkip = plan.wantsEmptyRound || forceEmpty || isEmptyLiveSkipTransition(prev, next);
-  if ((isLiveSetPlacementOnly(prev, next) || liveSetPlacementInProgress(next)) && !emptySkip) {
+  if (isLiveSetPlacementOnly(prev, next) || liveSetPlacementInProgress(next)) {
     TCG_DEBUG.log('live', 'presentLiveRound skip (live_set placement open)');
     return { reveal: false, spectacle: false, empty: false };
   }
+  const plan = liveRoundPresentationPlan(prev, next, opts);
+  const forceEmpty = !!opts.forceEmptyRound;
+  const emptySkip = plan.wantsEmptyRound || forceEmpty || isEmptyLiveSkipTransition(prev, next);
   let needsLiveReveal = plan.needsLiveReveal;
   let wantsSpectacle = plan.wantsSpectacle;
+  if (!needsLiveReveal && !emptySkip && (wantsSpectacle || isLeavingLiveSetPhase(prev, next))) {
+    const revealBoard = buildLiveRevealPlayback(prev, next, myId);
+    if (revealBoard && liveStorageHadFaceDownOppBluff(revealBoard, myId)) {
+      needsLiveReveal = true;
+      TCG_DEBUG.log('live', 'force reveal (face-down opponent storage before spectacle/performance)');
+    }
+  }
   if (emptySkip) {
     clearEmptyLiveRoundPerfState();
     needsLiveReveal = shouldRevealLiveStorageForRound(prev, next, true);
@@ -30888,10 +30927,11 @@ function isLivePipelinePhase(phase) {
 
 function leavingEmptyLivePipeline(prev, next) {
   if (!prev || !next) return false;
+  if (liveSetPlacementInProgress(next)) return false;
   const fromLive = prev.phase === 'live_set' || isLivePipelinePhase(prev.phase);
   if (!fromLive) return false;
   if (isLivePipelinePhase(next.phase) || next.phase === 'live_set') return false;
-  if (liveRoundHasLiveCards(prev) || liveRoundHasLiveCards(next)) return false;
+  if (liveRoundBoardHasLiveCards(prev) || liveRoundBoardHasLiveCards(next)) return false;
   const from = prev.log?.length || 0;
   const slice = (next.log || []).slice(from);
   if (slice.some(e => e.msg === 'No Lives played this turn.')) return true;
