@@ -219,7 +219,9 @@
     },
     "booster": {
       "title": "Open Boosters",
-      "openPack": "Open Pack (5 cards)",
+      "openPack": "Open Pack ({n} cards)",
+      "openPaidBox": "Open 1 box ({n} packs)",
+      "ratesLead": "{pool} cards in pool · chance to appear in a {n}-card pack",
       "packOpened": "Pack Opened",
       "godPack": "GOD PACK!",
       "openAnother": "Open another pack",
@@ -961,7 +963,9 @@
     },
     "booster": {
       "title": "ブースターを開封",
-      "openPack": "パック開封（5枚）",
+      "openPack": "パック開封（{n}枚）",
+      "openPaidBox": "ボックス開封（{n}パック）",
+      "ratesLead": "プール {pool} 枚 · {n}枚パックで出現する確率",
       "packOpened": "パック開封完了",
       "godPack": "GOD PACK!",
       "openAnother": "もう1パック開封",
