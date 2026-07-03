@@ -341,9 +341,9 @@ function filterStateForClient(array $state, string $roomId, string $token): arra
 }
 
 function getStatePolling(): void {
-    tcgRateLimitForAction('get_state');
     $roomId      = $_GET['room_id'] ?? '';
     $playerToken = $_GET['token']   ?? $_SERVER['HTTP_X_PLAYER_TOKEN'] ?? '';
+    tcgRateLimitForAction('get_state', ['room_id' => $roomId, 'token' => $playerToken]);
     $lastSeq     = intval($_GET['seq'] ?? 0);
 
     if (!$roomId || !$playerToken) {

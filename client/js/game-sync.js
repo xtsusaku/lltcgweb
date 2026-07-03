@@ -49,6 +49,21 @@
     else G.pollTimer = setTimeout(doPollLegacy, delayMs);
   };
 
+  function pollDelayAfterError(errorMsg) {
+    if (typeof errorMsg === 'string' && /rate limit/i.test(errorMsg)) {
+      G._pollRateLimitBackoff = Math.min((G._pollRateLimitBackoff || 0) + 1, 6);
+      return Math.min(8000, 800 * (2 ** G._pollRateLimitBackoff));
+    }
+    G._pollRateLimitBackoff = 0;
+    return null;
+  }
+
+  function nextPollDelayMs(errorMsg) {
+    const backoff = pollDelayAfterError(errorMsg);
+    if (backoff != null) return backoff;
+    return G.isCPU ? 280 : 600;
+  }
+
   global.stopPoll = function stopPoll() {
     G.polling = false;
     clearTimeout(G.pollTimer);
@@ -203,16 +218,21 @@
       if (G.polling) G.pollTimer = setTimeout(doPollLegacy, 400);
       return;
     }
+    let pollError = null;
     try {
       TCG_DEBUG.log('poll', 'fetch', { seq: G.lastSeq, room: G.roomId });
       const r = await fetch(`${API}?action=get_state&room_id=${encodeURIComponent(G.roomId)}&token=${G.token}&seq=${G.lastSeq}`);
       const d = await r.json();
       if (d.error) {
         if (handleSpectatorPollError(d.error)) return;
+        pollError = d.error;
         TCG_DEBUG.warn('poll', 'error', d.error);
-      } else onState(d);
+      } else {
+        G._pollRateLimitBackoff = 0;
+        onState(d);
+      }
     } catch (e) { TCG_DEBUG.warn('poll', 'fetch failed', e); }
-    if (G.polling) G.pollTimer = setTimeout(doPollLegacy, G.isCPU ? 280 : 600);
+    if (G.polling) G.pollTimer = setTimeout(doPollLegacy, nextPollDelayMs(pollError));
   };
 
   global.pullLatestState = async function pullLatestState(force) {
