@@ -6788,12 +6788,13 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       + '&redirect_uri=' + encodeURIComponent(WRAPPED_OAUTH_REDIRECT)
       + '&response_type=code&scope=identify&state=' + encodeURIComponent(DISCORD_OAUTH_STATE_TCG);
   }
-  function showInlineGuestAuth(message) {
+  function showInlineGuestAuth(i18nKey) {
     var authEl = document.getElementById('auth-status');
     var loginBtn = document.getElementById('btn-discord-login');
     var guestMenu = document.getElementById('auth-guest-menu');
     if (authEl) {
-      authEl.textContent = message;
+      authEl.setAttribute('data-i18n', i18nKey || 'auth.guestTimeout');
+      authEl.textContent = I18N && I18N.t ? I18N.t(i18nKey || 'auth.guestTimeout') : 'Sign-in check timed out — play unranked, or retry Discord sign-in.';
       authEl.setAttribute('data-auth-boot', 'done');
     }
     if (loginBtn) {
@@ -6818,7 +6819,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     var authEl = document.getElementById('auth-status');
     var boot = authBootState(authEl);
     if (!authEl || boot !== 'pending' || !guestMenuStillHidden()) return;
-    showInlineGuestAuth(timeoutGuestMessage());
+    showInlineGuestAuth('auth.guestTimeout');
   }, AUTH_GUARD_MS);
   var guardPoll = setInterval(function () {
     var authEl = document.getElementById('auth-status');
@@ -6830,11 +6831,11 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     }
     var elapsed = Date.now() - bootStartedAt;
     if (boot === 'pending' && elapsed >= AUTH_GUARD_MS) {
-      showInlineGuestAuth(timeoutGuestMessage());
+      showInlineGuestAuth('auth.guestTimeout');
       return;
     }
     if (boot === 'booting' && elapsed >= 18000) {
-      showInlineGuestAuth(timeoutGuestMessage());
+      showInlineGuestAuth('auth.guestTimeout');
     }
   }, 2000);
   window.__tcgClearAuthBootGuard = function () {
@@ -8368,7 +8369,7 @@ async function initAccountFlow() {
     if (authDone) return;
     authDone = true;
     clearActiveGameSession();
-    showGuestAuth(t('auth.guestTimeout'));
+    showGuestAuth(null, 'auth.guestTimeout');
   }, AUTH_BOOT_WATCHDOG_MS);
   try {
     const params = new URLSearchParams(location.search);
@@ -8386,16 +8387,19 @@ async function initAccountFlow() {
     let token = getAuthToken();
     if (!token) {
       if (await resumeActiveGameIfAny()) return;
-      showGuestAuth('Sign in with Discord to save your collection and play ranked.');
+      showGuestAuth(null, 'auth.guestPrompt');
       return;
     }
-    if (authEl) authEl.textContent = 'Signing in…';
+    if (authEl) {
+      authEl.setAttribute('data-i18n', 'auth.signingIn');
+      authEl.textContent = t('auth.signingIn');
+    }
     persistAuthToken(token);
     A.token = token;
     const me = await accountGet('me');
     if (!me.success) {
       localStorage.removeItem(AUTH_TOKEN_KEY);
-      showGuestAuth('Session expired — sign in again, or play unranked without an account.');
+      showGuestAuth(null, 'auth.sessionExpired');
       return;
     }
     A.user = me.user;
@@ -8411,18 +8415,24 @@ async function initAccountFlow() {
     enterHub(me);
     setTimeout(resumeRankedSearchIfQueued, 0);
   } catch (e) {
-    showGuestAuth(e.message || 'Could not load account — you can still play unranked.');
+    showGuestAuth(e.message || t('auth.loadError'));
   } finally {
     finishAuthBoot();
   }
 }
 
-function showGuestAuth(message) {
+function showGuestAuth(message, i18nKey) {
   const authEl = el('auth-status');
   const loginBtn = el('btn-discord-login');
   const guestMenu = el('auth-guest-menu');
   if (authEl) {
-    authEl.textContent = message;
+    if (i18nKey) {
+      authEl.setAttribute('data-i18n', i18nKey);
+      authEl.textContent = t(i18nKey);
+    } else {
+      authEl.removeAttribute('data-i18n');
+      authEl.textContent = message || '';
+    }
     authEl.setAttribute('data-auth-boot', 'done');
   }
   if (loginBtn) {
@@ -8488,7 +8498,7 @@ function syncLobbyExperimentField() {
 function leaveLobbyToMenu() {
   if (A.casualSearching) void cancelCasualSearch();
   if (A.profile) enterHub(A.profile);
-  else showGuestAuth('Sign in with Discord to save your collection and play ranked.');
+  else showGuestAuth(null, 'auth.guestPrompt');
 }
 
 function openOptionsScreen() {
@@ -14556,7 +14566,7 @@ let G = {
   on('btn-auth-debug-card-test', 'click', openDebugCardTestScreen);
   on('btn-auth-debug-replay', 'click', openDebugReplayScreen);
   on('btn-auth-tutorial', 'click', startTutorial);
-  on('btn-debug-replay-back', 'click', () => showGuestAuth('Play unranked without an account, or sign in for ranked.'));
+  on('btn-debug-replay-back', 'click', () => showGuestAuth(null, 'auth.guestPlayHint'));
   on('inp-replay-file', 'change', (e) => onReplayFileSelected(e.target.files?.[0] || null));
   on('btn-debug-replay-start', 'click', startDebugReplayFromFile);
   on('btn-debug-save-replay', 'click', saveReplayFile);
@@ -14565,7 +14575,7 @@ let G = {
   on('btn-replay-next', 'click', () => replayGotoStep(Math.min(G.replayTotal, G.replayStep + 1)));
   on('btn-replay-last', 'click', () => replayGotoStep(G.replayTotal));
   on('btn-replay-play', 'click', toggleReplayAutoPlay);
-  on('btn-debug-card-test-back', 'click', () => showGuestAuth('Play unranked without an account, or sign in for ranked.'));
+  on('btn-debug-card-test-back', 'click', () => showGuestAuth(null, 'auth.guestPlayHint'));
   on('btn-debug-card-test-start', 'click', startDebugCardTest);
   document.querySelectorAll('#screen-debug-card-test .debug-stage-select').forEach((sel) => {
     sel.addEventListener('change', syncDebugStageCustomInputs);
@@ -14583,7 +14593,7 @@ let G = {
   on('btn-pack-again', 'click', openSamePackAgain);
   on('btn-pack-hub', 'click', () => enterHub(A.profile));
   on('btn-deck-back', 'click', () => {
-    if (A.deckBuilderMode === 'experiment') showGuestAuth('Sign in with Discord to save your collection and play ranked.');
+    if (A.deckBuilderMode === 'experiment') showGuestAuth(null, 'auth.guestPrompt');
     else enterHub(A.profile);
   });
   on('btn-ranked-back', 'click', () => enterHub(A.profile));

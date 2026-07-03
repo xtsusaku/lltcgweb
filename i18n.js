@@ -14,7 +14,12 @@
     },
     "auth": {
       "checking": "Checking Discord sign-in…",
+      "signingIn": "Signing in…",
       "signInDiscord": "Sign in with Discord",
+      "guestPrompt": "Sign in with Discord to save your collection and play ranked.",
+      "guestPlayHint": "Play unranked without an account, or sign in for ranked.",
+      "sessionExpired": "Session expired — sign in again, or play unranked without an account.",
+      "loadError": "Could not load account — you can still play unranked.",
       "guestTimeout": "Sign-in check timed out — play unranked, or retry Discord sign-in."
     },
     "menu": {
@@ -758,7 +763,12 @@
     },
     "auth": {
       "checking": "Discordサインインを確認中…",
+      "signingIn": "サインイン中…",
       "signInDiscord": "Discordでサインイン",
+      "guestPrompt": "Discordでサインインしてコレクションを保存し、ランク戦をプレイしましょう。",
+      "guestPlayHint": "アカウントなしで非ランクプレイするか、サインインしてランク戦をプレイできます。",
+      "sessionExpired": "セッションの有効期限が切れました——再度サインインするか、アカウントなしで非ランクプレイしてください。",
+      "loadError": "アカウントを読み込めませんでした——非ランクプレイは引き続き可能です。",
       "guestTimeout": "サインイン確認がタイムアウトしました——非ランクでプレイするか、Discordサインインを再試行してください。"
     },
     "menu": {
