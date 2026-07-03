@@ -17,6 +17,7 @@ require_once __DIR__ . '/AbilityResolverSwitchBlade.php';
 require_once __DIR__ . '/AbilityResolverSwitchGrant.php';
 require_once __DIR__ . '/AbilityResolverSwitchAddFromWr.php';
 require_once __DIR__ . '/AbilityResolverSwitchPlayerChoice.php';
+require_once __DIR__ . '/AbilityResolverSwitchBaton.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -100,6 +101,12 @@ function resolveAbilityEffectSwitch(
     if (str_starts_with($type, 'opponent_')
         || str_starts_with($type, 'player_choice')) {
         return tryResolveAbilityEffectSwitchPlayerChoice($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
+    if (str_starts_with($type, 'if_baton_')
+        || $type === 'allows_double_baton'
+        || str_starts_with($type, 'if_double_baton_')) {
+        return tryResolveAbilityEffectSwitchBaton($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
     switch ($type) {
@@ -210,30 +217,6 @@ function resolveAbilityEffectSwitch(
                 " — [$name] Members cannot become Active by effects this turn.");
             break;
 
-        case 'if_baton_lower_cost':
-            if (memberBatonFromLowerCostSubunit($source, $ab['baton_subunit'] ?? '')) {
-                $then = $ab['then'] ?? [];
-                if (!empty($then)) {
-                    $thenType = $then['type'] ?? '';
-                    if (in_array($thenType, [
-                        'blade_bonus', 'hearts_and_blade_bonus', 'live_score_bonus',
-                    ], true)) {
-                        $state = applyModifierEffect($state, $pid, $then);
-                        if ($thenType === 'blade_bonus') {
-                            $state = addLog($state, $state['players'][$pid]['name'] .
-                                ' — [' . $name . '] gained +' . intval($then['amount'] ?? 0) .
-                                ' Blade until Live ends (Baton Touch).');
-                        } else {
-                            $state = addLog($state, $state['players'][$pid]['name'] .
-                                ' — [' . $name . '] Baton Touch effect resolved.');
-                        }
-                    } else {
-                        $state = resolveAbilityEffect($state, $pid, $source, $then, $ctx);
-                    }
-                }
-            }
-            break;
-
         case 'reveal_hand_look_live_if_no_live':
             if (!empty($ab['requires_other_stage_member'])
                 && !stageHasOtherMember($p, $source['instance_id'] ?? '')) {
@@ -320,33 +303,6 @@ function resolveAbilityEffectSwitch(
             }
             break;
 
-
-        case 'if_baton_wr_add_live_not_self':
-            if (empty($source['entered_via_baton'])) break;
-            $batonId = $source['baton_wr_member_id'] ?? '';
-            if ($batonId === '') break;
-            $batonCard = null;
-            foreach ($p['waiting_room'] as $c) {
-                if (($c['instance_id'] ?? '') === $batonId) {
-                    $batonCard = $c;
-                    break;
-                }
-            }
-            if ($batonCard && cardNameMatchesList($batonCard, $ab['exclude_names'] ?? [])) {
-                break;
-            }
-            if (!$batonCard || !cardMatchesGroup($batonCard, $ab['group'] ?? '', 'member')) break;
-            $added = addFromWaitingRoomFiltered(
-                $p,
-                $ab['group'] ?? '',
-                'live',
-                1
-            );
-            if ($added > 0) {
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    " — [$name] added 1 Live card from Waiting Room (Baton Touch).");
-            }
-            break;
 
         case 'on_enter_if_named_activate_add_wr':
             if (!stageHasNamedMember($p, $ab['names'] ?? [])) break;
@@ -643,29 +599,6 @@ function resolveAbilityEffectSwitch(
                 ' — [' . $name . '] if Live scores tie, neither player adds Success Lives this turn.');
             break;
 
-        case 'if_baton_wr_group_to_hand':
-            if (empty($source['entered_via_baton'])) break;
-            $batonId = $source['baton_wr_member_id'] ?? '';
-            if ($batonId === '') break;
-            $picked = null;
-            $rest = [];
-            foreach ($p['waiting_room'] as $c) {
-                if (!$picked && ($c['instance_id'] ?? '') === $batonId
-                    && cardMatchesGroup($c, $ab['group'] ?? '', $ab['filter'] ?? 'member')) {
-                    $picked = $c;
-                } else {
-                    $rest[] = $c;
-                }
-            }
-            if ($picked) {
-                $p['waiting_room'] = $rest;
-                $p['hand'][] = $picked;
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    ' — [' . $name . '] added ' . cardDisplayName($picked) . ' from Baton Touch to hand.');
-            }
-            break;
-
-
         case 'reduce_yell_reveal_count':
             if (!empty($ab['requires_other_members'])) {
                 $others = 0;
@@ -729,32 +662,6 @@ function resolveAbilityEffectSwitch(
         case 'on_enter_side_area':
             $slot = $ctx['slot'] ?? findMemberSlot($p, $source['instance_id'] ?? '');
             $state = applyOnEnterSideEffect($state, $pid, $p, $name, $ab, $slot);
-            break;
-
-        case 'allows_double_baton':
-            break;
-
-        case 'if_double_baton_group_bonus':
-            if (intval($source['baton_count'] ?? 0) < intval($ab['min_baton'] ?? 2)) break;
-            $group = $ab['group'] ?? '';
-            $batonGroups = $source['baton_member_groups'] ?? [];
-            $groupCount = count(array_filter($batonGroups, fn($g) => $g === $group));
-            if ($groupCount < intval($ab['min_baton'] ?? 2)) break;
-            $drawn = drawCardsForPlayer($state, $pid, intval($ab['draw'] ?? 2));
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                " — [$name] drew $drawn (double Baton Touch).");
-            $placed = putWrGroupMemberToEmptyStage(
-                $p,
-                $ab['group'] ?? '',
-                intval($ab['max_cost'] ?? 4),
-                intval($state['turn'] ?? 1)
-            );
-            if ($placed) {
-                $m = $placed['member'];
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    ' — [' . $name . '] put ' . cardDisplayName($m) .
-                    ' from Waiting Room onto Stage.');
-            }
             break;
 
         case 'energy_wait_if_baton_group_min_energy':
