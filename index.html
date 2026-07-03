@@ -8099,7 +8099,7 @@ function discordAuthUrl() {
     + '&redirect_uri=' + encodeURIComponent(WRAPPED_OAUTH_REDIRECT)
     + '&response_type=code&scope=identify&state=' + encodeURIComponent(DISCORD_OAUTH_STATE_TCG);
 }
-// fetchWithTimeout, parseAccountJson, accountGet, accountPost: client/js/api-client.js (do not redeclare — shadows window.* and recurses)
+// fetchWithTimeout, parseAccountJson, accountGet, accountPost, apiPost, captureSyncMeta: client/js/api-client.js (do not redeclare)
 
 function saveActiveGameSession() {
   if (G.isTutorial || G.isSpectator || !G.roomId || !G.token) return;
@@ -16181,9 +16181,7 @@ function copyCode(){
 }
 function setErr(m){ el('lerr').textContent=m; }
 
-function captureSyncMeta(res) {
-  return window.captureSyncMeta(res);
-}
+// captureSyncMeta: client/js/api-client.js
 
 // Poll / SSE sync: client/js/game-sync.js
 
@@ -35850,9 +35848,7 @@ function toast(m, ms, asHtml=false){
   _tt=setTimeout(()=>{ t.classList.remove('show'); t.textContent=''; t.innerHTML=''; }, ms||2500);
 }
 
-async function apiPost(action,body){
-  return window.apiPost(action, body);
-}
+// apiPost: client/js/api-client.js
 
 function findHand(iid,s,myId){ return (s?.players?.[myId]?.hand||[]).find(c=>c.instance_id===iid)||null; }
 
