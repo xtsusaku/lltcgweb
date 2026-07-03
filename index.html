@@ -6766,14 +6766,14 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
   </div>
 </div>
 
-<script src="i18n.js?v=6"></script>
-<script src="log_i18n.js?v=4"></script>
-<script src="sfx.js?v=14"></script>
-<script src="client/js/api-client.js?v=1"></script>
-<script src="client/js/game-sync.js?v=1"></script>
-<script src="client/js/state-apply.js?v=1"></script>
-<script src="client/js/replay-debug.js?v=1"></script>
-<script src="client/js/prompt-renderer.js?v=3"></script>
+<script src="i18n.js?v=7"></script>
+<script src="log_i18n.js?v=5"></script>
+<script src="sfx.js?v=15"></script>
+<script src="client/js/api-client.js?v=2"></script>
+<script src="client/js/game-sync.js?v=2"></script>
+<script src="client/js/state-apply.js?v=2"></script>
+<script src="client/js/replay-debug.js?v=2"></script>
+<script src="client/js/prompt-renderer.js?v=4"></script>
 <!-- Early auth guard: separate script so a main-bundle parse error cannot leave auth stuck forever. -->
 <script>
 (function () {
@@ -6801,16 +6801,47 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       loginBtn.onclick = function () { location.href = discordAuthUrl(); };
     }
     if (guestMenu) guestMenu.hidden = false;
+    if (typeof window.__tcgClearAuthBootGuard === 'function') window.__tcgClearAuthBootGuard();
   }
+  function authBootState(authEl) {
+    return authEl ? (authEl.getAttribute('data-auth-boot') || 'pending') : 'done';
+  }
+  function guestMenuStillHidden() {
+    var guestMenu = document.getElementById('auth-guest-menu');
+    return !guestMenu || guestMenu.hidden;
+  }
+  function timeoutGuestMessage() {
+    return I18N && I18N.t ? I18N.t('auth.guestTimeout') : 'Sign-in check timed out — play unranked, or retry Discord sign-in.';
+  }
+  var bootStartedAt = Date.now();
   var guardTimer = setTimeout(function () {
     var authEl = document.getElementById('auth-status');
-    if (!authEl || authEl.getAttribute('data-auth-boot') !== 'pending') return;
-    var msg = I18N && I18N.t ? I18N.t('auth.guestTimeout') : 'Sign-in check timed out — play unranked, or retry Discord sign-in.';
-    showInlineGuestAuth(msg);
+    var boot = authBootState(authEl);
+    if (!authEl || boot !== 'pending' || !guestMenuStillHidden()) return;
+    showInlineGuestAuth(timeoutGuestMessage());
   }, AUTH_GUARD_MS);
+  var guardPoll = setInterval(function () {
+    var authEl = document.getElementById('auth-status');
+    if (!authEl) return;
+    var boot = authBootState(authEl);
+    if (boot === 'done' || !guestMenuStillHidden()) {
+      if (typeof window.__tcgClearAuthBootGuard === 'function') window.__tcgClearAuthBootGuard();
+      return;
+    }
+    var elapsed = Date.now() - bootStartedAt;
+    if (boot === 'pending' && elapsed >= AUTH_GUARD_MS) {
+      showInlineGuestAuth(timeoutGuestMessage());
+      return;
+    }
+    if (boot === 'booting' && elapsed >= 18000) {
+      showInlineGuestAuth(timeoutGuestMessage());
+    }
+  }, 2000);
   window.__tcgClearAuthBootGuard = function () {
     clearTimeout(guardTimer);
     guardTimer = null;
+    clearInterval(guardPoll);
+    guardPoll = null;
   };
 })();
 </script>
@@ -8332,7 +8363,6 @@ async function initAccountFlow() {
     authDone = true;
     clearTimeout(authWatchdog);
     if (authEl) authEl.setAttribute('data-auth-boot', 'done');
-    if (typeof window.__tcgClearAuthBootGuard === 'function') window.__tcgClearAuthBootGuard();
   };
   const authWatchdog = setTimeout(() => {
     if (authDone) return;
@@ -8402,6 +8432,7 @@ function showGuestAuth(message) {
   if (guestMenu) guestMenu.hidden = false;
   syncDebugCardTestButton();
   showScr('auth');
+  if (typeof window.__tcgClearAuthBootGuard === 'function') window.__tcgClearAuthBootGuard();
 }
 
 function syncDebugCardTestButton(forceShow) {
@@ -8525,6 +8556,7 @@ async function resetAccount() {
 function enterHub(me) {
   const authEl = el('auth-status');
   if (authEl) authEl.setAttribute('data-auth-boot', 'done');
+  if (typeof __tcgClearAuthBootGuard === 'function') __tcgClearAuthBootGuard();
   A.profile = me || A.profile;
   syncStarGemsFromProfile(A.profile);
   const userName = A.profile?.user?.username || A.user?.username || 'Player';
@@ -35997,6 +36029,6 @@ function mkNoImg(card){
   return d;
 }
 </script>
-<script src="client/js/cpu-ai.js?v=1"></script>
+<script src="client/js/cpu-ai.js?v=2"></script>
 </body>
 </html>
