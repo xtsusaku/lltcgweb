@@ -31,6 +31,7 @@ require_once __DIR__ . '/AbilityResolverSwitchPickWr.php';
 require_once __DIR__ . '/AbilityResolverSwitchReveal.php';
 require_once __DIR__ . '/AbilityResolverSwitchPickYellMember.php';
 require_once __DIR__ . '/AbilityResolverSwitchFormationDiscarded.php';
+require_once __DIR__ . '/AbilityResolverSwitchMemberHeartsLiveSuccess.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -177,6 +178,13 @@ function resolveAbilityEffectSwitch(
         'buff_member_matching_discarded_group',
     ], true)) {
         return tryResolveAbilityEffectSwitchFormationDiscarded($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
+    if (in_array($type, [
+        'member_hearts_as_blade',
+        'negate_self_live_success_if_group_hearts',
+    ], true)) {
+        return tryResolveAbilityEffectSwitchMemberHeartsLiveSuccess($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
     switch ($type) {
@@ -383,36 +391,6 @@ function resolveAbilityEffectSwitch(
                     intval($ab['max_combined_cost'] ?? 4) . ') to put on Stage in Wait.',
                 'ability'            => $ab,
             ];
-            break;
-
-        case 'member_hearts_as_blade':
-            foreach ($p['stage'] as $slot => &$mbr) {
-                if ($mbr && ($mbr['instance_id'] ?? '') === ($source['instance_id'] ?? '')) {
-                    $mbr['hearts_as_blade_color'] = $ab['color'] ?? 'blue';
-                    $p['stage'][$slot] = $mbr;
-                    break;
-                }
-            }
-            unset($mbr);
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] printed hearts treated as ' .
-                ucfirst($ab['color'] ?? 'blue') . ' Blade hearts until this Live ends.');
-            break;
-
-        case 'negate_self_live_success_if_group_hearts':
-            $heartColor = (string)($ab['heart_color'] ?? '');
-            if (sumGroupStageHearts($p, $ab['group'] ?? 'Sunshine', $heartColor)
-                >= intval($ab['min_hearts'] ?? 6)) {
-                foreach ($p['live_zone'] as &$lc) {
-                    if ($lc && ($lc['instance_id'] ?? '') === ($source['instance_id'] ?? '')) {
-                        $lc['live_success_negated'] = true;
-                        break;
-                    }
-                }
-                unset($lc);
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    ' — [' . $name . '] Live Success ability negated (Aqours stage hearts).');
-            }
             break;
 
         case 'reduce_yell_reveal_count':
