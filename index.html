@@ -5297,7 +5297,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
       </div>
     </div>
     <div class="panel auth-box account-panel">
-      <p id="auth-status" data-i18n="auth.checking">Checking Discord sign-in…</p>
+      <p id="auth-status" data-auth-boot="pending" data-i18n="auth.checking">Checking Discord sign-in…</p>
       <div class="auth-actions">
         <button class="btn-grad" id="btn-discord-login" type="button" hidden data-i18n="auth.signInDiscord">Sign in with Discord</button>
       </div>
@@ -6779,7 +6779,6 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 (function () {
   'use strict';
   var I18N = window.LLTCG_I18N;
-  var AUTH_CHECK_MSG = I18N && I18N.t ? I18N.t('auth.checking') : 'Checking Discord sign-in…';
   var AUTH_GUARD_MS = 12000;
   var DISCORD_CLIENT_ID = '1439716818058088612';
   var WRAPPED_OAUTH_REDIRECT = 'https://loveliveradio.ca/wrapped';
@@ -6793,7 +6792,10 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
     var authEl = document.getElementById('auth-status');
     var loginBtn = document.getElementById('btn-discord-login');
     var guestMenu = document.getElementById('auth-guest-menu');
-    if (authEl) authEl.textContent = message;
+    if (authEl) {
+      authEl.textContent = message;
+      authEl.setAttribute('data-auth-boot', 'done');
+    }
     if (loginBtn) {
       loginBtn.hidden = false;
       loginBtn.onclick = function () { location.href = discordAuthUrl(); };
@@ -6802,7 +6804,7 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
   }
   var guardTimer = setTimeout(function () {
     var authEl = document.getElementById('auth-status');
-    if (!authEl || authEl.textContent !== AUTH_CHECK_MSG) return;
+    if (!authEl || authEl.getAttribute('data-auth-boot') !== 'pending') return;
     var msg = I18N && I18N.t ? I18N.t('auth.guestTimeout') : 'Sign-in check timed out — play unranked, or retry Discord sign-in.';
     showInlineGuestAuth(msg);
   }, AUTH_GUARD_MS);
@@ -8321,14 +8323,15 @@ async function resumeActiveGameIfAny() {
 }
 
 async function initAccountFlow() {
-  if (typeof window.__tcgClearAuthBootGuard === 'function') window.__tcgClearAuthBootGuard();
   const authEl = el('auth-status');
   const loginBtn = el('btn-discord-login');
   const guestMenu = el('auth-guest-menu');
+  if (authEl) authEl.setAttribute('data-auth-boot', 'booting');
   let authDone = false;
   const finishAuthBoot = () => {
     authDone = true;
     clearTimeout(authWatchdog);
+    if (authEl) authEl.setAttribute('data-auth-boot', 'done');
     if (typeof window.__tcgClearAuthBootGuard === 'function') window.__tcgClearAuthBootGuard();
   };
   const authWatchdog = setTimeout(() => {
@@ -8388,7 +8391,10 @@ function showGuestAuth(message) {
   const authEl = el('auth-status');
   const loginBtn = el('btn-discord-login');
   const guestMenu = el('auth-guest-menu');
-  if (authEl) authEl.textContent = message;
+  if (authEl) {
+    authEl.textContent = message;
+    authEl.setAttribute('data-auth-boot', 'done');
+  }
   if (loginBtn) {
     loginBtn.hidden = false;
     loginBtn.onclick = () => { location.href = discordAuthUrl(); };
@@ -8517,6 +8523,8 @@ async function resetAccount() {
 }
 
 function enterHub(me) {
+  const authEl = el('auth-status');
+  if (authEl) authEl.setAttribute('data-auth-boot', 'done');
   A.profile = me || A.profile;
   syncStarGemsFromProfile(A.profile);
   const userName = A.profile?.user?.username || A.user?.username || 'Player';
