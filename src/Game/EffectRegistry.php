@@ -14,12 +14,17 @@ final class EffectRegistry
             return $types;
         }
         $root = dirname(__DIR__, 2);
-        $src = (string)file_get_contents($root . '/src/Game/AbilityResolverSwitch.php');
-        if (!preg_match_all("/case '([a-z0-9_]+)':/", $src, $m)) {
-            $types = [];
-            return $types;
+        $paths = glob($root . '/src/Game/AbilityResolverSwitch*.php') ?: [];
+        $all = [];
+        foreach ($paths as $path) {
+            $src = (string)file_get_contents($path);
+            if (preg_match_all("/case '([a-z0-9_]+)':/", $src, $m)) {
+                foreach ($m[1] as $type) {
+                    $all[$type] = true;
+                }
+            }
         }
-        $types = array_values(array_unique($m[1]));
+        $types = array_keys($all);
         sort($types);
         return $types;
     }
