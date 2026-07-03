@@ -9,6 +9,7 @@ require_once __DIR__ . '/AbilityResolverSwitchLive.php';
 require_once __DIR__ . '/AbilityResolverSwitchDeckLook.php';
 require_once __DIR__ . '/AbilityResolverSwitchScore.php';
 require_once __DIR__ . '/AbilityResolverSwitchWaitActivate.php';
+require_once __DIR__ . '/AbilityResolverSwitchYell.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -45,6 +46,10 @@ function resolveAbilityEffectSwitch(
 
     if (str_starts_with($type, 'wait_') || str_starts_with($type, 'activate_')) {
         return tryResolveAbilityEffectSwitchWaitActivate($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
+    if (str_starts_with($type, 'yell_') || $type === 'waive_one_required_heart_color') {
+        return tryResolveAbilityEffectSwitchYell($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
     switch ($type) {
@@ -707,26 +712,6 @@ function resolveAbilityEffectSwitch(
             }
             break;
 
-        case 'yell_hearts_wildcard':
-        case 'yell_heart_score_bonus':
-        case 'waive_one_required_heart_color':
-            if (!stageHasGroupMember($p, $ab['requires_stage_group'] ?? '')) break;
-            if (!empty($state['pending_prompt'])) break;
-            $choices = $ab['colors'] ?? ['pink', 'green', 'blue'];
-            $state['pending_prompt'] = [
-                'type'          => 'waive_required_heart_color',
-                'owner'         => $pid,
-                'responder'     => $pid,
-                'source_id'     => $source['instance_id'] ?? '',
-                'source_name'   => $name,
-                'prompt'        => 'Choose 1 required heart color you do not need for this Live.',
-                'choices'       => $choices,
-                'choice_labels' => array_map(fn($c) => ucfirst($c) . ' ♡ waived', $choices),
-                'ability'       => $ab,
-            ];
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] choose a heart color to waive.');
-            break;
 
         case 'choose_required_heart_pair_gray':
             if (!stageHasGroupMember($p, $ab['requires_stage_group'] ?? '')) break;
@@ -867,21 +852,7 @@ function resolveAbilityEffectSwitch(
             }
             break;
 
-        case 'yell_blades_to_blue':
-            $state = initLiveModifiers($state);
-            $state['live_modifiers'][$pid]['yell_blades_to_blue'] = true;
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] Yell Blade hearts become Blue until Live ends.');
-            break;
 
-        case 'yell_all_heart_types_score_bonus':
-            $yellCards = $ctx['yell_cards'] ?? $p['_pending_yell_wr'] ?? [];
-            if (yellMembersHaveAllHeartColors($yellCards)) {
-                bumpLiveCardScore($state, $pid, $source['instance_id'] ?? '', intval($ab['amount'] ?? 1));
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    ' — [' . $name . '] score +' . intval($ab['amount'] ?? 1) . ' (all heart colors in Yell).');
-            }
-            break;
 
         case 'turn_one_live_score_member_blade':
             if (intval($state['turn'] ?? 1) !== 1) {
@@ -1393,13 +1364,6 @@ function resolveAbilityEffectSwitch(
                 ' — [' . $name . '] choose Members for bonus hearts.');
             break;
 
-        case 'yell_blades_to_color':
-            $state = initLiveModifiers($state);
-            $color = $ab['color'] ?? 'purple';
-            $state['live_modifiers'][$pid]['yell_blades_to_color'] = $color;
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] Yell Blade hearts become ' . ucfirst($color) . ' until Live ends.');
-            break;
 
         case 'hearts_if_combined_energy':
         case 'live_score_if_opp_success_total':
