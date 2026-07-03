@@ -29,6 +29,7 @@ require_once __DIR__ . '/AbilityResolverSwitchBlock.php';
 require_once __DIR__ . '/AbilityResolverSwitchOppMayDiscard.php';
 require_once __DIR__ . '/AbilityResolverSwitchPickWr.php';
 require_once __DIR__ . '/AbilityResolverSwitchReveal.php';
+require_once __DIR__ . '/AbilityResolverSwitchPickYellMember.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -166,6 +167,10 @@ function resolveAbilityEffectSwitch(
         return tryResolveAbilityEffectSwitchReveal($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
+    if ($type === 'pick_yell_member') {
+        return tryResolveAbilityEffectSwitchPickYellMember($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
     switch ($type) {
         case 'add_from_waiting_room':
             $candidates = array_values(array_filter($p['waiting_room'], function ($c) use ($ab) {
@@ -296,34 +301,6 @@ function resolveAbilityEffectSwitch(
                         " — [$name] $n other Member(s) gained +" . intval($ab['amount'] ?? 2) . ' Blade until Live ends.');
                 }
             }
-            break;
-
-        case 'pick_yell_member':
-            if (($ctx['phase'] ?? '') !== 'live_success') break;
-            $yellPool = $ctx['yell_cards'] ?? $p['_pending_yell_wr'] ?? [];
-            $candidates = array_values(array_filter(
-                $yellPool,
-                fn($c) => cardMatchesYellPick($c, $ab)
-            ));
-            if (empty($candidates)) break;
-            if (count($candidates) === 1) {
-                $picked = $candidates[0];
-                $ownerP['hand'][] = $picked;
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    ' — [' . $name . '] added ' . cardDisplayName($picked) . ' from Yell to hand.');
-                break;
-            }
-            $state['pending_prompt'] = [
-                'type'        => 'pick_yell_member',
-                'owner'       => $pid,
-                'responder'   => $pid,
-                'source_name' => $name,
-                'prompt'      => 'Choose 1 card revealed by Yell to add to your hand.',
-                'candidates'  => array_map('cardPromptSummary', $candidates),
-                'ability'       => $ab,
-            ];
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] choose a Yell card.');
             break;
 
         case 'both_wr_member_to_empty_stage':
