@@ -62,9 +62,10 @@ function tcgCardImageAllowedHosts(): array {
     if ($hosts !== null) {
         return $hosts;
     }
-    $hosts = [];
+    $map = [];
     $cardsFile = tcgPath('cards');
     if (!is_file($cardsFile)) {
+        $hosts = [];
         return $hosts;
     }
     $data = json_decode(file_get_contents($cardsFile), true);
@@ -75,10 +76,11 @@ function tcgCardImageAllowedHosts(): array {
         }
         $host = parse_url($image, PHP_URL_HOST);
         if (is_string($host) && $host !== '') {
-            $hosts[strtolower($host)] = true;
+            $map[strtolower($host)] = true;
         }
     }
-    return array_keys($hosts);
+    $hosts = array_keys($map);
+    return $hosts;
 }
 
 function tcgAssertCardImageUrlAllowed(string $url): void {

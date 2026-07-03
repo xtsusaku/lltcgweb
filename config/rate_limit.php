@@ -4,6 +4,8 @@
  */
 require_once __DIR__ . '/paths.php';
 
+const TCG_RATE_WINDOW_SEC = 600;
+
 function tcgRateLimitDir(): string {
     return tcgPath('rate_limits');
 }
@@ -39,4 +41,50 @@ function tcgRateLimitCheck(string $bucket, string $key, int $maxHits, int $windo
 function tcgRateLimitClientKey(): string {
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     return is_string($ip) ? $ip : 'unknown';
+}
+
+function tcgRateLimitAuthKey(array $body, ?string $authToken = null): string {
+    $token = $authToken ?? trim((string)($body['token'] ?? ''));
+    if ($token !== '') {
+        return $token;
+    }
+    $header = $_SERVER['HTTP_X_AUTH_TOKEN'] ?? '';
+    if (is_string($header) && trim($header) !== '') {
+        return trim($header);
+    }
+    return tcgRateLimitClientKey();
+}
+
+/**
+ * Apply per-action rate limits (see docs/SECURITY.md for bucket table).
+ */
+function tcgRateLimitForAction(string $action, array $body = [], ?string $authToken = null): void {
+    $ip = tcgRateLimitClientKey();
+    switch ($action) {
+        case 'create_room':
+            tcgRateLimitCheck('create_room', $ip, 30, TCG_RATE_WINDOW_SEC);
+            break;
+        case 'cache_card_image':
+            tcgRateLimitCheck('cache_card_image', $ip, 120, TCG_RATE_WINDOW_SEC);
+            break;
+        case 'join_room':
+            tcgRateLimitCheck('join_room', $ip, 60, TCG_RATE_WINDOW_SEC);
+            break;
+        case 'action':
+            $roomId = preg_replace('/[^A-Z0-9]/', '', strtoupper(trim((string)($body['room_id'] ?? ''))));
+            tcgRateLimitCheck('action', $ip . '_' . ($roomId !== '' ? $roomId : 'none'), 300, TCG_RATE_WINDOW_SEC);
+            break;
+        case 'get_state':
+            tcgRateLimitCheck('get_state', $ip, 120, TCG_RATE_WINDOW_SEC);
+            break;
+        case 'casual_join':
+            tcgRateLimitCheck('casual_join', $ip, 30, TCG_RATE_WINDOW_SEC);
+            break;
+        case 'open_booster':
+            tcgRateLimitCheck('open_booster', tcgRateLimitAuthKey($body, $authToken), 20, TCG_RATE_WINDOW_SEC);
+            break;
+        case 'ranked_join':
+            tcgRateLimitCheck('ranked_join', tcgRateLimitAuthKey($body, $authToken), 20, TCG_RATE_WINDOW_SEC);
+            break;
+    }
 }

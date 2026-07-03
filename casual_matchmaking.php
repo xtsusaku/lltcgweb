@@ -435,6 +435,7 @@ function tcgNormalizeCasualQueueKey(string $key): string {
 }
 
 function apiCasualJoin(array $body): array {
+    tcgRateLimitForAction('casual_join', $body);
     $queueKey = (string)($body['queue_id'] ?? '');
     $join = tcgCasualQueueJoin($queueKey, $body);
     $match = tcgTryCasualMatchmake($queueKey);

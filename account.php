@@ -13,6 +13,8 @@
  */
 require_once __DIR__ . '/config/paths.php';
 require_once __DIR__ . '/config/cors.php';
+require_once __DIR__ . '/config/errors.php';
+require_once __DIR__ . '/config/rate_limit.php';
 tcgDefinePathConstants();
 
 header('Content-Type: application/json');
@@ -72,7 +74,7 @@ try {
         $code = 500;
     }
     http_response_code($code);
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    echo json_encode(['success' => false, 'error' => tcgPublicErrorMessage($e, $code)]);
 }
 
 function tcgLoadCardsData(): array {
@@ -195,6 +197,7 @@ function tcgApiDailyStatus(array $body): array {
 }
 
 function tcgApiOpenBooster(array $body): array {
+    tcgRateLimitForAction('open_booster', $body);
     $uid = tcgRequireAuthUser($body);
     $user = tcgEnsureUser($uid, tcgAuthUserProfile($uid));
     if (empty($user['starter_deck'])) {
@@ -433,6 +436,7 @@ function tcgApiResetAccount(array $body): array {
 }
 
 function tcgApiRankedJoin(array $body): array {
+    tcgRateLimitForAction('ranked_join', $body);
     $uid = tcgRequireAuthUser($body);
     $user = tcgEnsureUser($uid, tcgAuthUserProfile($uid));
     if (empty($user['starter_deck'])) {

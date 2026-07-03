@@ -24,6 +24,7 @@
 
 require_once __DIR__ . '/config/paths.php';
 require_once __DIR__ . '/config/cors.php';
+require_once __DIR__ . '/config/errors.php';
 require_once __DIR__ . '/config/rate_limit.php';
 tcgDefinePathConstants();
 
@@ -123,11 +124,12 @@ try {
 } catch (Exception $e) {
     $msg = $e->getMessage();
     $serverFault = preg_match('/^(Cannot acquire lock|Lock timeout)/', $msg);
-    http_response_code($serverFault ? 500 : 400);
-    echo json_encode(['error' => $msg]);
+    $code = $serverFault ? 500 : 400;
+    http_response_code($code);
+    echo json_encode(['error' => tcgPublicErrorMessage($e, $code)]);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error' => tcgPublicErrorMessage($e, 500)]);
 }
 
 // ─────────────────────────────────────────────
@@ -141,7 +143,7 @@ function getCards(): string {
 }
 
 function cacheCardImage(array $body): array {
-    tcgRateLimitCheck('cache_card_image', tcgRateLimitClientKey(), 120, 600);
+    tcgRateLimitForAction('cache_card_image', $body);
     $cardNo = trim((string)($body['card_no'] ?? ''));
     if ($cardNo === '') {
         throw new InvalidArgumentException('card_no required');
@@ -244,7 +246,7 @@ function resolveExperimentDeckLists(array $body, array $cardsData): array {
 }
 
 function createRoom(array $body): array {
-    tcgRateLimitCheck('create_room', tcgRateLimitClientKey(), 30, 600);
+    tcgRateLimitForAction('create_room', $body);
     $roomId    = strtoupper(bin2hex(random_bytes(4)));
     $playerToken = generateToken();
     $playerName  = htmlspecialchars($body['name'] ?? 'Player 1', ENT_QUOTES);
@@ -275,6 +277,7 @@ function createRoom(array $body): array {
 }
 
 function joinRoom(array $body): array {
+    tcgRateLimitForAction('join_room', $body);
     $roomId      = strtoupper(trim($body['room_id'] ?? ''));
     $playerToken = generateToken();
     $playerName  = htmlspecialchars($body['name'] ?? 'Player 2', ENT_QUOTES);
@@ -338,6 +341,7 @@ function filterStateForClient(array $state, string $roomId, string $token): arra
 }
 
 function getStatePolling(): void {
+    tcgRateLimitForAction('get_state');
     $roomId      = $_GET['room_id'] ?? '';
     $playerToken = $_GET['token']   ?? $_SERVER['HTTP_X_PLAYER_TOKEN'] ?? '';
     $lastSeq     = intval($_GET['seq'] ?? 0);
@@ -439,6 +443,7 @@ function getStatePolling(): void {
 // Action Handler
 // ─────────────────────────────────────────────
 function handleAction(array $body): array {
+    tcgRateLimitForAction('action', $body);
     $roomId = $body['room_id'] ?? '';
     $token  = $body['token']   ?? '';
     $type   = $body['type']    ?? '';
