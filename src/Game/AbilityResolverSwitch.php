@@ -22,6 +22,7 @@ require_once __DIR__ . '/AbilityResolverSwitchEnergyWait.php';
 require_once __DIR__ . '/AbilityResolverSwitchSet.php';
 require_once __DIR__ . '/AbilityResolverSwitchMemberBlade.php';
 require_once __DIR__ . '/AbilityResolverSwitchOnEnter.php';
+require_once __DIR__ . '/AbilityResolverSwitchTreat.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -129,6 +130,10 @@ function resolveAbilityEffectSwitch(
 
     if (str_starts_with($type, 'on_enter_')) {
         return tryResolveAbilityEffectSwitchOnEnter($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
+    if (str_starts_with($type, 'treat_')) {
+        return tryResolveAbilityEffectSwitchTreat($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
     switch ($type) {
@@ -362,9 +367,6 @@ function resolveAbilityEffectSwitch(
 
 
 
-
-        case 'treat_as_subunits':
-            break;
 
         case 'pick_wr_members_deck_top_by_opp_wait':
             $opp = ($pid === 'p1') ? 'p2' : 'p1';
@@ -751,41 +753,6 @@ function resolveAbilityEffectSwitch(
             ];
             break;
 
-
-        case 'treat_group_stage_hearts_as':
-            $state = initLiveModifiers($state);
-            $grp = $ab['group'] ?? '';
-            $color = $ab['color'] ?? 'pink';
-            if ($grp !== '') {
-                $state['live_modifiers'][$pid]['group_hearts_as'][$grp] = $color;
-            }
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                " — [$name] $grp Member hearts treated as $color until Live ends.");
-            break;
-
-        case 'treat_pick_group_member_hearts_as':
-            if (!empty($state['pending_prompt'])) break;
-            $grp = $ab['group'] ?? 'Hasunosora';
-            $candidates = [];
-            foreach ($p['stage'] as $slot => $mbr) {
-                if (!$mbr || ($mbr['group'] ?? '') !== $grp) continue;
-                $candidates[] = array_merge(cardPromptSummary($mbr), ['slot' => $slot]);
-            }
-            if (empty($candidates)) break;
-            $state['pending_prompt'] = [
-                'type'          => 'treat_pick_group_member_hearts_as',
-                'owner'         => $pid,
-                'responder'     => $pid,
-                'source_id'     => $source['instance_id'] ?? '',
-                'source_name'   => $name,
-                'color'         => $ab['color'] ?? 'pink',
-                'candidates'    => $candidates,
-                'prompt'        => "Choose 1 $grp Member — until this Live ends, all hearts on that Member are treated as " .
-                    ($ab['color'] ?? 'pink') . ' ♡.',
-            ];
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                " — [$name] choose a Member for heart treatment.");
-            break;
 
     }
     return $state;
