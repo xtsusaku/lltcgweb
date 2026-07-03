@@ -12,6 +12,7 @@ require_once __DIR__ . '/AbilityResolverSwitchWaitActivate.php';
 require_once __DIR__ . '/AbilityResolverSwitchYell.php';
 require_once __DIR__ . '/AbilityResolverSwitchChooseHeart.php';
 require_once __DIR__ . '/AbilityResolverSwitchReduceHearts.php';
+require_once __DIR__ . '/AbilityResolverSwitchMandatoryDiscard.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -60,6 +61,21 @@ function resolveAbilityEffectSwitch(
 
     if (str_starts_with($type, 'reduce_hearts_') || $type === 'reduce_required_hearts_if_blade') {
         return tryResolveAbilityEffectSwitchReduceHearts($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
+    if (in_array($type, [
+        'hearts_if_combined_energy',
+        'live_score_if_opp_success_total',
+        'on_self_wait_draw_discard',
+        'optional_named_live_zone_from_wr_on_hand',
+        'member_blade_on_live_zone_faceup',
+        'cannot_live_if_solo_stage',
+        'blade_bonus_if_center',
+        'cost_bonus_if_min_energy',
+        'live_score_bonus_if_min_energy',
+        'mandatory_discard_look_reveal',
+    ], true)) {
+        return tryResolveAbilityEffectSwitchMandatoryDiscard($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
     switch ($type) {
@@ -1132,31 +1148,6 @@ function resolveAbilityEffectSwitch(
                 ' — [' . $name . '] choose Members for bonus hearts.');
             break;
 
-
-        case 'hearts_if_combined_energy':
-        case 'live_score_if_opp_success_total':
-        case 'on_self_wait_draw_discard':
-        case 'optional_named_live_zone_from_wr_on_hand':
-        case 'member_blade_on_live_zone_faceup':
-        case 'cannot_live_if_solo_stage':
-        case 'blade_bonus_if_center':
-        case 'cost_bonus_if_min_energy':
-        case 'live_score_bonus_if_min_energy':
-        case 'mandatory_discard_look_reveal':
-            if (!empty($state['pending_prompt'])) break;
-            $state['pending_prompt'] = [
-                'type'          => 'mandatory_discard_look_reveal',
-                'owner'         => $pid,
-                'responder'     => $pid,
-                'source_id'     => $source['instance_id'] ?? '',
-                'source_name'   => $name,
-                'prompt'        => 'Put 1 card from your hand into the Waiting Room (required).',
-                'discard_count' => intval($ab['discard'] ?? 1),
-                'ability'       => $ab,
-            ];
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] mandatory discard for On Enter.');
-            break;
 
         case 'reveal_hand_member_cost_live_score':
             if (!empty($state['pending_prompt'])) break;
