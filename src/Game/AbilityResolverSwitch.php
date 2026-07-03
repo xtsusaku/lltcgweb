@@ -24,6 +24,7 @@ require_once __DIR__ . '/AbilityResolverSwitchMemberBlade.php';
 require_once __DIR__ . '/AbilityResolverSwitchOnEnter.php';
 require_once __DIR__ . '/AbilityResolverSwitchTreat.php';
 require_once __DIR__ . '/AbilityResolverSwitchPickNamedMembersGrant.php';
+require_once __DIR__ . '/AbilityResolverSwitchPayEnergy.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -139,6 +140,10 @@ function resolveAbilityEffectSwitch(
 
     if (str_starts_with($type, 'pick_named_members_grant_')) {
         return tryResolveAbilityEffectSwitchPickNamedMembersGrant($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
+    if (str_starts_with($type, 'pay_energy_')) {
+        return tryResolveAbilityEffectSwitchPayEnergy($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
     switch ($type) {
@@ -630,32 +635,6 @@ function resolveAbilityEffectSwitch(
                 ' — [' . $name . '] both players rotated Stage formation.');
             break;
 
-
-        case 'pay_energy_reveal_live_wr_superset':
-            if (!empty($state['pending_prompt'])) break;
-            $lives = array_values(array_filter(
-                $p['hand'] ?? [],
-                fn($c) => ($c['card_type'] ?? '') === 'ライブ'
-            ));
-            if (empty($lives)) break;
-            $state['pending_prompt'] = [
-                'type'        => 'pay_energy_reveal_live_wr_superset',
-                'owner'       => $pid,
-                'responder'   => $pid,
-                'source_id'   => $source['instance_id'] ?? '',
-                'source_name' => $name,
-                'ability_idx' => $ctx['ability_index'] ?? 0,
-                'slot'        => $ctx['slot'] ?? null,
-                'step'        => 'reveal_hand_live',
-                'pay_cost'    => intval($ab['cost'] ?? 2),
-                'candidates'  => array_map('cardPromptSummary', $lives),
-                'prompt'      => 'Pay ' . intval($ab['cost'] ?? 2) .
-                    ' Energy and reveal 1 Live card from your hand: add 1 Live from Waiting Room whose name contains it?',
-            ];
-            break;
-
-        case 'pay_energy_play_wr_empty':
-            break;
 
         case 'buff_member_matching_discarded_group':
             if (!empty($state['pending_prompt'])) break;
