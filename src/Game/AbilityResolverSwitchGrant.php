@@ -14,6 +14,14 @@ function tryResolveAbilityEffectSwitchGrant(
     string $name
 ): array {
     switch ($type) {
+        case 'grant_hearts':
+            if (!empty($ab['hearts'])) {
+                addBonusHeartsToModifier($state, $pid, $ab['hearts']);
+                $state = addLog($state, $state['players'][$pid]['name'] .
+                    " — [$name] gained bonus heart(s) until this Live ends.");
+            }
+            break;
+
         case 'grant_live_score_if_success':
             $succCount = count($p['success_lives'] ?? []);
             $scoreSum = sumSuccessLiveScores($p);

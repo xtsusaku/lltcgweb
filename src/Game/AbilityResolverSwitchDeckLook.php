@@ -371,6 +371,9 @@ function tryResolveAbilityEffectSwitchDeckLook(
         case 'draw_per_yell_heart':
             break;
 
+        case 'draw_per_yell_draw':
+            break;
+
         case 'draw_if_live_score_higher_than_opp':
             $opp = ($pid === 'p1') ? 'p2' : 'p1';
             if (getLiveTotalScore($state, $pid) > getLiveTotalScore($state, $opp)) {
