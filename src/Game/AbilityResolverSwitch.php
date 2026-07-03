@@ -20,6 +20,7 @@ require_once __DIR__ . '/AbilityResolverSwitchPlayerChoice.php';
 require_once __DIR__ . '/AbilityResolverSwitchBaton.php';
 require_once __DIR__ . '/AbilityResolverSwitchEnergyWait.php';
 require_once __DIR__ . '/AbilityResolverSwitchSet.php';
+require_once __DIR__ . '/AbilityResolverSwitchMemberBlade.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -119,6 +120,10 @@ function resolveAbilityEffectSwitch(
 
     if (str_starts_with($type, 'set_')) {
         return tryResolveAbilityEffectSwitchSet($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
+    if (str_starts_with($type, 'member_blade_bonus')) {
+        return tryResolveAbilityEffectSwitchMemberBlade($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
     switch ($type) {
@@ -307,15 +312,6 @@ function resolveAbilityEffectSwitch(
             }
             break;
 
-        case 'member_blade_bonus':
-            $n = applyMemberBladeBonus($state, $pid, $ab);
-            if ($n > 0) {
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    " — [$name] $n Member(s) gained +" . intval($ab['amount'] ?? 0) . ' Blade until Live ends.');
-            }
-            break;
-
-
         case 'on_enter_if_named_activate_add_wr':
             if (!stageHasNamedMember($p, $ab['names'] ?? [])) break;
             $activated = activateEnergyForPlayer($p, intval($ab['activate'] ?? 1));
@@ -434,33 +430,6 @@ function resolveAbilityEffectSwitch(
                 " — [$name] score +1; $n Member(s) gained +" . intval($ab['blade'] ?? 1) . ' Blade (turn 1).');
             break;
 
-
-        case 'member_blade_bonus_if_success_count':
-            if (count($p['success_lives'] ?? []) >= intval($ab['min_success_count'] ?? 2)) {
-                $n = applyMemberBladeBonus($state, $pid, $ab);
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    " — [$name] $n Member(s) gained +" . intval($ab['amount'] ?? 2) . ' Blade until Live ends.');
-            }
-            break;
-
-        case 'member_blade_bonus_if_other_live_zone':
-            $exclude = $ab['exclude_live_name'] ?? '';
-            $hasOther = false;
-            foreach ($p['live_zone'] ?? [] as $lc) {
-                if (!$lc || ($lc['card_type'] ?? '') !== 'ライブ') continue;
-                $ln = $lc['name_en'] ?? $lc['name'] ?? '';
-                if ($exclude !== '' && str_contains($ln, $exclude)) continue;
-                if (($lc['group'] ?? '') === ($ab['group'] ?? 'Sunshine')) {
-                    $hasOther = true;
-                    break;
-                }
-            }
-            if ($hasOther) {
-                $n = applyMemberBladeBonus($state, $pid, $ab);
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    " — [$name] $n Member(s) gained +" . intval($ab['amount'] ?? 1) . ' Blade until Live ends.');
-            }
-            break;
 
         case 'add_self_to_hand_if_winning_yell':
             if (empty($ctx['yell_cards'])) break;
