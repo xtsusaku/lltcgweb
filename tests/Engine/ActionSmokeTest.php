@@ -8,6 +8,18 @@ use PHPUnit\Framework\TestCase;
 
 final class ActionSmokeTest extends TestCase
 {
+    private function cardByNo(string $cardNo, string $instanceId): array {
+        $data = json_decode((string)file_get_contents(CARDS_FILE), true);
+        $this->assertIsArray($data);
+        foreach ($data['cards'] ?? [] as $card) {
+            if (($card['card_no'] ?? '') === $cardNo) {
+                $card['instance_id'] = $instanceId;
+                return $card;
+            }
+        }
+        $this->fail('Missing test card ' . $cardNo);
+    }
+
     private function joinedMulliganState(): array {
         $created = createRoom(['name' => 'Smoke P1', 'deck' => 'nijigasaki']);
         joinRoom([
@@ -79,5 +91,35 @@ final class ActionSmokeTest extends TestCase
         $handIds = array_column($state['players']['p1']['hand'] ?? [], 'instance_id');
         $this->assertNotContains($member['instance_id'], $handIds);
         $this->assertSame($member['instance_id'], $state['players']['p1']['stage']['center']['instance_id'] ?? null);
+    }
+
+    public function testPlayedRurinoHydratesOnEnterAbilityFromCatalog(): void {
+        $state = $this->joinedMulliganState();
+        $state = applyAction($state, 'p1', 'mulligan', ['card_ids' => []]);
+        $state = applyAction($state, 'p2', 'mulligan', ['card_ids' => []]);
+        $this->assertSame('main_first', $state['phase'] ?? '');
+
+        $rurino = $this->cardByNo('PL!HS-pb1-011-R', 'test_rurino_missing_abilities');
+        unset($rurino['abilities'], $rurino['text'], $rurino['text_jp']);
+        $discardFodder = $this->cardByNo('PL!N-sd1-024-SD', 'test_discard_fodder');
+
+        $state['players']['p1']['hand'] = [$rurino, $discardFodder];
+        $state['players']['p1']['energy_zone'] = [];
+        for ($i = 0; $i < 7; $i++) {
+            $state['players']['p1']['energy_zone'][] = [
+                'instance_id' => 'test_energy_' . $i,
+                'active' => true,
+            ];
+        }
+
+        $state = applyAction($state, 'p1', 'play_member', [
+            'card_id' => 'test_rurino_missing_abilities',
+            'slot' => 'center',
+        ]);
+
+        $this->assertSame('test_rurino_missing_abilities', $state['players']['p1']['stage']['center']['instance_id'] ?? null);
+        $this->assertSame('optional_discard_prompt', $state['pending_prompt']['type'] ?? null);
+        $this->assertSame('test_rurino_missing_abilities', $state['pending_prompt']['source_id'] ?? null);
+        $this->assertSame('look_reveal_filter', $state['pending_prompt']['ability']['then']['type'] ?? null);
     }
 }
