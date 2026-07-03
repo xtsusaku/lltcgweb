@@ -34,6 +34,7 @@ require_once __DIR__ . '/AbilityResolverSwitchFormationDiscarded.php';
 require_once __DIR__ . '/AbilityResolverSwitchMemberHeartsLiveSuccess.php';
 require_once __DIR__ . '/AbilityResolverSwitchYellAdjunct.php';
 require_once __DIR__ . '/AbilityResolverSwitchWrMemberStage.php';
+require_once __DIR__ . '/AbilityResolverSwitchLiveScoreMemberBlade.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -203,6 +204,13 @@ function resolveAbilityEffectSwitch(
         return tryResolveAbilityEffectSwitchWrMemberStage($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
+    if (in_array($type, [
+        'other_member_blade_if_plain_live',
+        'turn_one_live_score_member_blade',
+    ], true)) {
+        return tryResolveAbilityEffectSwitchLiveScoreMemberBlade($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
     switch ($type) {
         case 'add_from_waiting_room':
             $candidates = array_values(array_filter($p['waiting_room'], function ($c) use ($ab) {
@@ -319,35 +327,6 @@ function resolveAbilityEffectSwitch(
             }
             break;
 
-
-
-        case 'other_member_blade_if_plain_live':
-            if (liveZoneHasPlainLive($p['live_zone'])) {
-                $n = applyMemberBladeBonus($state, $pid, [
-                    'amount'             => intval($ab['amount'] ?? 2),
-                    'max_members'        => intval($ab['max_members'] ?? 1),
-                    'exclude_source_id'  => $source['instance_id'] ?? '',
-                ]);
-                if ($n > 0) {
-                    $state = addLog($state, $state['players'][$pid]['name'] .
-                        " — [$name] $n other Member(s) gained +" . intval($ab['amount'] ?? 2) . ' Blade until Live ends.');
-                }
-            }
-            break;
-
-        case 'turn_one_live_score_member_blade':
-            if (intval($state['turn'] ?? 1) !== 1) {
-                break;
-            }
-            bumpLiveCardScore($state, $pid, $source['instance_id'] ?? '', intval($ab['score'] ?? 1));
-            $n = applyMemberBladeBonus($state, $pid, [
-                'group'        => $ab['group'] ?? 'Nijigasaki',
-                'amount'       => intval($ab['blade'] ?? 1),
-                'max_members'  => intval($ab['max_members'] ?? 1),
-            ]);
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                " — [$name] score +1; $n Member(s) gained +" . intval($ab['blade'] ?? 1) . ' Blade (turn 1).');
-            break;
 
 
     }
