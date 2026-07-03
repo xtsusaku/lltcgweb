@@ -32,6 +32,7 @@ require_once __DIR__ . '/AbilityResolverSwitchReveal.php';
 require_once __DIR__ . '/AbilityResolverSwitchPickYellMember.php';
 require_once __DIR__ . '/AbilityResolverSwitchFormationDiscarded.php';
 require_once __DIR__ . '/AbilityResolverSwitchMemberHeartsLiveSuccess.php';
+require_once __DIR__ . '/AbilityResolverSwitchYellAdjunct.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -185,6 +186,13 @@ function resolveAbilityEffectSwitch(
         'negate_self_live_success_if_group_hearts',
     ], true)) {
         return tryResolveAbilityEffectSwitchMemberHeartsLiveSuccess($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
+    if (in_array($type, [
+        'add_self_to_hand_if_winning_yell',
+        'reduce_yell_reveal_count',
+    ], true)) {
+        return tryResolveAbilityEffectSwitchYellAdjunct($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
     switch ($type) {
@@ -352,27 +360,6 @@ function resolveAbilityEffectSwitch(
             break;
 
 
-        case 'add_self_to_hand_if_winning_yell':
-            if (empty($ctx['yell_cards'])) break;
-            $inYell = false;
-            foreach ($ctx['yell_cards'] as $yc) {
-                if (($yc['instance_id'] ?? '') === ($source['instance_id'] ?? '')) {
-                    $inYell = true;
-                    break;
-                }
-            }
-            if (!$inYell) break;
-            $opp = ($pid === 'p1') ? 'p2' : 'p1';
-            $myScore = array_sum(array_column($p['live_zone'] ?? [], 'score')) + getLiveScoreBonus($state, $pid);
-            $oppScore = array_sum(array_column($state['players'][$opp]['live_zone'] ?? [], 'score'))
-                + getLiveScoreBonus($state, $opp);
-            if ($myScore > $oppScore) {
-                $p['hand'][] = $source;
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    ' — [' . $name . '] added itself to hand (winning Live score, revealed by Yell).');
-            }
-            break;
-
         case 'play_wr_members_combined_cost':
             if (!empty($state['pending_prompt'])) break;
             $cands = array_values(array_filter($p['waiting_room'], function ($c) use ($ab) {
@@ -391,24 +378,6 @@ function resolveAbilityEffectSwitch(
                     intval($ab['max_combined_cost'] ?? 4) . ') to put on Stage in Wait.',
                 'ability'            => $ab,
             ];
-            break;
-
-        case 'reduce_yell_reveal_count':
-            if (!empty($ab['requires_other_members'])) {
-                $others = 0;
-                foreach ($p['stage'] as $mbr) {
-                    if ($mbr && ($mbr['instance_id'] ?? '') !== ($source['instance_id'] ?? '')) {
-                        $others++;
-                    }
-                }
-                if ($others < 1) break;
-            }
-            $state = initLiveModifiers($state);
-            $state['live_modifiers'][$pid]['yell_reveal_reduction'] =
-                intval($state['live_modifiers'][$pid]['yell_reveal_reduction'] ?? 0)
-                + intval($ab['amount'] ?? 8);
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] Yell reveal count reduced by ' . intval($ab['amount'] ?? 8) . ' until Live ends.');
             break;
 
     }
