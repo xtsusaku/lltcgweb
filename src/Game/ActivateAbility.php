@@ -517,37 +517,42 @@ function actionActivateAbility(array $state, string $pid, array $data): array {
             ' — [' . ($member['name_en'] ?? $member['name']) . "] paid $cost Energy; drew $drawn.");
     } elseif (($ab['type'] ?? '') === 'pay_energy_play_wr_empty') {
         $cost = intval($ab['cost'] ?? 0);
-        if ($cost > 0 && !payEnergyCost($p, $cost)) {
+        if ($cost > 0 && countActiveEnergyInZone($p) < $cost) {
             throw new Exception("Need $cost active Energy");
         }
-        $placed = null;
-        foreach (['left', 'center', 'right'] as $targetSlot) {
-            if (!empty($p['stage'][$targetSlot])) continue;
-            foreach ($p['waiting_room'] as $i => $c) {
-                if (!cardMatchesWrPick($c, [
-                    'filter'   => 'member',
-                    'max_cost' => intval($ab['max_cost'] ?? 2),
-                    'group'    => $ab['group'] ?? '',
-                    'subunit'  => $ab['subunit'] ?? '',
-                ])) {
-                    continue;
-                }
-                $played = $c;
-                array_splice($p['waiting_room'], $i, 1);
-                $played['active'] = true;
-                $played['entered_turn'] = intval($state['turn'] ?? 1);
-                $p['stage'][$targetSlot] = $played;
-                $placed = $played;
-                $state = resolveOnEnterAbilities($state, $pid, $played, $targetSlot);
-                break 2;
-            }
+        $cfg = [
+            'filter'   => 'member',
+            'max_cost' => intval($ab['max_cost'] ?? 2),
+            'group'    => $ab['group'] ?? '',
+            'subunit'  => $ab['subunit'] ?? '',
+        ];
+        $eligible = wrCandidatesMatching($p, $cfg);
+        $emptySlots = array_values(array_filter(
+            ['left', 'center', 'right'],
+            fn($targetSlot) => empty($p['stage'][$targetSlot])
+        ));
+        if (empty($eligible) || empty($emptySlots)) {
+            throw new Exception('No matching Member in Waiting Room or no empty Stage area');
         }
-        if (!$placed) throw new Exception('No matching Member in Waiting Room or no empty Stage area');
-        if (!empty($ab['once_per_turn'])) markAbilityUsed($member, $abilityIdx);
         $p['stage'][$slot] = $member;
+        $state['pending_prompt'] = [
+            'type'          => 'ssd1_play_wr_empty',
+            'owner'         => $pid,
+            'responder'     => $pid,
+            'source_id'     => $member['instance_id'] ?? '',
+            'source_name'   => $member['name_en'] ?? $member['name'] ?? 'Member',
+            'source_slot'   => $slot,
+            'ability_index' => $abilityIdx,
+            'step'          => 'pick_wr',
+            'candidates'    => array_map('cardPromptSummary', $eligible),
+            'slots'         => $emptySlots,
+            'pay_cost'      => $cost,
+            'ability'       => $ab,
+            'prompt'        => 'Pay ' . $cost . ' Energy: choose 1 ' . ($ab['group'] ?? '') .
+                ' Member (cost <= ' . intval($ab['max_cost'] ?? 2) . ') from your Waiting Room.',
+        ];
         $state = addLog($state, $state['players'][$pid]['name'] .
-            ' — [' . ($member['name_en'] ?? $member['name']) . '] paid ' . $cost .
-            ' Energy; played ' . cardDisplayName($placed) . ' from Waiting Room.');
+            ' — [' . ($member['name_en'] ?? $member['name']) . '] choose WR Member to play.');
     } elseif (($ab['type'] ?? '') === 'pay_energy_reveal_live_wr_superset') {
         $lives = array_values(array_filter(
             $p['hand'] ?? [],

@@ -278,7 +278,10 @@ function tryResolveAbilityEffectSwitchDeckLook(
             if (!stageHasGroupMember($p, $ab['group'] ?? '')) break;
             $drawn = drawCardsForPlayer($state, $pid, intval($ab['draw'] ?? 1));
             if (intval($ab['discard'] ?? 0) > 0 && !empty($p['hand'])) {
-                autoDiscardFromHand($p, intval($ab['discard'] ?? 1));
+                $discard = min(intval($ab['discard'] ?? 1), count($p['hand']));
+                $state = addLog($state, $state['players'][$pid]['name'] .
+                    " — [$name] drew $drawn.");
+                return startEffectDiscardHandPrompt($state, $pid, $name, $discard);
             }
             $state = addLog($state, $state['players'][$pid]['name'] .
                 " — [$name] drew $drawn and discarded " . intval($ab['discard'] ?? 0) . '.');

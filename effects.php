@@ -890,6 +890,10 @@ function cardMatchesLookPick(array $card, array $cfg): bool {
             return false;
         }
     }
+    $subunit = $cfg['subunit'] ?? '';
+    if ($subunit !== '' && !cardMatchesSubunit($card, $subunit)) {
+        return false;
+    }
     return cardMatchesGroup($card, $cfg['group'] ?? '', $cfg['filter'] ?? '');
 }
 
@@ -899,7 +903,8 @@ function lookPickIsOptional(array $cfg): bool {
     }
     $filter = $cfg['filter'] ?? '';
     $group = $cfg['group'] ?? '';
-    return $filter !== '' || $group !== '';
+    $subunit = $cfg['subunit'] ?? '';
+    return $filter !== '' || $group !== '' || $subunit !== '';
 }
 
 /** Minimum main-deck cards needed for a discard-then effect to be worth doing (0 = no deck requirement). */

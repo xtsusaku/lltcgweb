@@ -286,7 +286,19 @@ function sSd1ResolvePrompt(
 
     if ($promptType === 'ssd1_play_wr_empty') {
         if (($prompt['step'] ?? '') === 'pick_wr') {
+            if ($choice === 'no' || $choice === 'cancel' || $choice === 'skip') {
+                unset($state['pending_prompt']);
+                $state['seq']++;
+                return finishPromptEffects($state);
+            }
             $cardId = $data['card_id'] ?? $choice;
+            $candidateIds = array_values(array_filter(array_map(
+                fn($c) => $c['instance_id'] ?? '',
+                $prompt['candidates'] ?? []
+            )));
+            if (!in_array($cardId, $candidateIds, true)) {
+                throw new Exception('Choose a matching Member from Waiting Room');
+            }
             $state['pending_prompt'] = array_merge($prompt, [
                 'step'    => 'pick_slot',
                 'card_id' => $cardId,
@@ -301,9 +313,25 @@ function sSd1ResolvePrompt(
         if (!in_array($slot, $slots, true)) {
             throw new Exception('Choose an empty Stage area');
         }
+        if (!empty($ownerP['stage'][$slot])) {
+            throw new Exception('Choose an empty Stage area');
+        }
+        $ability = $prompt['ability'] ?? [];
+        $cost = intval($prompt['pay_cost'] ?? $ability['cost'] ?? 0);
+        if ($cost > 0 && !payEnergyCost($ownerP, $cost)) {
+            throw new Exception("Need $cost active Energy");
+        }
         foreach ($ownerP['waiting_room'] as $i => $c) {
             if (($c['instance_id'] ?? '') !== $cardId) {
                 continue;
+            }
+            if (!cardMatchesWrPick($c, [
+                'filter'   => 'member',
+                'max_cost' => intval($ability['max_cost'] ?? 2),
+                'group'    => $ability['group'] ?? '',
+                'subunit'  => $ability['subunit'] ?? '',
+            ])) {
+                throw new Exception('Choose a matching Member from Waiting Room');
             }
             $played = $c;
             array_splice($ownerP['waiting_room'], $i, 1);
@@ -312,6 +340,20 @@ function sSd1ResolvePrompt(
             $ownerP['stage'][$slot] = $played;
             $state = resolveOnEnterAbilities($state, $owner, $played, $slot);
             break;
+        }
+        if (!isset($played)) {
+            throw new Exception('Invalid Waiting Room card');
+        }
+        if (isset($prompt['ability_index'], $prompt['source_id'])) {
+            $srcId = (string)$prompt['source_id'];
+            $abIdx = intval($prompt['ability_index']);
+            foreach ($ownerP['stage'] as &$mbr) {
+                if ($mbr && ($mbr['instance_id'] ?? '') === $srcId) {
+                    markAbilityUsed($mbr, $abIdx);
+                    break;
+                }
+            }
+            unset($mbr);
         }
         return returnAfterPlacedMemberEnter($state);
     }

@@ -706,19 +706,31 @@ function actionResolvePrompt(array $state, string $pid, array $data): array {
             if (!empty($ids)) {
                 discardFromHandByIds($ownerP, $ids);
             }
-            $picked = lookRevealSubunit(
+            unset($state['pending_prompt']);
+            $state = beginLookRevealPick(
+                $state,
+                $owner,
+                $prompt['source_name'] ?? 'Member',
                 $ownerP,
-                intval($ability['look'] ?? 4),
-                $ability['subunit'] ?? 'lily white'
+                [
+                    'type'          => 'look_reveal_filter',
+                    'look'          => intval($ability['look'] ?? 4),
+                    'subunit'       => $ability['subunit'] ?? 'lily white',
+                    'pick'          => intval($ability['pick'] ?? 1),
+                    'optional_pick' => true,
+                ]
             );
-            $state = addLog($state, $state['players'][$owner]['name'] .
-                ' — [' . ($prompt['source_name'] ?? 'Member') . "] looked at deck top; added $picked card(s) to hand.");
+            if (!empty($state['pending_prompt'])) {
+                $state['seq']++;
+                return $state;
+            }
         } else {
             $state = addLog($state, $state['players'][$owner]['name'] .
                 ' — [' . ($prompt['source_name'] ?? 'Member') . '] skipped optional On Enter effect.');
         }
         unset($state['pending_prompt']);
         $state['seq']++;
+        $state = finishPromptEffects($state);
         return $state;
     }
 

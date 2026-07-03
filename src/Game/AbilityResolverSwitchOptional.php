@@ -263,12 +263,15 @@ function tryResolveAbilityEffectSwitchOptional(
 
         case 'optional_discard_look_reveal_subunit':
             if (!empty($state['pending_prompt'])) break;
+            $look = max(1, intval($ab['look'] ?? 4));
+            $subunit = trim((string)($ab['subunit'] ?? ''));
             $state['pending_prompt'] = [
                 'type'          => 'optional_discard_look_reveal_subunit',
                 'owner'         => $pid,
                 'responder'     => $pid,
                 'source_name'   => $name,
-                'prompt'        => 'Put 1 card from hand into the Waiting Room to look at the top 4 cards of your deck?',
+                'prompt'        => 'Put 1 card from hand into the Waiting Room to look at the top ' . $look .
+                    ' cards of your deck and add 1 ' . ($subunit !== '' ? $subunit . ' ' : '') . 'card?',
                 'choices'       => ['yes', 'no'],
                 'choice_labels' => ['Yes', 'No — Skip'],
                 'ability'       => $ab,
