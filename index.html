@@ -8090,6 +8090,7 @@ function playPackOpenAnimation(cards, packImage, packStyle, faceSrcByIndex = nul
 function getAuthToken() {
   return localStorage.getItem(AUTH_TOKEN_KEY) || '';
 }
+window.getAuthToken = getAuthToken;
 function persistAuthToken(t) {
   if (t) localStorage.setItem(AUTH_TOKEN_KEY, t);
 }
@@ -8098,18 +8099,7 @@ function discordAuthUrl() {
     + '&redirect_uri=' + encodeURIComponent(WRAPPED_OAUTH_REDIRECT)
     + '&response_type=code&scope=identify&state=' + encodeURIComponent(DISCORD_OAUTH_STATE_TCG);
 }
-async function fetchWithTimeout(url, options = {}, ms = AUTH_FETCH_TIMEOUT_MS) {
-  return window.fetchWithTimeout(url, options, ms);
-}
-async function parseAccountJson(r) {
-  return window.parseAccountJson(r);
-}
-async function accountGet(action, extra = {}) {
-  return window.accountGet(action, extra);
-}
-async function accountPost(action, body = {}) {
-  return window.accountPost(action, body);
-}
+// fetchWithTimeout, parseAccountJson, accountGet, accountPost: client/js/api-client.js (do not redeclare — shadows window.* and recurses)
 
 function saveActiveGameSession() {
   if (G.isTutorial || G.isSpectator || !G.roomId || !G.token) return;
