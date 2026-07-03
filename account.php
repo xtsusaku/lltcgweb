@@ -9,7 +9,8 @@
  * Endpoints (action=):
  *   me, pick_starter, collection, booster_boxes, booster_rates, daily_status, open_booster,
  *   deck_list, deck_save, deck_delete, deck_equip, deck_equip_starter, deck_reset_starter, deck_auto_build, reset_account,
- *   ranked_join, ranked_leave, ranked_status, rank_stats, rank_banner_set, active_game, leave_active_game
+ *   ranked_join, ranked_leave, ranked_status, rank_stats, rank_banner_set, active_game, leave_active_game,
+ *   replay_save, replay_list, replay_get, replay_start
  */
 require_once __DIR__ . '/config/paths.php';
 require_once __DIR__ . '/config/cors.php';
@@ -36,6 +37,10 @@ require_once __DIR__ . '/booster.php';
 require_once __DIR__ . '/deck_validate.php';
 require_once __DIR__ . '/matchmaking.php';
 require_once __DIR__ . '/deckgen.php';
+if (!defined('TCG_API_LIB_ONLY')) {
+    define('TCG_API_LIB_ONLY', true);
+}
+require_once __DIR__ . '/api.php';
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 $body   = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -64,6 +69,10 @@ try {
         case 'rank_banner_set':    echo json_encode(tcgApiRankBannerSet($body)); break;
         case 'active_game':        echo json_encode(tcgApiActiveGame($body)); break;
         case 'leave_active_game':  echo json_encode(tcgApiLeaveActiveGame($body)); break;
+        case 'replay_save':        echo json_encode(tcgApiReplaySave($body)); break;
+        case 'replay_list':        echo json_encode(tcgApiReplayList($body)); break;
+        case 'replay_get':         echo json_encode(tcgApiReplayGet($body)); break;
+        case 'replay_start':       echo json_encode(tcgApiReplayStartSaved($body)); break;
         default:
             http_response_code(404);
             echo json_encode(['success' => false, 'error' => 'Unknown action']);
@@ -479,6 +488,156 @@ function tcgApiLeaveActiveGame(array $body): array {
     $uid = tcgRequireAuthUser($body);
     $result = tcgAbandonActiveRankedGame($uid);
     return ['success' => true] + $result;
+}
+
+function tcgReplayRowToSummary(array $row): array {
+    return [
+        'id' => intval($row['id']),
+        'room_id' => (string)($row['room_id'] ?? ''),
+        'saver_player_id' => (string)($row['saver_player_id'] ?? ''),
+        'saver_name' => (string)($row['saver_name'] ?? ''),
+        'opponent_name' => (string)($row['opponent_name'] ?? ''),
+        'winner' => $row['winner'] ?? null,
+        'end_reason' => $row['end_reason'] ?? null,
+        'turn' => intval($row['turn'] ?? 0),
+        'phase' => (string)($row['phase'] ?? ''),
+        'action_count' => intval($row['action_count'] ?? 0),
+        'duration_seconds' => intval($row['duration_seconds'] ?? 0),
+        'saved_at' => intval($row['saved_at'] ?? 0),
+    ];
+}
+
+function tcgReplayOpponentName(array $state, string $playerId): string {
+    $opp = ($playerId === 'p1') ? 'p2' : 'p1';
+    return (string)($state['players'][$opp]['name'] ?? $opp);
+}
+
+function tcgAssertReplaySaveAllowedForAccount(string $uid, array $state, string $playerId): void {
+    $ranked = $state['ranked'] ?? null;
+    if (!is_array($ranked)) {
+        return;
+    }
+    $expected = $ranked[$playerId . '_discord_id'] ?? null;
+    if ($expected !== null && (string)$expected !== $uid) {
+        throw new Exception('This ranked replay belongs to a different account', 403);
+    }
+}
+
+function tcgReplayLoadOwnedRow(string $uid, int $id): array {
+    if ($id <= 0) {
+        throw new Exception('replay_id required', 400);
+    }
+    $stmt = tcgDb()->prepare('SELECT * FROM tcg_replays WHERE id = ? AND discord_id = ?');
+    $stmt->execute([$id, $uid]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$row) {
+        throw new Exception('Replay not found', 404);
+    }
+    return $row;
+}
+
+function tcgReplayPayloadFromRow(array $row): array {
+    $payload = json_decode((string)($row['payload_json'] ?? ''), true);
+    if (!is_array($payload)) {
+        throw new Exception('Saved replay payload is invalid', 500);
+    }
+    validateReplayFile($payload);
+    return $payload;
+}
+
+function tcgApiReplaySave(array $body): array {
+    $uid = tcgRequireAuthUser($body);
+    tcgEnsureUser($uid, tcgAuthUserProfile($uid));
+    $roomId = strtoupper(trim((string)($body['room_id'] ?? '')));
+    $token = (string)($body['player_token'] ?? $body['token'] ?? '');
+    if ($roomId === '' || $token === '') {
+        throw new Exception('room_id and player_token required', 400);
+    }
+    $state = loadGame($roomId);
+    if (!$state) {
+        throw new Exception('Room not found', 404);
+    }
+    $playerId = getPlayerIdByToken($state, $token);
+    if (!$playerId) {
+        throw new Exception('Invalid player token', 403);
+    }
+    tcgAssertReplaySaveAllowedForAccount($uid, $state, $playerId);
+    if (($state['status'] ?? '') !== 'finished') {
+        throw new Exception('Replay can only be saved after the match finishes', 400);
+    }
+    $payload = buildReplayExportPayload($state, $playerId);
+    validateReplayFile($payload);
+    if (count($payload['actions'] ?? []) === 0) {
+        throw new Exception('No recorded actions yet', 400);
+    }
+    $payloadJson = json_encode($payload, JSON_UNESCAPED_SLASHES);
+    if ($payloadJson === false) {
+        throw new Exception('Could not encode replay payload', 500);
+    }
+
+    $meta = $payload['meta'] ?? [];
+    $db = tcgDb();
+    $now = time();
+    $db->prepare('INSERT INTO tcg_replays (
+            discord_id, room_id, saver_player_id, saver_name, opponent_name, winner, end_reason,
+            turn, phase, action_count, duration_seconds, payload_json, saved_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+        ->execute([
+            $uid,
+            (string)($meta['room_id'] ?? $roomId),
+            $playerId,
+            (string)($meta['saver_name'] ?? ($state['players'][$playerId]['name'] ?? $playerId)),
+            tcgReplayOpponentName($state, $playerId),
+            $state['winner'] ?? null,
+            $state['end_reason'] ?? null,
+            intval($meta['turn'] ?? $state['turn'] ?? 0),
+            (string)($meta['phase'] ?? $state['phase'] ?? ''),
+            count($payload['actions'] ?? []),
+            intval($meta['duration_seconds'] ?? 0),
+            $payloadJson,
+            $now,
+        ]);
+    $id = intval($db->lastInsertId());
+    $row = tcgReplayLoadOwnedRow($uid, $id);
+    return ['success' => true, 'replay' => tcgReplayRowToSummary($row)];
+}
+
+function tcgApiReplayList(array $body): array {
+    $uid = tcgRequireAuthUser($body);
+    tcgEnsureUser($uid, tcgAuthUserProfile($uid));
+    $limit = max(1, min(100, intval($body['limit'] ?? $_GET['limit'] ?? 50)));
+    $stmt = tcgDb()->prepare('SELECT id, room_id, saver_player_id, saver_name, opponent_name, winner, end_reason,
+            turn, phase, action_count, duration_seconds, saved_at
+        FROM tcg_replays
+        WHERE discord_id = ?
+        ORDER BY saved_at DESC, id DESC
+        LIMIT ?');
+    $stmt->bindValue(1, $uid, PDO::PARAM_STR);
+    $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    return [
+        'success' => true,
+        'replays' => array_map('tcgReplayRowToSummary', $rows),
+    ];
+}
+
+function tcgApiReplayGet(array $body): array {
+    $uid = tcgRequireAuthUser($body);
+    $row = tcgReplayLoadOwnedRow($uid, intval($body['replay_id'] ?? $_GET['replay_id'] ?? 0));
+    return [
+        'success' => true,
+        'replay' => tcgReplayPayloadFromRow($row),
+        'summary' => tcgReplayRowToSummary($row),
+    ];
+}
+
+function tcgApiReplayStartSaved(array $body): array {
+    $uid = tcgRequireAuthUser($body);
+    $row = tcgReplayLoadOwnedRow($uid, intval($body['replay_id'] ?? 0));
+    $payload = tcgReplayPayloadFromRow($row);
+    $started = apiReplayStart(['replay' => $payload]);
+    return ['success' => true, 'summary' => tcgReplayRowToSummary($row)] + $started;
 }
 
 function tcgApiRankedStatus(array $body): array {

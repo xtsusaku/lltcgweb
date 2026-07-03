@@ -44,6 +44,17 @@
       return;
     }
     try {
+      if (typeof global.isSignedInAccount === 'function' && global.isSignedInAccount()) {
+        const saved = await global.accountPost('replay_save', {
+          room_id: creds.roomId,
+          player_token: creds.token,
+        });
+        if (saved.error) throw new Error(saved.error);
+        const summary = saved.replay;
+        global.toast(summary?.id ? `Replay saved to your library (#${summary.id})` : 'Replay saved to your library', 2800);
+        return;
+      }
+
       const r = await global.apiPost('replay_export', {
         room_id: creds.roomId,
         token: creds.token,
@@ -54,7 +65,7 @@
       const stamp = new Date().toISOString().replace(/[:.]/g, '-');
       const room = replay.meta?.room_id || global.G.roomId || 'room';
       global.downloadJsonFile(`tcg-replay-${room}-${stamp}.json`, replay);
-      global.toast('Replay saved 💾', 2400);
+      global.toast('Replay downloaded as JSON', 2400);
     } catch (e) {
       global.toast(e.message || 'Could not save replay', 4200);
     }

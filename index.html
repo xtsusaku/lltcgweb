@@ -1109,6 +1109,15 @@ body.tcg-debug-on .llc-menu-item.tcg-debug-only{display:flex}
   font-size:10px;color:rgba(186,228,255,.75);width:100%;text-align:center;margin:0;
 }
 .replay-file-meta{font-size:12px;color:rgba(255,255,255,.65);margin:8px 0 12px;line-height:1.45}
+.replay-library-list{display:flex;flex-direction:column;gap:10px;max-height:min(48vh,420px);overflow-y:auto;margin:12px 0}
+.replay-library-card{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;
+}
+.replay-library-card strong{display:block;color:#fff;font-size:14px}
+.replay-library-card span{display:block;color:rgba(255,255,255,.68);font-size:12px;line-height:1.45;margin-top:3px}
+.replay-library-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.replay-import-box{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
 .ljo-scores{display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 0}
 .ljo-scores .sblock{text-align:center}
 
@@ -5620,13 +5629,22 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
         <button class="btn-ghost" id="btn-debug-replay-back" type="button">← Back</button>
       </div>
       <h2>Replay Viewer</h2>
-      <p class="account-lead">Load a <code>.json</code> replay saved after a match. Playback follows the saved action timing, and the seekbar can jump to any point in the replay.</p>
-      <div class="field">
-        <label for="inp-replay-file">Replay file</label>
-        <input type="file" id="inp-replay-file" accept=".json,application/json">
+      <p class="account-lead">Watch saved match replays from your account library. Playback follows the saved action timing, and the seekbar can jump to any point in the replay.</p>
+      <div id="replay-library-section">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+          <button class="btn-ghost" id="btn-replay-library-refresh" type="button">Refresh library</button>
+        </div>
+        <div id="replay-library-list" class="replay-library-list"></div>
       </div>
-      <div id="replay-file-meta" class="replay-file-meta">No file selected.</div>
-      <button class="btn-grad" id="btn-debug-replay-start" type="button" disabled>Start replay</button>
+      <div class="replay-import-box">
+        <p class="account-lead">Have an exported replay file? Import JSON here as a secondary option.</p>
+        <div class="field">
+          <label for="inp-replay-file">Replay file</label>
+          <input type="file" id="inp-replay-file" accept=".json,application/json">
+        </div>
+        <div id="replay-file-meta" class="replay-file-meta">No file selected.</div>
+        <button class="btn-grad" id="btn-debug-replay-start" type="button" disabled>Start imported replay</button>
+      </div>
       <p class="lerr" id="debug-replay-err"></p>
     </div>
   </div>
@@ -5714,6 +5732,12 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
           <span class="llc-menu-item-body">
             <span class="llc-menu-item-title" data-i18n="hub.unranked.title">Unranked Play</span>
             <span class="llc-menu-item-sub" data-i18n="hub.unranked.sub">Rooms, friends, or practice vs CPU</span>
+          </span>
+        </button>
+        <button class="llc-menu-item llc-menu-hover" id="btn-hub-replay" type="button">
+          <span class="llc-menu-item-body">
+            <span class="llc-menu-item-title">Replay Viewer</span>
+            <span class="llc-menu-item-sub">Watch saved match replays from your library</span>
           </span>
         </button>
         <button class="llc-menu-item llc-menu-hover" id="btn-hub-tutorial" type="button">
@@ -6933,6 +6957,7 @@ const A = {
   casualSearching: false,
   casualWaitSeconds: 0,
   casualWaitSecondsShown: null,
+  replays: [],
 };
 window.A = A;
 
@@ -10998,6 +11023,140 @@ function renderReplayFileMeta(replay) {
   if (startBtn) startBtn.disabled = actionCount < 0;
 }
 
+function formatReplaySavedAt(ts) {
+  const n = Number(ts || 0);
+  if (!n) return 'Unknown date';
+  try {
+    return new Date(n * 1000).toLocaleString();
+  } catch (e) {
+    return 'Unknown date';
+  }
+}
+
+function replaySummaryLine(r) {
+  const actions = Number(r?.action_count || 0);
+  const duration = Number(r?.duration_seconds || 0);
+  return [
+    `Saved ${formatReplaySavedAt(r?.saved_at)}`,
+    `Room ${r?.room_id || '?'}`,
+    `vs ${r?.opponent_name || 'Opponent'}`,
+    `Turn ${r?.turn || '?'}`,
+    duration > 0 ? formatReplayElapsed(duration) : null,
+    `${actions} action${actions === 1 ? '' : 's'}`,
+  ].filter(Boolean).join(' · ');
+}
+
+function renderReplayLibraryList() {
+  const box = el('replay-library-list');
+  if (!box) return;
+  const list = Array.isArray(A.replays) ? A.replays : [];
+  box.replaceChildren();
+  if (!isSignedInAccount()) {
+    const empty = document.createElement('div');
+    empty.className = 'replay-file-meta';
+    empty.textContent = 'Sign in to save and view replays in your library.';
+    box.appendChild(empty);
+    return;
+  }
+  if (!list.length) {
+    const empty = document.createElement('div');
+    empty.className = 'replay-file-meta';
+    empty.textContent = 'No saved replays yet. Finish a match and choose Save Replay.';
+    box.appendChild(empty);
+    return;
+  }
+  list.forEach((r) => {
+    const card = document.createElement('div');
+    card.className = 'replay-library-card';
+    const body = document.createElement('div');
+    const title = document.createElement('strong');
+    const result = r.winner ? (r.winner === r.saver_player_id ? 'Win' : 'Loss') : 'Replay';
+    title.textContent = `${result} as ${r.saver_name || r.saver_player_id || 'Player'}`;
+    const sub = document.createElement('span');
+    sub.textContent = replaySummaryLine(r);
+    body.append(title, sub);
+
+    const actions = document.createElement('div');
+    actions.className = 'replay-library-actions';
+    const watch = document.createElement('button');
+    watch.className = 'btn-grad';
+    watch.type = 'button';
+    watch.textContent = 'Watch';
+    watch.addEventListener('click', () => startSavedReplay(r.id));
+    const dl = document.createElement('button');
+    dl.className = 'btn-ghost';
+    dl.type = 'button';
+    dl.textContent = 'Download JSON';
+    dl.addEventListener('click', () => downloadSavedReplay(r.id));
+    actions.append(watch, dl);
+    card.append(body, actions);
+    box.appendChild(card);
+  });
+}
+
+async function refreshReplayLibrary() {
+  if (!isSignedInAccount()) {
+    A.replays = [];
+    renderReplayLibraryList();
+    return;
+  }
+  const box = el('replay-library-list');
+  if (box) box.textContent = 'Loading saved replays...';
+  try {
+    const res = await accountPost('replay_list', { limit: 50 });
+    A.replays = res.replays || [];
+    renderReplayLibraryList();
+  } catch (e) {
+    if (box) box.textContent = e.message || 'Could not load saved replays.';
+  }
+}
+
+async function bootReplayFromPayload(startResult, replay) {
+  await bootMatchSession({
+    roomId: startResult.room_id,
+    token: startResult.player_token,
+    playerId: startResult.player_id,
+    isCPU: true,
+    cpuToken: startResult.cpu_token,
+  });
+  stopReplayAutoPlay();
+  G.replayTimeline = replayTimingFromActions(replay.actions);
+  G.replayLoadedMeta = replay.meta || null;
+  G.replayMode = true;
+  G.replayHandoff = false;
+  G.replayStep = 0;
+  G.replayTotal = startResult.total_steps ?? (replay.actions?.length || 0);
+  syncReplayControlBar();
+  toast(`Replay loaded — ${G.replayTotal} action(s)`, 2800);
+  if (G.replayTotal > 0) scheduleReplayAutoPlay();
+}
+
+async function startSavedReplay(replayId) {
+  el('debug-replay-err').textContent = '';
+  try {
+    const got = await accountPost('replay_get', { replay_id: replayId });
+    if (!got.replay) throw new Error('Replay payload missing');
+    const started = await accountPost('replay_start', { replay_id: replayId });
+    if (started.error) throw new Error(started.error);
+    await bootReplayFromPayload(started, got.replay);
+  } catch (e) {
+    el('debug-replay-err').textContent = e.message || 'Could not start saved replay';
+  }
+}
+
+async function downloadSavedReplay(replayId) {
+  try {
+    const got = await accountPost('replay_get', { replay_id: replayId });
+    if (!got.replay) throw new Error('Replay payload missing');
+    const room = got.replay.meta?.room_id || got.summary?.room_id || 'room';
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    downloadJsonFile(`tcg-replay-${room}-${stamp}.json`, got.replay);
+    toast('Replay JSON downloaded', 2200);
+  } catch (e) {
+    toast(e.message || 'Could not download replay', 4200);
+  }
+}
+
 function openDebugReplayScreen() {
   el('debug-replay-err').textContent = '';
   G._pendingReplayFile = null;
@@ -11005,6 +11164,7 @@ function openDebugReplayScreen() {
   const inp = el('inp-replay-file');
   if (inp) inp.value = '';
   showScr('debug-replay');
+  void refreshReplayLibrary();
 }
 
 async function onReplayFileSelected(file) {
@@ -11033,23 +11193,7 @@ async function startDebugReplayFromFile() {
   try {
     const r = await apiPost('replay_start', { replay });
     if (r.error) throw new Error(r.error);
-    await bootMatchSession({
-      roomId: r.room_id,
-      token: r.player_token,
-      playerId: r.player_id,
-      isCPU: true,
-      cpuToken: r.cpu_token,
-    });
-    stopReplayAutoPlay();
-    G.replayTimeline = replayTimingFromActions(replay.actions);
-    G.replayLoadedMeta = replay.meta || null;
-    G.replayMode = true;
-    G.replayHandoff = false;
-    G.replayStep = 0;
-    G.replayTotal = r.total_steps ?? (replay.actions?.length || 0);
-    syncReplayControlBar();
-    toast(`Replay loaded — ${G.replayTotal} action(s)`, 2800);
-    if (G.replayTotal > 0) scheduleReplayAutoPlay();
+    await bootReplayFromPayload(r, replay);
   } catch (e) {
     el('debug-replay-err').textContent = e.message || 'Could not start replay';
   }
@@ -14571,6 +14715,7 @@ window.G = G;
   on('btn-leave-active-game', 'click', leaveActiveGame);
   on('btn-reset-account', 'click', resetAccount);
   on('btn-hub-unranked', 'click', openUnrankedLobby);
+  on('btn-hub-replay', 'click', openDebugReplayScreen);
   on('btn-hub-tutorial', 'click', startTutorial);
   on('btn-hub-bug-reports', 'click', openBugReportsScreen);
   on('btn-bug-reports-back', 'click', () => enterHub(A.profile));
@@ -14598,6 +14743,7 @@ window.G = G;
     if (A.profile) enterHub(A.profile);
     else showGuestAuth(null, 'auth.guestPlayHint');
   });
+  on('btn-replay-library-refresh', 'click', refreshReplayLibrary);
   on('inp-replay-file', 'change', (e) => onReplayFileSelected(e.target.files?.[0] || null));
   on('btn-debug-replay-start', 'click', startDebugReplayFromFile);
   on('btn-debug-save-replay', 'click', saveReplayFile);
@@ -34303,7 +34449,9 @@ function showWin(s){
   });
   el('btn-win-hub').hidden = false;
   el('btn-win-leaderboard').hidden = !(pvp && s.mode === 'ranked');
-  el('btn-win-save-replay').hidden = !replaySaveEnabled();
+  const saveReplayBtn = el('btn-win-save-replay');
+  saveReplayBtn.hidden = !replaySaveEnabled();
+  saveReplayBtn.textContent = isSignedInAccount() ? 'Save Replay to Library' : 'Download Replay JSON';
   el('btn-again').textContent = (pvp && (s.mode === 'ranked' || G.casualRandomMatch)) ? t('win.findAnother') : t('win.playAgain');
   syncWinDebugTools(s);
   el('overlay-win').classList.add('open');
