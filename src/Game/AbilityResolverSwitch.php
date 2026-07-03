@@ -28,6 +28,7 @@ require_once __DIR__ . '/AbilityResolverSwitchPayEnergy.php';
 require_once __DIR__ . '/AbilityResolverSwitchBlock.php';
 require_once __DIR__ . '/AbilityResolverSwitchOppMayDiscard.php';
 require_once __DIR__ . '/AbilityResolverSwitchPickWr.php';
+require_once __DIR__ . '/AbilityResolverSwitchReveal.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -161,6 +162,10 @@ function resolveAbilityEffectSwitch(
         return tryResolveAbilityEffectSwitchPickWr($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
+    if (str_starts_with($type, 'reveal_')) {
+        return tryResolveAbilityEffectSwitchReveal($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
     switch ($type) {
         case 'add_from_waiting_room':
             $candidates = array_values(array_filter($p['waiting_room'], function ($c) use ($ab) {
@@ -263,34 +268,6 @@ function resolveAbilityEffectSwitch(
             }
             break;
 
-        case 'reveal_hand_look_live_if_no_live':
-            if (!empty($ab['requires_other_stage_member'])
-                && !stageHasOtherMember($p, $source['instance_id'] ?? '')) {
-                break;
-            }
-            $handSummary = implode(', ', array_map(
-                fn($c) => cardDisplayName($c),
-                $p['hand'] ?? []
-            ));
-            $hasLive = !empty(array_filter(
-                $p['hand'] ?? [],
-                fn($c) => ($c['card_type'] ?? '') === 'ライブ'
-            ));
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                " — [$name] revealed hand ($handSummary).");
-            if (!$hasLive) {
-                $picked = lookRevealGroup(
-                    $p,
-                    intval($ab['look'] ?? 5),
-                    $ab['group'] ?? 'Nijigasaki',
-                    $ab['filter'] ?? 'live',
-                    intval($ab['pick'] ?? 1)
-                );
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    " — [$name] looked at deck top; added $picked Live card(s) to hand.");
-            }
-            break;
-
         case 'position_change_off_center':
             $group = $ab['group'] ?? 'μ\'s';
             $minBlades = intval($ab['min_original_blades'] ?? 0);
@@ -302,26 +279,6 @@ function resolveAbilityEffectSwitch(
                     $state = addLog($state, $state['players'][$pid]['name'] .
                         " — [$name] position-changed off Center.");
                 }
-            }
-            break;
-
-
-
-        case 'reveal_per_both_stage_member':
-            $members = countBothStagesMembers($state);
-            $top = array_splice($p['main_deck'], 0, min($members, count($p['main_deck'])));
-            $liveCount = 0;
-            foreach ($top as $c) {
-                if (($c['card_type'] ?? '') === 'ライブ') $liveCount++;
-            }
-            if ($liveCount > 0) {
-                $bonus = $liveCount * intval($ab['score_per_live'] ?? 1);
-                bumpLiveCardScore($state, $pid, $source['instance_id'] ?? '', $bonus);
-                $state = addLog($state, $state['players'][$pid]['name'] .
-                    " — [$name] revealed $liveCount Live card(s); score +$bonus.");
-            }
-            if (!empty($top)) {
-                $p['waiting_room'] = array_merge($p['waiting_room'], $top);
             }
             break;
 
@@ -489,28 +446,6 @@ function resolveAbilityEffectSwitch(
                 + intval($ab['amount'] ?? 8);
             $state = addLog($state, $state['players'][$pid]['name'] .
                 ' — [' . $name . '] Yell reveal count reduced by ' . intval($ab['amount'] ?? 8) . ' until Live ends.');
-            break;
-
-        case 'reveal_hand_member_cost_live_score':
-            if (!empty($state['pending_prompt'])) break;
-            $members = array_values(array_filter(
-                $p['hand'] ?? [],
-                fn($c) => ($c['card_type'] ?? '') === 'メンバー'
-            ));
-            if (empty($members)) break;
-            $state['pending_prompt'] = [
-                'type'          => 'reveal_hand_member_cost_live_score',
-                'owner'         => $pid,
-                'responder'     => $pid,
-                'source_id'     => $source['instance_id'] ?? '',
-                'source_name'   => $name,
-                'candidates'    => array_map('cardPromptSummary', $members),
-                'milestones'    => $ab['milestones'] ?? [10, 20, 30, 40, 50],
-                'prompt'        => 'Reveal any number of Member cards from your hand (combined cost 10/20/30/40/50 for +1 Live Score).',
-                'ability'       => $ab,
-            ];
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] reveal hand Members (choose).');
             break;
 
         case 'formation_rotate_all':
