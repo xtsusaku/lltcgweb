@@ -10,6 +10,7 @@ require_once __DIR__ . '/AbilityResolverSwitchDeckLook.php';
 require_once __DIR__ . '/AbilityResolverSwitchScore.php';
 require_once __DIR__ . '/AbilityResolverSwitchWaitActivate.php';
 require_once __DIR__ . '/AbilityResolverSwitchYell.php';
+require_once __DIR__ . '/AbilityResolverSwitchChooseHeart.php';
 
 function resolveAbilityEffectSwitch(
     array $state,
@@ -50,6 +51,10 @@ function resolveAbilityEffectSwitch(
 
     if (str_starts_with($type, 'yell_') || $type === 'waive_one_required_heart_color') {
         return tryResolveAbilityEffectSwitchYell($state, $pid, $source, $ab, $ctx, $type, $p, $name);
+    }
+
+    if (str_starts_with($type, 'choose_heart_') || $type === 'choose_required_heart_pair_gray') {
+        return tryResolveAbilityEffectSwitchChooseHeart($state, $pid, $source, $ab, $ctx, $type, $p, $name);
     }
 
     switch ($type) {
@@ -320,23 +325,6 @@ function resolveAbilityEffectSwitch(
             }
             break;
 
-        case 'choose_heart_per_success':
-            if (!empty($state['pending_prompt'])) break;
-            $choices = $ab['heart_choices'] ?? ['yellow', 'pink', 'purple'];
-            $labels = array_map(fn($c) => ucfirst($c) . ' ♡', $choices);
-            $state['pending_prompt'] = [
-                'type'          => 'choose_heart_per_success',
-                'owner'         => $pid,
-                'responder'     => $pid,
-                'source_name'   => $name,
-                'prompt'        => 'Choose a heart color to gain for each Success Live card until this Live ends.',
-                'choices'       => $choices,
-                'choice_labels' => $labels,
-                'ability'       => $ab,
-            ];
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] Live Start: choose a heart color.');
-            break;
 
         case 'reveal_per_both_stage_member':
             $members = countBothStagesMembers($state);
@@ -382,23 +370,6 @@ function resolveAbilityEffectSwitch(
             }
             break;
 
-        case 'choose_heart_one_mus_member':
-            if (!empty($ab['requires_success_lives']) && empty($p['success_lives'])) break;
-            if (!empty($state['pending_prompt'])) break;
-            $choices = $ab['heart_choices'] ?? ['yellow', 'pink', 'purple'];
-            $state['pending_prompt'] = [
-                'type'          => 'choose_heart_mus_member',
-                'owner'         => $pid,
-                'responder'     => $pid,
-                'source_name'   => $name,
-                'prompt'        => 'Choose a heart for 1 μ\'s Member on your Stage to gain until this Live ends.',
-                'choices'       => $choices,
-                'choice_labels' => array_map(fn($c) => ucfirst($c) . ' ♡', $choices),
-                'ability'       => $ab,
-            ];
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] Live Start: choose a heart for a μ\'s Member.');
-            break;
 
         case 'other_member_blade_if_plain_live':
             if (liveZoneHasPlainLive($p['live_zone'])) {
@@ -509,21 +480,6 @@ function resolveAbilityEffectSwitch(
                 " — [$name] activated $activated Energy; added $added card(s) from Waiting Room.");
             break;
 
-        case 'choose_heart_other_member':
-            if (!empty($state['pending_prompt'])) break;
-            $choices = $ab['heart_choices'] ?? ['yellow', 'pink', 'purple', 'green', 'blue', 'red'];
-            $state['pending_prompt'] = [
-                'type'          => 'choose_heart_other_member',
-                'owner'         => $pid,
-                'responder'     => $pid,
-                'source_id'     => $source['instance_id'] ?? '',
-                'source_name'   => $name,
-                'prompt'        => 'Choose a heart color for another Member on your Stage.',
-                'choices'       => $choices,
-                'choice_labels' => array_map(fn($c) => ucfirst($c) . ' ♡', $choices),
-                'ability'       => $ab,
-            ];
-            break;
 
         case 'blade_per_discarded_pick_member':
             if (!empty($state['pending_prompt'])) break;
@@ -655,22 +611,6 @@ function resolveAbilityEffectSwitch(
             }
             break;
 
-        case 'choose_heart_modifier':
-            if (!empty($state['pending_prompt'])) break;
-            $choices = $ab['heart_choices'] ?? ['yellow', 'pink', 'purple'];
-            $state['pending_prompt'] = [
-                'type'          => 'choose_heart_modifier',
-                'owner'         => $pid,
-                'responder'     => $pid,
-                'source_name'   => $name,
-                'prompt'        => 'Choose a heart color to gain until this Live ends.',
-                'choices'       => $choices,
-                'choice_labels' => array_map(fn($c) => ucfirst($c) . ' ♡', $choices),
-                'ability'       => $ab,
-            ];
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] choose a heart color.');
-            break;
 
         case 'both_wr_member_to_empty_stage':
             $maxCost = intval($ab['max_cost'] ?? 2);
@@ -713,27 +653,6 @@ function resolveAbilityEffectSwitch(
             break;
 
 
-        case 'choose_required_heart_pair_gray':
-            if (!stageHasGroupMember($p, $ab['requires_stage_group'] ?? '')) break;
-            if (!empty($state['pending_prompt'])) break;
-            $choices = $ab['colors'] ?? ['pink', 'green', 'blue'];
-            $state['pending_prompt'] = [
-                'type'          => 'choose_required_heart_pair_gray',
-                'owner'         => $pid,
-                'responder'     => $pid,
-                'source_id'     => $source['instance_id'] ?? '',
-                'source_name'   => $name,
-                'prompt'        => 'Choose pink, green, or blue — required hearts become 2 of that color and 1 Gray Heart.',
-                'choices'       => $choices,
-                'choice_labels' => array_map(
-                    fn($c) => ucfirst($c) . ' ♡, ' . ucfirst($c) . ' ♡, Gray ♡',
-                    $choices
-                ),
-                'ability'       => $ab,
-            ];
-            $state = addLog($state, $state['players'][$pid]['name'] .
-                ' — [' . $name . '] choose required heart pattern.');
-            break;
 
         case 'reduce_hearts_if_baton_group':
             $turn = intval($state['turn'] ?? 1);
