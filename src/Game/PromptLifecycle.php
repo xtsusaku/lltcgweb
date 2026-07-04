@@ -55,7 +55,8 @@ function startPickWrToHandPrompt(
     int $abilityIdx,
     array $ab,
     array $cfg,
-    bool $leaveStage = false
+    bool $leaveStage = false,
+    int $count = 1
 ): void {
     $p = &$state['players'][$pid];
     $candidates = wrCandidatesMatching($p, $cfg);
@@ -82,6 +83,7 @@ function startPickWrToHandPrompt(
         'candidates'    => array_map('cardPromptSummary', $candidates),
         'ability'       => $ab,
         'wr_pick_cfg'   => $cfg,
+        'pick_count'    => $count,
     ];
 }
 
