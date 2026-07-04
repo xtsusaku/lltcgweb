@@ -1080,7 +1080,11 @@ function actionResolvePrompt(array $state, string $pid, array $data): array {
 
     if ($promptType === 'pick_wr_leave_stage_add') {
         $pickId = $data['card_id'] ?? '';
-        if ($pickId === '') {
+        $needsPick = intval($prompt['pick_count'] ?? 1) > 0;
+        if (!$needsPick) {
+            $pickId = 'NO_CARD_NEEDED';
+        }
+        if ($needsPick && $pickId === '') {
             throw new Exception('Choose a card');
         }
         $cfg = $prompt['wr_pick_cfg'] ?? wrPickCfgForLeaveStageAbility($ability);
@@ -1118,14 +1122,20 @@ function actionResolvePrompt(array $state, string $pid, array $data): array {
             $state['seq']++;
             return $state;
         }
-        if($pickId !== 'NO_CARD_NEEDED') array_splice($ownerP['waiting_room'], $pickIndex, 1);
+        if ($pickId !== 'NO_CARD_NEEDED') {
+            array_splice($ownerP['waiting_room'], $pickIndex, 1);
+        }
         $ownerP['waiting_room'][] = $leavingMember;
-        if($pickId !== 'NO_CARD_NEEDED') $ownerP['hand'][] = $picked;
+        if ($pickId !== 'NO_CARD_NEEDED') {
+            $ownerP['hand'][] = $picked;
+        }
         $mName = $leavingMember['name_en'] ?? $leavingMember['name'] ?? 'Member';
-        $state = ($pickId !== 'NO_CARD_NEEDED') ? addLog($state, $state['players'][$owner]['name'] .
-            ' — [' . $mName . '] left Stage; added ' .
-            cardDisplayName($picked) . ' from Waiting Room to hand.') : addLog($state, $state['players'][$owner]['name'] .
-            ' — [' . $mName . '] left Stage; no card added from Waiting Room.');
+        $state = ($pickId !== 'NO_CARD_NEEDED')
+            ? addLog($state, $state['players'][$owner]['name'] .
+                ' — [' . $mName . '] left Stage; added ' .
+                cardDisplayName($picked) . ' from Waiting Room to hand.')
+            : addLog($state, $state['players'][$owner]['name'] .
+                ' — [' . $mName . '] left Stage; no card added from Waiting Room.');
         $group = $ability['group'] ?? '';
         $minScore = intval($ability['activate_energy_if_score_min'] ?? 0);
         if ($pickId !== 'NO_CARD_NEEDED' && $minScore > 0 && ($picked['card_type'] ?? '') === 'ライブ'

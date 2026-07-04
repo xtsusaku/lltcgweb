@@ -670,7 +670,6 @@ function spBp2ResolveEffect(array $state, string $pid, array $source, array $ab,
             $cfg = wrPickCfgForLeaveStageAbility($ab);
             $found = findActivatedAbilitySource($p, $source['instance_id'] ?? '');
             $slot = $found['slot'] ?? null;
-            $slot = $found['slot'] ?? null;
             $zone = $found['zone'] ?? 'stage';
             $wrIndex = $found['wr_index'] ?? null;
             if ($zone === 'stage' && $slot !== null && !empty($p['stage'][$slot])) {

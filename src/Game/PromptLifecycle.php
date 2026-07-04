@@ -60,7 +60,7 @@ function startPickWrToHandPrompt(
 ): void {
     $p = &$state['players'][$pid];
     $candidates = wrCandidatesMatching($p, $cfg);
-    if (empty($candidates)) {
+    if ($count > 0 && empty($candidates)) {
         throw new Exception('No matching card in Waiting Room');
     }
     $mName = $member['name_en'] ?? $member['name'] ?? 'Member';
@@ -78,7 +78,7 @@ function startPickWrToHandPrompt(
         'source_slot'   => $slot,
         'source_name'   => $mName,
         'ability_index' => $abilityIdx,
-        'prompt'        => 'Choose 1 ' . wrPickFilterLabel($filter) .
+        'prompt'        => 'Choose ' . max(0, $count) . ' ' . wrPickFilterLabel($filter) .
             ' card from your Waiting Room to add to your hand.',
         'candidates'    => array_map('cardPromptSummary', $candidates),
         'ability'       => $ab,

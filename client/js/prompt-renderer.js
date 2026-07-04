@@ -226,7 +226,7 @@ global.openStageSlotPick = function openStageSlotPick(pr){
 
 
 global.openWrToHandPick = function openWrToHandPick(pr, opts = {}) {
-  if(pr.pick_count<= 0){
+  if ((Number(pr.pick_count) || 0) <= 0) {
     sendAct('resolve_prompt', { card_id: 'NO_CARD_NEEDED' });
     return;
   }
