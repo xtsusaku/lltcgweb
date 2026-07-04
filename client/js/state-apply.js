@@ -4,8 +4,35 @@
 (function (global) {
   'use strict';
 
+  function isReplayViewingState(s) {
+    return !!(s && ((s.mode || '') === 'replay_view' || s.replay))
+      || (typeof global.isReplayViewing === 'function' && global.isReplayViewing());
+  }
+
+  function applyReplayViewingState(s) {
+    G._lastAppliedAt = Date.now();
+    if (typeof abortGameplayPresentation === 'function') {
+      abortGameplayPresentation({ skipAbortFlag: true });
+    }
+    G._pendingStateQueue = [];
+    G._promptSubmitKey = null;
+    G.lastSeq = s?.seq ?? G.lastSeq;
+    G.playerId = G.isSpectator ? (s.view_as || 'p1') : (s.my_id || G.playerId);
+    if (typeof applyReplayStateFromPoll === 'function') applyReplayStateFromPoll(s);
+    if (document.querySelector('.screen.active')?.id !== 'screen-game') showScr('game');
+    G.gameState = s;
+    renderGame(s, { skipPrompt: true });
+    if (typeof dismissAllGameplayOverlays === 'function') dismissAllGameplayOverlays();
+    if (typeof syncReplayControlBar === 'function') syncReplayControlBar();
+  }
+
   global.onState = function onState(s) {
     if (G.isTutorial) return;
+    if (isReplayViewingState(s)) {
+      TCG_DEBUG.log('state', 'apply replay snapshot', TCG_DEBUG.snap(s));
+      applyStateUpdate(s);
+      return;
+    }
     if(s.seq<=G.lastSeq && G.gameState) {
       TCG_DEBUG.logOnce('state', `stale:${s.seq}`, 'skip stale', { incoming: s.seq, last: G.lastSeq });
       return;
@@ -76,6 +103,10 @@
   /** Apply one server state snapshot: spectacle gate, log anims, or direct render. */
   global.applyStateUpdate = async function applyStateUpdate(s) {
     if (G.isTutorial) return;
+    if (isReplayViewingState(s)) {
+      applyReplayViewingState(s);
+      return;
+    }
     G._lastAppliedAt = Date.now();
     syncPromptSubmitState(s);
     if (!s?.pending_prompt) clearDeferredPromptState();

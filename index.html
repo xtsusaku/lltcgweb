@@ -954,7 +954,6 @@ body.tcg-spectator-mode #screen-game .echip-stack,
 body.tcg-spectator-mode #screen-game .wr-face-card{cursor:help}
 body.tcg-spectator-mode #spectate-bar,
 body.tcg-spectator-mode #spectate-bar button{pointer-events:auto}
-body.tcg-replay-view-mode #screen-game #btn-resign,
 body.tcg-replay-view-mode #screen-game .phase-action-bar{display:none!important}
 body.tcg-replay-view-mode #screen-game .mat-zone.deck-pile,
 body.tcg-replay-view-mode #screen-game .mat-baton-toggle,
@@ -8289,8 +8288,9 @@ async function reconnectToGame(saved) {
       showScr('waiting');
     } else {
       showScr('game');
-      renderGame(s);
-      if (s.pending_prompt?.responder === G.playerId) {
+      const replayViewing = isReplayViewing();
+      renderGame(s, { skipPrompt: replayViewing });
+      if (!replayViewing && s.pending_prompt?.responder === G.playerId) {
         clearLiveSuccessHandDeferral(s);
         ensurePendingPromptSurfaced(s, G.playerId);
       }
@@ -11235,6 +11235,23 @@ function syncReplayControlBar() {
     btn.disabled = !inReplay;
   });
   if (playBtn) playBtn.disabled = !inReplay || G.replayStep >= G.replayTotal;
+  syncReplayExitButton();
+}
+
+function syncReplayExitButton() {
+  const btn = el('btn-resign');
+  if (!btn) return;
+  if (isReplayViewing()) {
+    btn.textContent = 'Exit Replay';
+    btn.classList.remove('btn-danger');
+    btn.classList.add('btn-ghost');
+    btn.setAttribute('aria-label', 'Exit Replay');
+    return;
+  }
+  btn.textContent = typeof t === 'function' ? t('game.resign') : 'Resign';
+  btn.classList.add('btn-danger');
+  btn.classList.remove('btn-ghost');
+  btn.removeAttribute('aria-label');
 }
 
 function formatReplayElapsed(seconds) {
@@ -11357,6 +11374,34 @@ function applyReplayStateFromPoll(s) {
     if (!G._replayHandoffPrimed) finalizeReplayHandoff(s);
   }
   syncReplayControlBar();
+}
+
+function exitReplayViewing() {
+  if (!isReplayViewing()) return;
+  stopReplayAutoPlay();
+  stopPoll();
+  abortGameplayPresentation({ skipAbortFlag: true });
+  dismissAllGameplayOverlays();
+  clearActiveGameSession();
+  G.roomId = null;
+  G.token = null;
+  G.cpuToken = null;
+  G.playerId = null;
+  G.gameState = null;
+  G.lastSeq = 0;
+  G.isCPU = false;
+  G.cpuPlayerId = null;
+  G.replayMode = false;
+  G.replayHandoff = false;
+  G.replayStep = 0;
+  G.replayTotal = 0;
+  G.replayTimeline = null;
+  G.replayLoadedMeta = null;
+  G._replayHandoffPrimed = false;
+  document.body.classList.remove('tcg-replay-view-mode');
+  syncReplayControlBar();
+  openDebugReplayScreen();
+  toast('Exited replay', 1800);
 }
 
 /** After replay handoff: sync spectacle done-keys from log, drop stale replay defer state. */
@@ -15301,7 +15346,14 @@ window.G = G;
   on('btn-win-debug-save-log', 'click', onDebugSaveLogClick);
   on('btn-win-debug-copy-log', 'click', onDebugCopyLogClick);
   on('btn-win-debug-save-bundle', 'click', () => { void saveDebugBundle(); });
-  on('btn-resign','click', () => { if (G.isTutorial || G.isSpectator || isReplayViewing()) return; confirm('Resign?') && sendAct('resign',{}); });
+  on('btn-resign','click', () => {
+    if (G.isTutorial || G.isSpectator) return;
+    if (isReplayViewing()) {
+      exitReplayViewing();
+      return;
+    }
+    confirm('Resign?') && sendAct('resign',{});
+  });
   on('btn-again', 'click', onWinPlayAgain);
   on('btn-win-hub', 'click', onWinReturnToMenu);
   on('btn-win-leaderboard', 'click', onWinViewLeaderboard);

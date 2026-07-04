@@ -1316,6 +1316,18 @@ global.renderPromptDiscardHandBranch = function renderPromptDiscardHandBranch(s,
 };
 
 global.renderPrompt = function renderPrompt(s, myId){
+  if (typeof global.isReplayViewing === 'function' && global.isReplayViewing()) {
+    global.G._promptSubmitKey = null;
+    const promptOverlay = typeof global.el === 'function' ? global.el('overlay-prompt') : null;
+    promptOverlay?.classList.remove('open');
+    if (typeof global.closeM === 'function') {
+      global.closeM('overlay-surveil');
+      global.closeM('overlay-pick');
+      global.closeM('overlay-hand-pick');
+      global.closeM('overlay-heart');
+    }
+    return;
+  }
   syncAntiSoftlockButton(s, myId);
   syncPromptSubmitState(s);
   if (isPromptSubmitting(s)) {
