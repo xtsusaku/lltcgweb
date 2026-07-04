@@ -61,6 +61,72 @@ final class ActionSmokeTest extends TestCase
         $this->assertNull($state['pending_prompt'] ?? null);
     }
 
+    public function testLiveStartPositionChangeContinuesPromptQueue(): void {
+        $tomari = $this->cardByNo('PL!SP-pb2-011-PP', 'test_tomari');
+        $natsumi = $this->cardByNo('PL!SP-sd1-020-SD', 'test_natsumi');
+        $followupLive = [
+            'instance_id' => 'test_followup_live',
+            'card_no' => 'TEST-LIVE',
+            'name_en' => 'Followup Live',
+            'card_type_en' => 'Live',
+            'abilities' => [],
+        ];
+
+        $state = [
+            'phase' => 'live_start_effects',
+            'seq' => 10,
+            'first_player' => 'p1',
+            'live_attempt' => ['p2'],
+            'players' => [
+                'p1' => [
+                    'name' => 'P1',
+                    'stage' => ['left' => null, 'center' => null, 'right' => null],
+                    'hand' => [],
+                    'waiting_room' => [],
+                    'live_zone' => [],
+                    'main_deck' => [],
+                    'energy_zone' => [],
+                    'success_lives' => [],
+                ],
+                'p2' => [
+                    'name' => 'P2',
+                    'stage' => ['left' => null, 'center' => $tomari, 'right' => $natsumi],
+                    'hand' => [],
+                    'waiting_room' => [],
+                    'live_zone' => [$followupLive],
+                    'main_deck' => [],
+                    'energy_zone' => [],
+                    'success_lives' => [],
+                ],
+            ],
+            'pending_prompt' => [
+                'type' => 'optional_swap_area_on_enter',
+                'owner' => 'p2',
+                'responder' => 'p2',
+                'source_id' => 'test_tomari',
+                'source_slot' => 'center',
+                'source_name' => 'Tomari Onitsuka',
+                'choices' => ['skip', 'left', 'right'],
+                'ability' => ['trigger' => 'live_start', 'type' => 'optional_swap_area_on_enter'],
+            ],
+            'live_start_optional_queue' => [[
+                'owner' => 'p2',
+                'source_id' => 'test_followup_live',
+                'source_name' => 'Followup Live',
+                'ability_index' => 0,
+                'ability' => ['trigger' => 'live_start', 'type' => 'optional_discard_hand', 'discard' => 1],
+            ]],
+        ];
+
+        $state = applyAction($state, 'p2', 'resolve_prompt', ['choice' => 'right']);
+
+        $this->assertSame('test_tomari', $state['players']['p2']['stage']['right']['instance_id'] ?? null);
+        $this->assertSame('test_natsumi', $state['players']['p2']['stage']['center']['instance_id'] ?? null);
+        $this->assertTrue($state['players']['p2']['stage']['right']['moved_this_turn'] ?? false);
+        $this->assertSame('optional_live_start', $state['pending_prompt']['type'] ?? null);
+        $this->assertSame('test_followup_live', $state['pending_prompt']['source_id'] ?? null);
+    }
+
     public function testPlayMemberLegalFromHand(): void {
         $state = $this->joinedMulliganState();
         $state = applyAction($state, 'p1', 'mulligan', ['card_ids' => []]);
