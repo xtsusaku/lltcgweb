@@ -38,11 +38,52 @@
     global.closeM('overlay-heart');
   };
 
+  const REPLAY_PROMPT_OVERLAY_IDS = [
+    'overlay-prompt',
+    'overlay-hand-pick',
+    'overlay-pick',
+    'overlay-heart',
+    'overlay-surveil',
+  ];
+
+  function isReplayPromptReadOnlyState(s) {
+    return !!(s?.pending_prompt && typeof global.isReplayViewing === 'function' && global.isReplayViewing());
+  }
+
+  function scheduleReplayPromptReadOnlyUi(readOnly) {
+    setTimeout(() => global.syncReplayPromptReadOnlyUi?.(readOnly), 0);
+  }
+
+  global.syncReplayPromptReadOnlyUi = function syncReplayPromptReadOnlyUi(forceReadOnly) {
+    const readOnly = forceReadOnly ?? isReplayPromptReadOnlyState(global.G?.gameState);
+    REPLAY_PROMPT_OVERLAY_IDS.forEach((id) => {
+      const overlay = global.el?.(id);
+      if (!overlay) return;
+      const active = !!(readOnly && overlay.classList.contains('open'));
+      overlay.classList.toggle('replay-prompt-readonly', active);
+      overlay.setAttribute('aria-readonly', active ? 'true' : 'false');
+      overlay.querySelectorAll('button, input, select, textarea').forEach((node) => {
+        if (active) {
+          if (node.dataset.replayReadonlyWasDisabled == null) {
+            node.dataset.replayReadonlyWasDisabled = node.disabled ? '1' : '0';
+          }
+          node.disabled = true;
+          node.setAttribute('aria-disabled', 'true');
+        } else if (node.dataset.replayReadonlyWasDisabled != null) {
+          node.disabled = node.dataset.replayReadonlyWasDisabled === '1';
+          delete node.dataset.replayReadonlyWasDisabled;
+          node.removeAttribute('aria-disabled');
+        }
+      });
+    });
+  };
+
   global.syncAntiSoftlockButton = function syncAntiSoftlockButton(s, myId) {
   const btn = el('btn-anti-softlock');
   if (!btn) return;
   const onGame = el('screen-game')?.classList.contains('active');
-  const show = !!(onGame && !G.isSpectator && hasAntiSoftlockTarget(s, myId));
+  const replayViewing = typeof global.isReplayViewing === 'function' && global.isReplayViewing();
+  const show = !!(onGame && !G.isSpectator && !replayViewing && hasAntiSoftlockTarget(s, myId));
   btn.hidden = !show;
 }
 
@@ -1000,6 +1041,7 @@ global.openOptionalLiveStartDiscardPick = function openOptionalLiveStartDiscardP
   const pickHand = optionalLiveStartDiscardHand(pr, s, myId);
   const minPick = ab.max_discard ? 0 : discardNeed;
   if (!pickHand.length) {
+    if (isReplayPromptReadOnlyState(s)) return false;
     G._promptSubmitKey = null;
     sendAct('resolve_prompt', { choice: 'no' });
     return true;
@@ -1068,6 +1110,7 @@ function hidePromptEffectText(){
 
 
 global.sendResolvePrompt = function sendResolvePrompt(choice, extra={}){
+  if (isReplayPromptReadOnlyState(G.gameState)) return;
   markPromptSubmitting(G.gameState);
   sendAct('resolve_prompt',{choice,...extra});
 }
@@ -1097,6 +1140,7 @@ global.renderSelfActivationPrompt = function renderSelfActivationPrompt(pr, s, m
 
 
 function submitTextAnswerPrompt(pr, myId){
+  if (isReplayPromptReadOnlyState(G.gameState)) return;
   const input=el('prompt-text-input');
   const text=(input?.value||'').trim();
   if(!text){ toast(t('prompt.typeAnswer')); input?.focus(); return; }
@@ -1162,6 +1206,7 @@ global.renderBranchChoiceButtons = function renderBranchChoiceButtons(pr, s, myI
 
 
 global.handlePromptChoice = function handlePromptChoice(pr, choice, s, myId){
+  if (isReplayPromptReadOnlyState(s)) return;
   if (choice === 'no' && pr?.type === 'optional_swap_area_on_enter') choice = 'skip';
   const me=s.players[myId];
   const discardNeed=promptDiscardCount(pr,choice);
@@ -1316,31 +1361,27 @@ global.renderPromptDiscardHandBranch = function renderPromptDiscardHandBranch(s,
 };
 
 global.renderPrompt = function renderPrompt(s, myId){
-  if (typeof global.isReplayViewing === 'function' && global.isReplayViewing()) {
+  let pr=s.pending_prompt;
+  const replayReadOnly = isReplayPromptReadOnlyState(s);
+  if (replayReadOnly) {
     global.G._promptSubmitKey = null;
-    const promptOverlay = typeof global.el === 'function' ? global.el('overlay-prompt') : null;
-    promptOverlay?.classList.remove('open');
-    if (typeof global.closeM === 'function') {
-      global.closeM('overlay-surveil');
-      global.closeM('overlay-pick');
-      global.closeM('overlay-hand-pick');
-      global.closeM('overlay-heart');
-    }
-    return;
+    myId = pr?.responder || myId;
+    scheduleReplayPromptReadOnlyUi(true);
+  } else {
+    global.syncReplayPromptReadOnlyUi?.(false);
   }
   syncAntiSoftlockButton(s, myId);
-  syncPromptSubmitState(s);
-  if (isPromptSubmitting(s)) {
+  if (!replayReadOnly) syncPromptSubmitState(s);
+  if (!replayReadOnly && isPromptSubmitting(s)) {
     const submittingSurveil = s.pending_prompt?.type === 'surveil_arrange'
       && el('overlay-surveil')?.classList.contains('open');
     if (!submittingSurveil) suppressPromptOverlaysWhileSubmitting();
     return;
   }
-  let pr=s.pending_prompt;
   if(pr) pr=ensurePromptChoices(pr);
   if (pr) TCG_DEBUG.log('prompt', pr.type, { responder: pr.responder, me: myId, seq: s.seq, step: pr.step });
   const ovl=el('overlay-prompt');
-  if (pr?.responder === myId && shouldDeferPromptForLivePresentation(s, myId)) {
+  if (!replayReadOnly && pr?.responder === myId && shouldDeferPromptForLivePresentation(s, myId)) {
     ovl?.classList.remove('open');
     if (pr.type === 'effect_discard_hand') closeM('overlay-hand-pick');
     return;
@@ -2084,6 +2125,7 @@ global.renderPrompt = function renderPrompt(s, myId){
     });
   }
   ovl.classList.add('open');
+  if (replayReadOnly) syncReplayPromptReadOnlyUi(true);
   bumpAntiSoftlockButton();
 }
 

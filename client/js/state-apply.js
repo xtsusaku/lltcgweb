@@ -21,8 +21,8 @@
     if (typeof applyReplayStateFromPoll === 'function') applyReplayStateFromPoll(s);
     if (document.querySelector('.screen.active')?.id !== 'screen-game') showScr('game');
     G.gameState = s;
-    renderGame(s, { skipPrompt: true });
-    if (typeof dismissAllGameplayOverlays === 'function') dismissAllGameplayOverlays();
+    renderGame(s, { skipPrompt: false });
+    if (typeof syncReplayPromptReadOnlyUi === 'function') syncReplayPromptReadOnlyUi(true);
     if (typeof syncReplayControlBar === 'function') syncReplayControlBar();
   }
 

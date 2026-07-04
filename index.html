@@ -965,6 +965,17 @@ body.tcg-replay-view-mode #replay-control-bar,
 body.tcg-replay-view-mode #replay-control-bar button,
 body.tcg-replay-view-mode #screen-game .tcg-debug-row,
 body.tcg-replay-view-mode #screen-game .tcg-debug-row button{pointer-events:auto!important}
+body.tcg-replay-view-mode .overlay.replay-prompt-readonly{pointer-events:none}
+body.tcg-replay-view-mode .overlay.replay-prompt-readonly button,
+body.tcg-replay-view-mode .overlay.replay-prompt-readonly input,
+body.tcg-replay-view-mode .overlay.replay-prompt-readonly select,
+body.tcg-replay-view-mode .overlay.replay-prompt-readonly textarea{
+  opacity:.72;cursor:default;filter:saturate(.75)
+}
+body.tcg-replay-view-mode .overlay.replay-prompt-readonly .pickcard,
+body.tcg-replay-view-mode .overlay.replay-prompt-readonly .hand-pick-card,
+body.tcg-replay-view-mode .overlay.replay-prompt-readonly .surveilcard,
+body.tcg-replay-view-mode .overlay.replay-prompt-readonly .heart-btn{cursor:default}
 .phase-timer-wrap{flex:0 0 auto;line-height:0}
 .phase-timer-wrap[hidden]{display:none!important}
 .phase-timer-wrap.phase-timer-wrap--prompt{
@@ -6797,9 +6808,9 @@ html:not(.foil-fx-off) #screen-game .mslot.card-tilt-enabled.foil-tilt-hover{
 <script src="sfx.js?v=15"></script>
 <script src="client/js/api-client.js?v=2"></script>
 <script src="client/js/game-sync.js?v=3"></script>
-<script src="client/js/state-apply.js?v=2"></script>
+<script src="client/js/state-apply.js?v=3"></script>
 <script src="client/js/replay-debug.js?v=3"></script>
-<script src="client/js/prompt-renderer.js?v=4"></script>
+<script src="client/js/prompt-renderer.js?v=5"></script>
 <!-- Early auth guard: separate script so a main-bundle parse error cannot leave auth stuck forever. -->
 <script>
 (function () {
@@ -8289,7 +8300,7 @@ async function reconnectToGame(saved) {
     } else {
       showScr('game');
       const replayViewing = isReplayViewing();
-      renderGame(s, { skipPrompt: replayViewing });
+      renderGame(s, { skipPrompt: false });
       if (!replayViewing && s.pending_prompt?.responder === G.playerId) {
         clearLiveSuccessHandDeferral(s);
         ensurePendingPromptSurfaced(s, G.playerId);
@@ -25046,7 +25057,8 @@ function renderGame(s, opts = {}) {
     el('overlay-live')?.classList.remove('open');
   }
 
-  if (!G.isTutorial && !opts.skipPrompt && !shouldDeferPromptForLivePresentation(s, myId)) renderPrompt(s, myId);
+  const deferPromptForPresentation = !isReplayViewing() && shouldDeferPromptForLivePresentation(s, myId);
+  if (!G.isTutorial && !opts.skipPrompt && !deferPromptForPresentation) renderPrompt(s, myId);
   else showTutorialPromptIfNeeded(G.tutorialData?.steps?.[G.tutorialStep], s, myId);
 
   syncAntiSoftlockButton(s, myId);

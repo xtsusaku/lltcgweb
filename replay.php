@@ -136,6 +136,26 @@ function replayDurationSeconds(array $actions): int {
     return max(0, $last - $first);
 }
 
+function replayActionBlockedByPendingPrompt(Throwable $e): bool {
+    return str_contains($e->getMessage(), 'pending skill prompt');
+}
+
+function replayApplyRecordedAction(array $state, string $pid, string $type, array $data, int $index): array {
+    try {
+        return applyAction($state, $pid, $type, $data);
+    } catch (Throwable $e) {
+        if ($type !== 'resolve_prompt'
+            && !empty($state['pending_prompt'])
+            && replayActionBlockedByPendingPrompt($e)) {
+            // Older saved replays may be missing the prompt-resolution action that happened
+            // before the next recorded action. Drop only that replay-local stale prompt.
+            unset($state['pending_prompt']);
+            return applyAction($state, $pid, $type, $data);
+        }
+        throw $e;
+    }
+}
+
 function replayRestoreFromBaseline(
     array $baseline,
     string $roomId,
@@ -174,7 +194,7 @@ function replayApplyActionsThrough(array $state, array $actions, int $step): arr
         if ($type === '') {
             throw new Exception('Replay action #' . ($i + 1) . ' missing type');
         }
-        $state = applyAction($state, $pid, $type, is_array($a['data'] ?? null) ? $a['data'] : []);
+        $state = replayApplyRecordedAction($state, $pid, $type, is_array($a['data'] ?? null) ? $a['data'] : [], $i + 1);
         if (empty($state['pending_prompt'])) {
             $state = flushAutoOnWaitAbilities($state);
         }
