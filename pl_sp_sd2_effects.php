@@ -217,7 +217,7 @@ function plSpSd2ResolvePrompt(array $state, string $owner, array $prompt, string
                 ' — [' . ($prompt['source_name'] ?? 'Member') . '] skipped position change.');
             unset($state['pending_prompt']);
             $state['seq']++;
-            return $state;
+            return finishPromptEffects($state);
         }
         if (!in_array($choice, $allowed, true)) {
             throw new Exception('Choose Skip or a valid Stage area');
@@ -236,14 +236,16 @@ function plSpSd2ResolvePrompt(array $state, string $owner, array $prompt, string
         $p['stage'][$toSlot] = $fromM;
         $p['stage'][$fromSlot] = $toM;
         $fromM['moved_this_turn'] = true;
+        $p['stage'][$toSlot] = $fromM;
         if ($toM) {
             $toM['moved_this_turn'] = true;
+            $p['stage'][$fromSlot] = $toM;
         }
         $state = addLog($state, $state['players'][$owner]['name'] .
             ' — [' . ($prompt['source_name'] ?? 'Member') . "] moved $fromSlot → $toSlot.");
         unset($state['pending_prompt']);
         $state['seq']++;
-        return $state;
+        return finishPromptEffects($state);
     }
     if ($type === 'on_enter_blade_self_and_pick_group') {
         $slot = $data['slot'] ?? '';
